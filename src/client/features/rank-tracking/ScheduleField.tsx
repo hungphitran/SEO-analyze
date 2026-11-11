@@ -1,0 +1,151 @@
+import { useId, useState } from "react";
+import { Info } from "lucide-react";
+import { Button } from "@/client/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+} from "@/client/components/ui/field";
+import { Input } from "@/client/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/client/components/ui/select";
+import type { RankTrackingConfig } from "@/types/schemas/rank-tracking";
+import {
+  getWeekdays,
+  browserTimeZoneLabel,
+  describeSchedule,
+  type LocalScheduleTime,
+} from "./scheduleTime";
+import { t } from "@/shared/i18n";
+
+type Schedule = RankTrackingConfig["scheduleInterval"];
+
+const SCHEDULE_ITEMS: { value: Schedule; label: string }[] = [
+  { value: "daily", label: t("rank.daily") },
+  { value: "weekly", label: t("rank.weekly") },
+  { value: "monthly", label: t("rank.monthlyEnd") },
+  { value: "manual", label: t("rank.manualOnly") },
+];
+
+const WEEKDAY_ITEMS = getWeekdays().map((day, index) => ({
+  value: index,
+  label: day,
+}));
+
+type Props = {
+  schedule: Schedule;
+  onScheduleChange: (schedule: Schedule) => void;
+  scheduleTime: LocalScheduleTime;
+  onScheduleTimeChange: (scheduleTime: LocalScheduleTime) => void;
+  /** AI visibility pauses tracking instead of offering a manual schedule. */
+  allowManual?: boolean;
+};
+
+export function ScheduleField({
+  schedule,
+  onScheduleChange,
+  scheduleTime,
+  onScheduleTimeChange,
+  allowManual = true,
+}: Props) {
+  const id = useId();
+  const items = allowManual
+    ? SCHEDULE_ITEMS
+    : SCHEDULE_ITEMS.filter((item) => item.value !== "manual");
+  const [showScheduleTime, setShowScheduleTime] = useState(false);
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{t("rank.schedule")}</FieldLabel>
+      <Select
+        items={items}
+        value={schedule}
+        onValueChange={(value) => {
+          if (value) onScheduleChange(value);
+        }}
+      >
+        <SelectTrigger id={id} className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {schedule !== "manual" && (
+        <FieldDescription>
+          {describeSchedule(schedule, scheduleTime)}
+          {!showScheduleTime && (
+            <>
+              {" "}
+              &middot;{" "}
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-xs"
+                onClick={() => setShowScheduleTime(true)}
+              >
+                {t("ui.change_c55e")}
+              </Button>
+            </>
+          )}
+        </FieldDescription>
+      )}
+      {schedule !== "manual" && showScheduleTime && (
+        <>
+          <div className="flex gap-2">
+            {schedule === "weekly" && (
+              <Select
+                items={WEEKDAY_ITEMS}
+                value={scheduleTime.weekday}
+                onValueChange={(weekday) => {
+                  if (weekday !== null) {
+                    onScheduleTimeChange({ ...scheduleTime, weekday });
+                  }
+                }}
+              >
+                <SelectTrigger aria-label={t("rank.dayOfWeek")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {WEEKDAY_ITEMS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Input
+              type="time"
+              className="w-auto"
+              aria-label={t("rank.timeOfDay")}
+              value={`${String(scheduleTime.hour).padStart(2, "0")}:${String(scheduleTime.minute).padStart(2, "0")}`}
+              onChange={(e) => {
+                const [hour, minute] = e.target.value.split(":").map(Number);
+                // Clearing the field yields "", which has no time to keep.
+                if (Number.isNaN(hour) || Number.isNaN(minute)) return;
+                onScheduleTimeChange({ ...scheduleTime, hour, minute });
+              }}
+            />
+          </div>
+          <FieldDescription>{t("ui.inYourLocalTimezone", { v0: browserTimeZoneLabel() })}</FieldDescription>
+        </>
+      )}
+      {schedule === "daily" && (
+        <p className="flex items-start gap-1.5 text-xs text-warning">
+          <Info className="mt-0.5 size-3.5 shrink-0" />
+          {t("ui.dailyChecksUse7xMoreCredits")}
+        </p>
+      )}
+    </Field>
+  );
+}

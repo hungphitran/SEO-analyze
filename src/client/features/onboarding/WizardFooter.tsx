@@ -1,0 +1,73 @@
+import type { ReactNode, Ref } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { cn } from "cn";
+import { Button } from "@/client/components/ui/button";
+import { t } from "@/shared/i18n";
+
+export function WizardFooter({
+  onBack,
+  onSkip,
+  skipLabel = t("onboarding.skipForNow"),
+  onContinue,
+  continueLabel = t("common.continue"),
+  continueDisabled = false,
+  continueAction,
+  continueRef,
+  className,
+}: {
+  onBack?: () => void;
+  onSkip?: () => void;
+  skipLabel?: string;
+  onContinue?: () => void;
+  continueLabel?: string;
+  continueDisabled?: boolean;
+  continueAction?: ReactNode;
+  continueRef?: Ref<HTMLButtonElement>;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "mt-8 flex flex-wrap items-center justify-between gap-3",
+        className,
+      )}
+    >
+      {onBack ? (
+        <Button
+          type="button"
+          variant="ghost"
+          className="gap-1.5 px-0 text-xs font-normal text-muted-foreground hover:bg-transparent"
+          onClick={onBack}
+        >
+          <ArrowLeft className="size-3.5" /> {t("common.back")}
+        </Button>
+      ) : (
+        <span />
+      )}
+      <div className="flex items-center gap-2">
+        {onSkip ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-8 px-3 text-xs font-semibold text-foreground/55"
+            onClick={onSkip}
+          >
+            {skipLabel}
+          </Button>
+        ) : null}
+        {continueAction ?? (
+          <Button
+            ref={continueRef}
+            type="button"
+            className="font-semibold disabled:bg-foreground/10 disabled:text-foreground/20 disabled:opacity-100"
+            onClick={onContinue}
+            disabled={continueDisabled || !onContinue}
+          >
+            {continueLabel}
+            <ArrowRight className="size-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
