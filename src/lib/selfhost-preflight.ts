@@ -23,6 +23,7 @@ export type PreflightItem = {
     | "pagespeed"
     | "crux"
     | "open-pagerank"
+    | "serpapi"
     | "ai"
     | "rendering"
     | "runtime";
