@@ -38,6 +38,8 @@ const CHECK_ENV_VARS = [
   "PAGESPEED_API_KEY",
   "CRUX_API_KEY",
   "OPEN_PAGERANK_API_KEY",
+  "SERP_PROVIDER",
+  "SERPAPI_API_KEY",
 ] as const;
 
 const LEVEL_TO_STATUS = {
