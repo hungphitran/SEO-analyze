@@ -9,7 +9,13 @@
  * never logged; error messages have it stripped. Only verified sites are
  * returned or queried — unverified properties are refused.
  */
-import { AppError } from "@/server/lib/errors";
+import {
+  BING_CODE_INVALID_URL,
+  BING_CODE_NOT_AUTHORIZED,
+  BingWebmasterError,
+  kindForResponse,
+  logBingFailure,
+} from "@/server/lib/free-sources/bing-errors";
 import {
   redactApiKeyQuery,
   safeErrorMessage,
@@ -38,95 +44,8 @@ export type BingQuerySummary = {
   queries: BingQueryStat[];
 };
 
-/**
- * What went wrong, independent of Bing's wording, so the app can show clear
- * Vietnamese copy: key_rejected (401/403/InvalidApiKey), not_verified (site is
- * not a verified site of the key), throttled (429), unavailable (network, 5xx,
- * timeout), invalid_response (unreadable payload), invalid_input (no key).
- */
-export type BingErrorKind =
-  | "key_rejected"
-  | "not_verified"
-  | "throttled"
-  | "unavailable"
-  | "invalid_response"
-  | "invalid_input";
-
-export class BingWebmasterError extends Error {
-  readonly status: number;
-  readonly kind: BingErrorKind;
-  /** Bing's own numeric ApiErrorCode from the error body, when it sent one. */
-  readonly errorCode: number | null;
-
-  constructor(
-    message: string,
-    status = 0,
-    kind: BingErrorKind = "unavailable",
-    errorCode: number | null = null,
-  ) {
-    super(message);
-    this.name = "BingWebmasterError";
-    this.status = status;
-    this.kind = kind;
-    this.errorCode = errorCode;
-  }
-}
-
-// Bing's ApiErrorCode enum (Microsoft.Bing.Webmaster.Api.Interfaces).
-const BING_CODE_INVALID_API_KEY = 3;
-const BING_CODE_THROTTLE_USER = 4;
-const BING_CODE_THROTTLE_HOST = 5;
-const BING_CODE_NOT_AUTHORIZED = 14;
-
 const BING_TIMEOUT_MS = 15_000;
 const BING_RETRY_DELAYS_MS = [400, 1200];
-
-/**
- * Classify a non-2xx Bing response. Bing reports API errors as HTTP 400 with
- * `{ErrorCode, Message}`, so the numeric ErrorCode (then the HTTP status) is
- * authoritative; message text is only a fallback when no ErrorCode is present.
- * Only HTTP 429 or ThrottleUser/ThrottleHost count as throttling: loose word
- * matches such as "quota" used to turn unrelated errors into "too many
- * requests".
- */
-export function kindForResponse(
-  status: number,
-  message: string,
-  errorCode: number | null = null,
-): BingErrorKind {
-  if (errorCode === BING_CODE_INVALID_API_KEY) return "key_rejected";
-  if (
-    errorCode === BING_CODE_THROTTLE_USER ||
-    errorCode === BING_CODE_THROTTLE_HOST
-  ) {
-    return "throttled";
-  }
-  if (status === 429) return "throttled";
-  if (status === 401 || status === 403) return "key_rejected";
-  if (errorCode === BING_CODE_NOT_AUTHORIZED) return "key_rejected";
-  if (errorCode === null) {
-    if (/invalid.?api.?key|not.?authori[sz]ed|unauthori[sz]ed/i.test(message)) {
-      return "key_rejected";
-    }
-    if (/throttle(user|host)/i.test(message)) return "throttled";
-  }
-  return "unavailable";
-}
-
-/** Safe, one-line diagnostics for Workers Logs. Never includes the key/URL. */
-function logBingFailure(fields: {
-  method: string;
-  status: number;
-  errorCode: number | null;
-  kind: BingErrorKind;
-  message: string;
-  attempts: number;
-  retryAfter: string | null;
-}) {
-  console.warn(
-    `bing.webmaster failure method=${fields.method} status=${fields.status} errorCode=${fields.errorCode ?? "none"} kind=${fields.kind} attempts=${fields.attempts} retryAfter=${fields.retryAfter ?? "none"} message=${JSON.stringify(fields.message.slice(0, 160))}`,
-  );
-}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null) return null;
@@ -170,6 +89,8 @@ async function bingGet<T>(input: {
   params?: Record<string, string>;
   fetchImpl?: typeof fetch;
   retryDelaysMs?: number[];
+  /** Site-scoped call: NotAuthorized/InvalidUrl mean "not your verified site". */
+  siteScoped?: boolean;
   map: (payload: unknown) => T;
 }): Promise<T> {
   const apiKey = input.apiKey.trim();
@@ -253,7 +174,14 @@ async function bingGet<T>(input: {
       stringField(payloadRecord, "Message") ??
       stringField(payloadRecord, "message") ??
       `Bing Webmaster returned HTTP ${response.status}.`;
-    const kind = kindForResponse(response.status, message, errorCode);
+    let kind = kindForResponse(response.status, message, errorCode);
+    if (
+      input.siteScoped &&
+      (errorCode === BING_CODE_NOT_AUTHORIZED ||
+        errorCode === BING_CODE_INVALID_URL)
+    ) {
+      kind = "not_verified";
+    }
     const safeMessage = redactApiKeyQuery(safeErrorMessage(message, apiKey));
     logBingFailure({
       method: input.method,
@@ -377,12 +305,60 @@ export async function getBingQueryStats(input: {
     params: { siteUrl: input.siteUrl },
     fetchImpl: input.fetchImpl,
     retryDelaysMs: input.retryDelaysMs,
+    siteScoped: true,
     map: (payload) =>
       parseBingQueryStatsPayload(payload, input.siteUrl, {
         sinceMs: input.sinceMs,
         limit: input.limit,
       }),
   });
+}
+
+/**
+ * Cheap per-site check used by the manual site path: GetUrlSubmissionQuota
+ * answers only for sites the key owns, and returns two small numbers.
+ */
+export async function verifyBingSiteAccess(input: {
+  apiKey: string;
+  siteUrl: string;
+  fetchImpl?: typeof fetch;
+  retryDelaysMs?: number[];
+}): Promise<void> {
+  await bingGet({
+    method: "GetUrlSubmissionQuota",
+    apiKey: input.apiKey,
+    params: { siteUrl: input.siteUrl },
+    fetchImpl: input.fetchImpl,
+    retryDelaysMs: input.retryDelaysMs,
+    siteScoped: true,
+    map: (payload) => {
+      const record = asRecord(asRecord(payload)?.d);
+      if (!record) throw new Error("missing quota object");
+      return null;
+    },
+  });
+}
+
+/**
+ * Normalise what a user types ("example.com", "https://www.example.com/path")
+ * to the origin form Bing uses for sites ("https://example.com/"); null when
+ * it is not a usable http(s) host.
+ */
+export function normalizeManualBingSite(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.length > 2048 || /\s/.test(trimmed)) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+  let url: URL;
+  try {
+    url = new URL(withScheme);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  if (!url.hostname.includes(".") || url.username || url.password) return null;
+  return `${url.protocol}//${url.host}/`;
 }
 
 /** Compare site URLs ignoring case and a trailing slash. */
@@ -412,43 +388,10 @@ export async function assertVerifiedBingSite(input: {
   return match;
 }
 
-/**
- * Turn a Bing client failure into an AppError whose code the browser maps to
- * Vietnamese guidance. The message is key-free (it was redacted at the source).
- */
-export function toBingAppError(error: unknown): unknown {
-  if (!(error instanceof BingWebmasterError)) return error;
-  switch (error.kind) {
-    case "key_rejected":
-      return new AppError("BING_KEY_REJECTED", error.message);
-    case "not_verified":
-      return new AppError("BING_SITE_NOT_VERIFIED", error.message);
-    case "invalid_input":
-      return new AppError("VALIDATION_ERROR", error.message);
-    case "throttled":
-      // Bing's own ThrottleUser/ThrottleHost (or HTTP 429), not our app's
-      // rate limit, so it gets its own code and accurate copy.
-      return new AppError("BING_THROTTLED", error.message);
-    default:
-      return new AppError("BING_UNAVAILABLE", error.message);
-  }
-}
-
-/** Fixed, key-free snapshot text per failure kind (localized in the browser). */
-export function bingRefreshMessage(error: unknown, apiKey: string): string {
-  if (error instanceof BingWebmasterError) {
-    switch (error.kind) {
-      case "key_rejected":
-        return "Bing Webmaster rejected the stored API key. Disconnect and save a new key.";
-      case "throttled":
-        return "Bing Webmaster is throttling this key. Try again later.";
-      case "invalid_response":
-        return "Bing Webmaster returned an unreadable response.";
-      case "unavailable":
-        return "Bing Webmaster could not be reached. Try again in a few minutes.";
-      default:
-        break;
-    }
-  }
-  return safeErrorMessage(error, apiKey);
-}
+export {
+  BingWebmasterError,
+  bingRefreshMessage,
+  kindForResponse,
+  toBingAppError,
+  type BingErrorKind,
+} from "@/server/lib/free-sources/bing-errors";

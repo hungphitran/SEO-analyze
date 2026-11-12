@@ -72,6 +72,8 @@ export function localizeFreeSourceMessage(
       "freeSources.bingKeyRejectedStored",
     "Bing Webmaster is throttling this key. Try again later.":
       "freeSources.bingThrottled",
+    "Bing Webmaster is limiting this server's IP address. Try again later.":
+      "freeSources.bingIpThrottled",
     "Bing Webmaster returned an unreadable response.":
       "freeSources.bingUnreadable",
     "Bing Webmaster could not be reached. Try again in a few minutes.":

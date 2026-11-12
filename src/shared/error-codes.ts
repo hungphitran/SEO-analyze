@@ -30,6 +30,7 @@ const ERROR_CODES = [
   "BING_SITE_NOT_VERIFIED",
   "BING_UNAVAILABLE",
   "BING_THROTTLED",
+  "BING_IP_THROTTLED",
   "CONFLICT",
   "INTERNAL_ERROR",
 ] as const;
@@ -73,6 +74,7 @@ const NON_REPORTABLE_ERROR_CODES = new Set<ErrorCode>([
   "BING_SITE_NOT_VERIFIED",
   "BING_UNAVAILABLE",
   "BING_THROTTLED",
+  "BING_IP_THROTTLED",
 ]);
 
 export function isErrorCode(value: string): value is ErrorCode {
