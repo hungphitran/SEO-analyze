@@ -280,7 +280,7 @@ describe("Bing Webmaster edge cases", () => {
   it.each([
     ["key_rejected", "BING_KEY_REJECTED"],
     ["not_verified", "BING_SITE_NOT_VERIFIED"],
-    ["throttled", "RATE_LIMITED"],
+    ["throttled", "BING_THROTTLED"],
     ["invalid_input", "VALIDATION_ERROR"],
     ["unavailable", "BING_UNAVAILABLE"],
     ["invalid_response", "BING_UNAVAILABLE"],
@@ -290,5 +290,100 @@ describe("Bing Webmaster edge cases", () => {
     expect((mapped as AppError).code).toBe(code);
     const other = new Error("x");
     expect(toBingAppError(other)).toBe(other);
+  });
+
+  describe("classification by Bing ErrorCode (not message words)", () => {
+    const bingError = (errorCode: number, message: string, status = 400) =>
+      json({ ErrorCode: errorCode, Message: message }, status);
+    const run = (response: Response) => {
+      const fetchImpl = vi.fn(async () => response);
+      return {
+        fetchImpl,
+        result: fail(
+          listVerifiedBingSites({
+            apiKey: KEY,
+            fetchImpl,
+            retryDelaysMs: noDelay,
+          }),
+        ),
+      };
+    };
+
+    it("maps the real 400 InvalidApiKey body to key_rejected after one call", async () => {
+      const { fetchImpl, result } = run(bingError(3, "ERROR!!! InvalidApiKey"));
+      const error = await result;
+      expect(error.kind).toBe("key_rejected");
+      expect(error.errorCode).toBe(3);
+      expect(toBingAppError(error)).toMatchObject({
+        code: "BING_KEY_REJECTED",
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      [4, "ERROR!!! ThrottleUser"],
+      [5, "ERROR!!! ThrottleHost"],
+    ])("maps ErrorCode %i to throttled without retrying", async (code, msg) => {
+      const { fetchImpl, result } = run(bingError(code, msg));
+      const error = await result;
+      expect(error.kind).toBe("throttled");
+      expect(toBingAppError(error)).toMatchObject({ code: "BING_THROTTLED" });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not treat the words quota/throttle in an unrelated error as throttling", async () => {
+      const { result } = run(
+        bingError(2, "ERROR!!! UnknownError: quota calculation failed"),
+      );
+      const error = await result;
+      expect(error.kind).toBe("unavailable");
+      expect(toBingAppError(error)).toMatchObject({ code: "BING_UNAVAILABLE" });
+    });
+
+    it("keeps InvalidApiKey even if the message mentions quota", async () => {
+      const { result } = run(bingError(3, "InvalidApiKey (quota key)"));
+      expect((await result).kind).toBe("key_rejected");
+    });
+
+    it("maps NotAuthorized (14) to key_rejected and unknown 400s to unavailable", async () => {
+      expect(
+        (await run(bingError(14, "ERROR!!! NotAuthorized")).result).kind,
+      ).toBe("key_rejected");
+      expect((await run(bingError(99, "Something new")).result).kind).toBe(
+        "unavailable",
+      );
+    });
+
+    it("falls back to message text only when no ErrorCode is sent", async () => {
+      expect(
+        (await run(json({ Message: "ERROR!!! InvalidApiKey" }, 400)).result)
+          .kind,
+      ).toBe("key_rejected");
+      expect(
+        (await run(json({ Message: "ERROR!!! ThrottleHost" }, 400)).result)
+          .kind,
+      ).toBe("throttled");
+      expect(
+        (
+          await run(json({ Message: "Quota exceeded for something" }, 400))
+            .result
+        ).kind,
+      ).toBe("unavailable");
+    });
+
+    it("logs status/ErrorCode/kind but never the API key", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      try {
+        await run(bingError(4, `ERROR!!! ThrottleUser ${KEY}`)).result;
+        const lines = warn.mock.calls.map((call) => call.join(" ")).join("\n");
+        expect(lines).toContain("status=400");
+        expect(lines).toContain("errorCode=4");
+        expect(lines).toContain("kind=throttled");
+        expect(lines).not.toContain(KEY);
+        expect(lines).not.toContain("apikey");
+      } finally {
+        warn.mockRestore();
+      }
+    });
   });
 });

@@ -55,34 +55,77 @@ export type BingErrorKind =
 export class BingWebmasterError extends Error {
   readonly status: number;
   readonly kind: BingErrorKind;
+  /** Bing's own numeric ApiErrorCode from the error body, when it sent one. */
+  readonly errorCode: number | null;
 
   constructor(
     message: string,
     status = 0,
     kind: BingErrorKind = "unavailable",
+    errorCode: number | null = null,
   ) {
     super(message);
     this.name = "BingWebmasterError";
     this.status = status;
     this.kind = kind;
+    this.errorCode = errorCode;
   }
 }
+
+// Bing's ApiErrorCode enum (Microsoft.Bing.Webmaster.Api.Interfaces).
+const BING_CODE_INVALID_API_KEY = 3;
+const BING_CODE_THROTTLE_USER = 4;
+const BING_CODE_THROTTLE_HOST = 5;
+const BING_CODE_NOT_AUTHORIZED = 14;
 
 const BING_TIMEOUT_MS = 15_000;
 const BING_RETRY_DELAYS_MS = [400, 1200];
 
-function kindForResponse(status: number, message: string): BingErrorKind {
+/**
+ * Classify a non-2xx Bing response. Bing reports API errors as HTTP 400 with
+ * `{ErrorCode, Message}`, so the numeric ErrorCode (then the HTTP status) is
+ * authoritative; message text is only a fallback when no ErrorCode is present.
+ * Only HTTP 429 or ThrottleUser/ThrottleHost count as throttling: loose word
+ * matches such as "quota" used to turn unrelated errors into "too many
+ * requests".
+ */
+export function kindForResponse(
+  status: number,
+  message: string,
+  errorCode: number | null = null,
+): BingErrorKind {
+  if (errorCode === BING_CODE_INVALID_API_KEY) return "key_rejected";
   if (
-    status === 401 ||
-    status === 403 ||
-    /invalid.?api.?key|not.?authorized|unauthori[sz]ed/i.test(message)
+    errorCode === BING_CODE_THROTTLE_USER ||
+    errorCode === BING_CODE_THROTTLE_HOST
   ) {
-    return "key_rejected";
-  }
-  if (status === 429 || /throttl|too many requests|quota/i.test(message)) {
     return "throttled";
   }
+  if (status === 429) return "throttled";
+  if (status === 401 || status === 403) return "key_rejected";
+  if (errorCode === BING_CODE_NOT_AUTHORIZED) return "key_rejected";
+  if (errorCode === null) {
+    if (/invalid.?api.?key|not.?authori[sz]ed|unauthori[sz]ed/i.test(message)) {
+      return "key_rejected";
+    }
+    if (/throttle(user|host)/i.test(message)) return "throttled";
+  }
   return "unavailable";
+}
+
+/** Safe, one-line diagnostics for Workers Logs. Never includes the key/URL. */
+function logBingFailure(fields: {
+  method: string;
+  status: number;
+  errorCode: number | null;
+  kind: BingErrorKind;
+  message: string;
+  attempts: number;
+  retryAfter: string | null;
+}) {
+  console.warn(
+    `bing.webmaster failure method=${fields.method} status=${fields.status} errorCode=${fields.errorCode ?? "none"} kind=${fields.kind} attempts=${fields.attempts} retryAfter=${fields.retryAfter ?? "none"} message=${JSON.stringify(fields.message.slice(0, 160))}`,
+  );
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -151,7 +194,9 @@ async function bingGet<T>(input: {
   // client errors are never retried.
   let response: Response | undefined;
   let bodyText = "";
+  let attempts = 0;
   for (let attempt = 0; ; attempt++) {
+    attempts = attempt + 1;
     let failure: BingWebmasterError | null = null;
     try {
       response = await fetchImpl(url, {
@@ -201,15 +246,25 @@ async function bingGet<T>(input: {
 
   if (!response.ok) {
     const payloadRecord = asRecord(payload);
+    const rawCode = payloadRecord?.ErrorCode ?? payloadRecord?.errorCode;
+    const errorCode =
+      typeof rawCode === "number" && Number.isInteger(rawCode) ? rawCode : null;
     const message =
       stringField(payloadRecord, "Message") ??
       stringField(payloadRecord, "message") ??
       `Bing Webmaster returned HTTP ${response.status}.`;
-    throw new BingWebmasterError(
-      redactApiKeyQuery(safeErrorMessage(message, apiKey)),
-      response.status,
-      kindForResponse(response.status, message),
-    );
+    const kind = kindForResponse(response.status, message, errorCode);
+    const safeMessage = redactApiKeyQuery(safeErrorMessage(message, apiKey));
+    logBingFailure({
+      method: input.method,
+      status: response.status,
+      errorCode,
+      kind,
+      message: safeMessage,
+      attempts,
+      retryAfter: response.headers.get("retry-after"),
+    });
+    throw new BingWebmasterError(safeMessage, response.status, kind, errorCode);
   }
   if (!parsedOk) {
     throw new BingWebmasterError(
@@ -371,7 +426,9 @@ export function toBingAppError(error: unknown): unknown {
     case "invalid_input":
       return new AppError("VALIDATION_ERROR", error.message);
     case "throttled":
-      return new AppError("RATE_LIMITED", error.message);
+      // Bing's own ThrottleUser/ThrottleHost (or HTTP 429), not our app's
+      // rate limit, so it gets its own code and accurate copy.
+      return new AppError("BING_THROTTLED", error.message);
     default:
       return new AppError("BING_UNAVAILABLE", error.message);
   }

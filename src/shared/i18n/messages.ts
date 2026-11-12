@@ -132,6 +132,7 @@ export const messages = {
   "errors.SERP_UNAVAILABLE": "Nguồn dữ liệu SERP tạm thời không trả được kết quả hợp lệ. Không có thứ hạng nào được ghi; vui lòng thử lại sau ít phút.",
   "errors.BING_KEY_REJECTED": "Bing Webmaster từ chối khóa API này. Hãy mở Bing Webmaster Tools > Settings > API access, tạo hoặc sao chép lại khóa API rồi dán lại.",
   "errors.BING_SITE_NOT_VERIFIED": "Trang này chưa được xác minh trong Bing Webmaster Tools với khóa API này. Hãy xác minh trang trong Bing Webmaster Tools, rồi bấm \"Liệt kê trang đã xác minh\" và chọn lại.",
+  "errors.BING_THROTTLED": "Bing Webmaster đang tạm giới hạn tần suất truy vấn (ThrottleUser/ThrottleHost hoặc HTTP 429). Đây là giới hạn phía Bing, không phải do bạn gửi quá nhiều yêu cầu, và khóa API của bạn chưa bị từ chối. Hãy chờ vài phút rồi bấm lại.",
   "errors.BING_UNAVAILABLE": "Không kết nối được Bing Webmaster (mạng, hết thời gian chờ hoặc Bing đang bận). Vui lòng thử lại sau ít phút.",
   "errors.UPSTREAM_UNAVAILABLE": "Nhà cung cấp dữ liệu tạm thời không khả dụng. Vui lòng thử lại sau ít phút.",
   "errors.CONFLICT": "Yêu cầu này xung đột với dữ liệu hiện có.",
