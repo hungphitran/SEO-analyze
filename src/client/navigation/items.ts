@@ -15,6 +15,7 @@ import {
 import { linkOptions } from "@tanstack/react-router";
 import { GoogleGlyphMuted } from "@/client/features/gsc/GoogleGlyph";
 import { t } from "@/shared/i18n";
+import { isPaidOnlyNavPath } from "@/shared/free-sources-visibility";
 
 const projectNavItems = [
   {
@@ -115,7 +116,22 @@ function getProjectNavItems(projectId: string) {
 
 // Grouped by scope: "My Site" is the project's own domain (tracked data),
 // "Research" is point-at-anything lookup tools.
-export function getProjectNavGroups(projectId: string) {
+export function getProjectNavGroups(
+  projectId: string,
+  options: { freeSourcesOnly?: boolean } = {},
+) {
+  const groups = buildProjectNavGroups(projectId);
+  if (!options.freeSourcesOnly) return groups;
+  // FREE_SOURCES_ONLY: drop DataForSEO-only items, then any group left empty.
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !isPaidOnlyNavPath(item.to)),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
+function buildProjectNavGroups(projectId: string) {
   const all = getProjectNavItems(projectId);
   const byPath = (path: (typeof projectNavItems)[number]["to"]) =>
     all.find((i) => i.to === path)!;

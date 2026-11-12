@@ -1,3 +1,4 @@
+import type { RankSourceProvider } from "@/shared/rank-tracking";
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 import { toRankTrackingTimestamp } from "@/server/features/rank-tracking/rankTrackingTimestamps";
 import { AppError } from "@/server/lib/errors";
@@ -42,7 +43,7 @@ export async function getLatestResults(
     lastCheckedAt: string | null;
     completedAt: string | null;
     status: "pending" | "running" | "completed" | "failed";
-    sourceProvider: "dataforseo" | "openserp" | null;
+    sourceProvider: RankSourceProvider | null;
     errorMessage: string | null;
   } | null;
 }> {

@@ -1,10 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { describe, expect, it, vi } from "vitest";
+import { t } from "@/shared/i18n";
+vi.mock("@/serverFunctions/config", () => ({
+  getSeoApiKeyStatus: vi.fn(),
+}));
 import type { RankTrackingRow } from "@/types/schemas/rank-tracking";
 import {
   applyDomainListFilters,
   applyFilters,
   EMPTY_DOMAIN_LIST_FILTERS,
   EMPTY_FILTERS,
+  FilterPanel,
   type Filters,
 } from "./RankTrackingFilters";
 
@@ -129,5 +137,40 @@ describe("applyFilters metric ranges", () => {
       "high volume",
       "zero volume",
     ]);
+  });
+});
+
+function renderPanel(freeSourcesOnly: boolean) {
+  const client = new QueryClient();
+  client.setQueryData(["seoApiKeyStatus"], {
+    configured: !freeSourcesOnly,
+    freeSourcesOnly,
+  });
+  return renderToStaticMarkup(
+    createElement(
+      QueryClientProvider,
+      { client },
+      createElement(FilterPanel, {
+        draft: EMPTY_FILTERS,
+        setDraft: () => {},
+        activeFilterCount: 0,
+        onReset: () => {},
+      }),
+    ),
+  );
+}
+
+describe("FilterPanel with FREE_SOURCES_ONLY", () => {
+  it("hides volume, difficulty and CPC filters (no free data behind them)", () => {
+    const free = renderPanel(true);
+    expect(free).not.toContain(t("kw.volume"));
+    expect(free).not.toContain(t("rank.keywordDifficulty"));
+    expect(free).toContain(t("rank.mobilePosition"));
+  });
+
+  it("keeps them when DataForSEO is allowed", () => {
+    const paid = renderPanel(false);
+    expect(paid).toContain(t("kw.volume"));
+    expect(paid).toContain(t("rank.keywordDifficulty"));
   });
 });

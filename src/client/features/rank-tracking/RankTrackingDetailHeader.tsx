@@ -14,7 +14,12 @@ import {
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
 import { getLocationDisplayName } from "@/shared/keyword-locations";
-import { devicesLabel, scheduleLabel } from "@/shared/rank-tracking";
+import {
+  devicesLabel,
+  isFreeRankSource,
+  scheduleLabel,
+  type RankSourceProvider,
+} from "@/shared/rank-tracking";
 import { formatNextCheck } from "./scheduleTime";
 import { formatLocationLabel } from "@/shared/keyword-locations";
 import type { RankTrackingConfig } from "@/types/schemas/rank-tracking";
@@ -45,11 +50,11 @@ export function RankTrackingDetailHeader({
   onToggleAddKeywords,
 }: {
   config: RankTrackingConfig;
-  sourceProvider: "dataforseo" | "openserp" | null | undefined;
+  sourceProvider: RankSourceProvider | null | undefined;
   run:
     | {
         lastCheckedAt: string | null;
-        sourceProvider: "dataforseo" | "openserp" | null;
+        sourceProvider: RankSourceProvider | null;
       }
     | null
     | undefined;
@@ -57,7 +62,7 @@ export function RankTrackingDetailHeader({
     | {
         keywordCount: number;
         costUsd: number;
-        sourceProvider: "dataforseo" | "openserp";
+        sourceProvider: RankSourceProvider;
       }
     | undefined;
   hasBothDevices: boolean;
@@ -77,7 +82,7 @@ export function RankTrackingDetailHeader({
             ? formatLocationLabel(config.locationName, 2)
             : (getLocationDisplayName(config.locationCode) ?? "US")}{" "}
           &middot;{" "}
-          {(sourceProvider ?? run?.sourceProvider) === "openserp" ? (
+          {isFreeRankSource(sourceProvider ?? run?.sourceProvider) ? (
             t("rank.deviceIndependent")
           ) : config.devices === "desktop" ? (
             devicesLabel(config.devices)

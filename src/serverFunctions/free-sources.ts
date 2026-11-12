@@ -7,10 +7,16 @@ import {
   refreshOwnedSiteSources,
   saveBingConnection,
 } from "@/server/features/free-sources/services/FreeSourcesService";
+import {
+  getCruxVitals,
+  getOpenPageRank,
+} from "@/server/features/free-sources/services/RealUserSignalsService";
 import { requireProjectContext } from "@/serverFunctions/middleware";
 import {
+  cruxVitalsSchema,
   freeSourcesProjectSchema,
   listBingSitesSchema,
+  openPageRankSchema,
   saveBingConnectionSchema,
 } from "@/types/schemas/free-sources";
 
@@ -62,3 +68,20 @@ export const refreshOwnedSiteSourcesFn = createServerFn({ method: "POST" })
       domain: context.project.domain,
     }),
   );
+
+/** Real-user Core Web Vitals (CrUX). `{ state: "disabled" }` when no key is set. */
+export const getCruxVitalsFn = createServerFn({ method: "GET" })
+  .middleware(requireProjectContext)
+  .validator(cruxVitalsSchema)
+  .handler(async ({ data, context }) =>
+    getCruxVitals({
+      domain: context.project.domain,
+      formFactor: data.formFactor,
+    }),
+  );
+
+/** Open PageRank authority score. `{ state: "disabled" }` when no key is set. */
+export const getOpenPageRankFn = createServerFn({ method: "GET" })
+  .middleware(requireProjectContext)
+  .validator(openPageRankSchema)
+  .handler(async ({ data }) => getOpenPageRank({ domain: data.domain }));

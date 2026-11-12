@@ -5,7 +5,9 @@ import { t } from "@/shared/i18n";
  * Stored snapshots and server writers stay in English; unknown or
  * provider error text is shown as stored.
  */
-export function localizeFreeSourceMessage(message: string | null | undefined): string {
+export function localizeFreeSourceMessage(
+  message: string | null | undefined,
+): string {
   if (!message) return "";
 
   const gscCount = message.match(
@@ -64,6 +66,18 @@ export function localizeFreeSourceMessage(message: string | null | undefined): s
   ) {
     return t("freeSources.bingDecryptFailed");
   }
+
+  const bingKnown: Record<string, Parameters<typeof t>[0]> = {
+    "Bing Webmaster rejected the stored API key. Disconnect and save a new key.":
+      "freeSources.bingKeyRejectedStored",
+    "Bing Webmaster is throttling this key. Try again later.":
+      "freeSources.bingThrottled",
+    "Bing Webmaster returned an unreadable response.":
+      "freeSources.bingUnreadable",
+    "Bing Webmaster could not be reached. Try again in a few minutes.":
+      "freeSources.bingUnreachable",
+  };
+  if (Object.hasOwn(bingKnown, message)) return t(bingKnown[message]);
 
   const bing = message.match(
     /^Bing Webmaster returned (\d+) queries for (.+)\.$/,

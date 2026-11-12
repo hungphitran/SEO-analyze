@@ -9,6 +9,7 @@
  * never logged; error messages have it stripped. Only verified sites are
  * returned or queried — unverified properties are refused.
  */
+import { AppError } from "@/server/lib/errors";
 import {
   redactApiKeyQuery,
   safeErrorMessage,
@@ -37,14 +38,51 @@ export type BingQuerySummary = {
   queries: BingQueryStat[];
 };
 
+/**
+ * What went wrong, independent of Bing's wording, so the app can show clear
+ * Vietnamese copy: key_rejected (401/403/InvalidApiKey), not_verified (site is
+ * not a verified site of the key), throttled (429), unavailable (network, 5xx,
+ * timeout), invalid_response (unreadable payload), invalid_input (no key).
+ */
+export type BingErrorKind =
+  | "key_rejected"
+  | "not_verified"
+  | "throttled"
+  | "unavailable"
+  | "invalid_response"
+  | "invalid_input";
+
 export class BingWebmasterError extends Error {
   readonly status: number;
+  readonly kind: BingErrorKind;
 
-  constructor(message: string, status = 0) {
+  constructor(
+    message: string,
+    status = 0,
+    kind: BingErrorKind = "unavailable",
+  ) {
     super(message);
     this.name = "BingWebmasterError";
     this.status = status;
+    this.kind = kind;
   }
+}
+
+const BING_TIMEOUT_MS = 15_000;
+const BING_RETRY_DELAYS_MS = [400, 1200];
+
+function kindForResponse(status: number, message: string): BingErrorKind {
+  if (
+    status === 401 ||
+    status === 403 ||
+    /invalid.?api.?key|not.?authorized|unauthori[sz]ed/i.test(message)
+  ) {
+    return "key_rejected";
+  }
+  if (status === 429 || /throttl|too many requests|quota/i.test(message)) {
+    return "throttled";
+  }
+  return "unavailable";
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -88,11 +126,16 @@ async function bingGet<T>(input: {
   apiKey: string;
   params?: Record<string, string>;
   fetchImpl?: typeof fetch;
+  retryDelaysMs?: number[];
   map: (payload: unknown) => T;
 }): Promise<T> {
   const apiKey = input.apiKey.trim();
   if (!apiKey) {
-    throw new BingWebmasterError("A Bing Webmaster API key is required.", 0);
+    throw new BingWebmasterError(
+      "A Bing Webmaster API key is required.",
+      0,
+      "invalid_input",
+    );
   }
 
   const url = new URL(`${BING_WEBMASTER_JSON_BASE}/${input.method}`);
@@ -102,24 +145,58 @@ async function bingGet<T>(input: {
   }
 
   const fetchImpl = input.fetchImpl ?? fetch;
-  let response: Response;
-  try {
-    response = await fetchImpl(url, {
-      method: "GET",
-      headers: { Accept: "application/json", "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    throw new BingWebmasterError(
-      `Bing Webmaster request failed: ${safeErrorMessage(error, apiKey)}`,
-    );
+  const delays = input.retryDelaysMs ?? BING_RETRY_DELAYS_MS;
+  // Reads are idempotent, so transient failures (network error, timeout, 5xx)
+  // are retried a bounded number of times with backoff. Key, throttling and
+  // client errors are never retried.
+  let response: Response | undefined;
+  let bodyText = "";
+  for (let attempt = 0; ; attempt++) {
+    let failure: BingWebmasterError | null = null;
+    try {
+      response = await fetchImpl(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(BING_TIMEOUT_MS),
+      });
+      bodyText = await response.text();
+      if (response.status >= 500) {
+        failure = new BingWebmasterError(
+          `Bing Webmaster returned HTTP ${response.status}.`,
+          response.status,
+          "unavailable",
+        );
+      }
+    } catch (error) {
+      failure = new BingWebmasterError(
+        `Bing Webmaster request failed: ${safeErrorMessage(error, apiKey)}`,
+        0,
+        "unavailable",
+      );
+    }
+    if (!failure) break;
+    const delay = delays[attempt];
+    if (delay === undefined) throw failure;
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
-  const bodyText = await response.text();
+  if (!response) {
+    throw new BingWebmasterError(
+      "Bing Webmaster did not respond.",
+      0,
+      "unavailable",
+    );
+  }
   let payload: unknown = null;
+  let parsedOk = true;
   try {
     payload = bodyText ? JSON.parse(bodyText) : null;
   } catch {
     payload = null;
+    parsedOk = false;
   }
 
   if (!response.ok) {
@@ -131,6 +208,14 @@ async function bingGet<T>(input: {
     throw new BingWebmasterError(
       redactApiKeyQuery(safeErrorMessage(message, apiKey)),
       response.status,
+      kindForResponse(response.status, message),
+    );
+  }
+  if (!parsedOk) {
+    throw new BingWebmasterError(
+      "Could not read the Bing Webmaster response: it was not valid JSON.",
+      response.status,
+      "invalid_response",
     );
   }
 
@@ -139,6 +224,8 @@ async function bingGet<T>(input: {
   } catch (error) {
     throw new BingWebmasterError(
       `Could not read the Bing Webmaster response: ${safeErrorMessage(error, apiKey)}`,
+      response.status,
+      "invalid_response",
     );
   }
 }
@@ -161,11 +248,13 @@ export function parseBingSitesPayload(payload: unknown): BingVerifiedSite[] {
 export async function listVerifiedBingSites(input: {
   apiKey: string;
   fetchImpl?: typeof fetch;
+  retryDelaysMs?: number[];
 }): Promise<BingVerifiedSite[]> {
   return bingGet({
     method: "GetUserSites",
     apiKey: input.apiKey,
     fetchImpl: input.fetchImpl,
+    retryDelaysMs: input.retryDelaysMs,
     map: parseBingSitesPayload,
   });
 }
@@ -206,7 +295,9 @@ export function parseBingQueryStatsPayload(
   const ranked = [...byQuery.values()];
   // ES2022 typings have no Array#toSorted.
   ranked.sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions);
-  const queries = ranked.slice(0, limit).map(({ dated: _dated, ...stat }) => stat);
+  const queries = ranked
+    .slice(0, limit)
+    .map(({ dated: _dated, ...stat }) => stat);
 
   return {
     siteUrl,
@@ -221,6 +312,7 @@ export async function getBingQueryStats(input: {
   apiKey: string;
   siteUrl: string;
   fetchImpl?: typeof fetch;
+  retryDelaysMs?: number[];
   sinceMs?: number;
   limit?: number;
 }): Promise<BingQuerySummary> {
@@ -229,6 +321,7 @@ export async function getBingQueryStats(input: {
     apiKey: input.apiKey,
     params: { siteUrl: input.siteUrl },
     fetchImpl: input.fetchImpl,
+    retryDelaysMs: input.retryDelaysMs,
     map: (payload) =>
       parseBingQueryStatsPayload(payload, input.siteUrl, {
         sinceMs: input.sinceMs,
@@ -237,17 +330,68 @@ export async function getBingQueryStats(input: {
   });
 }
 
+/** Compare site URLs ignoring case and a trailing slash. */
+function normalizeBingSite(value: string) {
+  return value.trim().toLowerCase().replace(/\/+$/, "");
+}
+
+export function sameBingSite(a: string, b: string) {
+  return normalizeBingSite(a) === normalizeBingSite(b);
+}
+
 export async function assertVerifiedBingSite(input: {
   apiKey: string;
   siteUrl: string;
   fetchImpl?: typeof fetch;
+  retryDelaysMs?: number[];
 }): Promise<BingVerifiedSite> {
   const sites = await listVerifiedBingSites(input);
-  const match = sites.find((site) => site.url === input.siteUrl);
+  const match = sites.find((site) => sameBingSite(site.url, input.siteUrl));
   if (!match) {
     throw new BingWebmasterError(
       "That site is not in the verified sites for this Bing Webmaster API key. Verify the site in Bing Webmaster Tools first, then pick it from the list.",
+      0,
+      "not_verified",
     );
   }
   return match;
+}
+
+/**
+ * Turn a Bing client failure into an AppError whose code the browser maps to
+ * Vietnamese guidance. The message is key-free (it was redacted at the source).
+ */
+export function toBingAppError(error: unknown): unknown {
+  if (!(error instanceof BingWebmasterError)) return error;
+  switch (error.kind) {
+    case "key_rejected":
+      return new AppError("BING_KEY_REJECTED", error.message);
+    case "not_verified":
+      return new AppError("BING_SITE_NOT_VERIFIED", error.message);
+    case "invalid_input":
+      return new AppError("VALIDATION_ERROR", error.message);
+    case "throttled":
+      return new AppError("RATE_LIMITED", error.message);
+    default:
+      return new AppError("BING_UNAVAILABLE", error.message);
+  }
+}
+
+/** Fixed, key-free snapshot text per failure kind (localized in the browser). */
+export function bingRefreshMessage(error: unknown, apiKey: string): string {
+  if (error instanceof BingWebmasterError) {
+    switch (error.kind) {
+      case "key_rejected":
+        return "Bing Webmaster rejected the stored API key. Disconnect and save a new key.";
+      case "throttled":
+        return "Bing Webmaster is throttling this key. Try again later.";
+      case "invalid_response":
+        return "Bing Webmaster returned an unreadable response.";
+      case "unavailable":
+        return "Bing Webmaster could not be reached. Try again in a few minutes.";
+      default:
+        break;
+    }
+  }
+  return safeErrorMessage(error, apiKey);
 }

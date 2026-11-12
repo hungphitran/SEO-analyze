@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   assertOpenSerpReady,
+  isOpenSerpSelected,
   resolveSerpProvider,
   searchOpenSerp,
 } from "./openserp";
@@ -158,5 +159,43 @@ describe("OpenSERP search contract", () => {
     await expect(resolveSerpProvider()).rejects.toMatchObject({
       code: "FREE_SOURCES_ONLY",
     });
+  });
+});
+
+describe("SERP provider selection", () => {
+  function withEnv(values: Record<string, string>, freeOnly = false) {
+    mocks.getOptionalEnvValue.mockImplementation(
+      async (name: string) => values[name],
+    );
+    mocks.isFreeSourcesOnly.mockResolvedValue(freeOnly);
+  }
+
+  it("selects serpapi only when SERP_PROVIDER=serpapi and a key is present", async () => {
+    withEnv({ SERP_PROVIDER: "serpapi", SERPAPI_API_KEY: "k" }, true);
+    await expect(resolveSerpProvider()).resolves.toBe("serpapi");
+    await expect(isOpenSerpSelected()).resolves.toBe(true);
+  });
+
+  it("stays off without a key: free-sources mode refuses instead of calling DataForSEO", async () => {
+    withEnv({ SERP_PROVIDER: "serpapi" }, true);
+    await expect(resolveSerpProvider()).rejects.toMatchObject({
+      code: "FREE_SOURCES_ONLY",
+    });
+    await expect(isOpenSerpSelected()).resolves.toBe(false);
+  });
+
+  it("ignores a blank key", async () => {
+    withEnv({ SERP_PROVIDER: "serpapi", SERPAPI_API_KEY: "   " }, true);
+    await expect(isOpenSerpSelected()).resolves.toBe(false);
+  });
+
+  it("still selects openserp when enabled", async () => {
+    withEnv({ SERP_PROVIDER: "OpenSERP", OPENSERP_ENABLED: "true" }, true);
+    await expect(resolveSerpProvider()).resolves.toBe("openserp");
+  });
+
+  it("falls back to dataforseo only outside free-sources mode", async () => {
+    withEnv({ SERP_PROVIDER: "serpapi" }, false);
+    await expect(resolveSerpProvider()).resolves.toBe("dataforseo");
   });
 });

@@ -21,6 +21,7 @@ import {
   connectNavGroup,
   getProjectNavGroups,
 } from "@/client/navigation/items";
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
 import { ProjectSwitcher } from "@/client/features/projects/ProjectSwitcher";
 import {
   SamChatListSkeleton,
@@ -131,10 +132,11 @@ export function Sidebar({
   // Until a project is known, show the project nav as rows without links, so
   // the sidebar has its full shape from the first paint instead of growing
   // once projects load. The placeholder rows never render these links.
+  const freeSourcesOnly = useFreeSourcesOnly(ready);
   const navPlaceholder = projectId === null && projectPending;
   const navGroups =
     projectId !== null || navPlaceholder
-      ? getProjectNavGroups(projectId ?? "")
+      ? getProjectNavGroups(projectId ?? "", { freeSourcesOnly })
       : [connectNavGroup];
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();

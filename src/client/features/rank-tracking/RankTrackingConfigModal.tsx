@@ -1,3 +1,4 @@
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
 import { useId, useState } from "react";
 import { projectsQueryOptions } from "@/client/features/projects/projectQueries";
 import { useQuery } from "@tanstack/react-query";
@@ -153,6 +154,8 @@ function RankTrackingConfigModalContent({
   const countryId = useId();
   const isEdit = !!existingConfig;
   const [createdConfigId, setCreatedConfigId] = useState<string>();
+  // Keyword suggestions and city targeting rely on DataForSEO data.
+  const freeSourcesOnly = useFreeSourcesOnly();
   // An untouched edit leaves the stored run time alone; anything that changes
   // the schedule sends the time on screen so it is the one that gets saved.
   const [scheduleTimeEdited, setScheduleTimeEdited] = useState(false);
@@ -161,8 +164,14 @@ function RankTrackingConfigModalContent({
     projectId,
     existingConfig,
     onCreated: (configId) => {
-      setCreatedConfigId(configId);
       onConfigCreated?.();
+      // Free sources have no keyword suggestions: close and let the user add
+      // their own keywords from the table.
+      if (freeSourcesOnly) {
+        onSaved(configId);
+        return;
+      }
+      setCreatedConfigId(configId);
     },
     onUpdated: () => onSaved(),
   });
@@ -285,6 +294,7 @@ function RankTrackingConfigModalContent({
                 />
               </Field>
 
+              {freeSourcesOnly && !existingConfig?.locationName ? null : (
               <form.Field name="locationName">
                 {(field) => (
                   <SearchTargetingField
@@ -299,6 +309,7 @@ function RankTrackingConfigModalContent({
                   />
                 )}
               </form.Field>
+              )}
 
               <form.AppField name="languageCode">
                 {(field) => (

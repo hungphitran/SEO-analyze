@@ -42,6 +42,7 @@ const mocks = vi.hoisted(() => ({
         config: DueConfigRow;
         keywordsTotal: number;
         trigger: string;
+        sourceProvider?: string;
       }) => Promise<BeginResult>
     >(),
   customerHasPaidPlan: vi.fn<(organizationId: string) => Promise<boolean>>(),
@@ -394,6 +395,51 @@ describe("runScheduledRankChecks", () => {
 
     expect(mocks.customerHasPaidPlan).not.toHaveBeenCalled();
     expect(mocks.beginRankCheckRun).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs scheduled checks on SerpApi in free-sources mode and never on DataForSEO", async () => {
+    mocks.getOptionalEnvValue.mockImplementation(async (name) => {
+      if (name === "FREE_SOURCES_ONLY") return "true";
+      if (name === "SERP_PROVIDER") return "serpapi";
+      if (name === "SERPAPI_API_KEY") return "test-key";
+      return undefined;
+    });
+
+    await runScheduledRankChecks(testEnv);
+
+    expect(mocks.beginRankCheckRun).toHaveBeenCalledTimes(1);
+    expect(mocks.beginRankCheckRun.mock.calls[0][0].sourceProvider).toBe(
+      "serpapi",
+    );
+  });
+
+  it("skips the tick in free-sources mode when SerpApi is selected but has no key", async () => {
+    mocks.getOptionalEnvValue.mockImplementation(async (name) => {
+      if (name === "FREE_SOURCES_ONLY") return "true";
+      if (name === "SERP_PROVIDER") return "serpapi";
+      return undefined;
+    });
+
+    await runScheduledRankChecks(testEnv);
+
+    expect(mocks.getDueConfigsWithOrganization).not.toHaveBeenCalled();
+    expect(mocks.beginRankCheckRun).not.toHaveBeenCalled();
+  });
+
+  it("skips city-level configs for SerpApi (it only targets countries)", async () => {
+    mocks.getOptionalEnvValue.mockImplementation(async (name) => {
+      if (name === "FREE_SOURCES_ONLY") return "true";
+      if (name === "SERP_PROVIDER") return "serpapi";
+      if (name === "SERPAPI_API_KEY") return "test-key";
+      return undefined;
+    });
+    mocks.getDueConfigsWithOrganization.mockResolvedValue([
+      dueConfig({ locationName: "Hanoi" }),
+    ]);
+
+    await runScheduledRankChecks(testEnv);
+
+    expect(mocks.beginRankCheckRun).not.toHaveBeenCalled();
   });
 
   it("skips the tick in free-sources mode before listing due configs", async () => {

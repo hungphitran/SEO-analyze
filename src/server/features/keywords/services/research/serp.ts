@@ -1,3 +1,4 @@
+import type { RankSourceProvider } from "@/shared/rank-tracking";
 import { waitUntil } from "cloudflare:workers";
 import {
   SERP_ANALYSIS_DEPTH,
@@ -11,15 +12,13 @@ import { createDataforseoClient } from "@/server/lib/dataforseo";
 import { normalizeKeyword } from "./helpers";
 import { assertLocalResearchLocation } from "./local-volume";
 import {
-  assertOpenSerpReady,
-  getOpenSerpDailyRequestLimit,
   OpenSerpError,
   resolveSerpProvider,
-  searchOpenSerp,
   type OpenSerpSnapshot,
 } from "@/server/lib/openserp";
+import { searchFreeSerp, toSerpAppError } from "@/server/lib/free-serp";
+import { isFreeRankSource } from "@/shared/rank-tracking";
 import { getIsoCountryCode } from "@/shared/keyword-locations";
-import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 
 const SERP_CACHE_TTL_SECONDS = 12 * 60 * 60;
 
@@ -30,7 +29,7 @@ type SerpAnalysisResult = {
   items: SerpResultItem[];
   /** SERP depth this snapshot was crawled at — how deep the results go. */
   depth: number;
-  sourceProvider: "dataforseo" | "openserp";
+  sourceProvider: RankSourceProvider;
   fetchedAt: string;
   marketHint: string;
   reason?: SerpAnalysisReason;
@@ -58,7 +57,9 @@ const serpCacheSchema = z.object({
   // they're treated as the shallow floor: worst case a user re-buys a deeper
   // crawl once, rather than being shown 20 results as if they were 100.
   depth: z.number().int().default(SERP_ANALYSIS_DEPTH),
-  sourceProvider: z.enum(["dataforseo", "openserp"]).default("dataforseo"),
+  sourceProvider: z
+    .enum(["dataforseo", "openserp", "serpapi"])
+    .default("dataforseo"),
   fetchedAt: z.string().optional(),
   marketHint: z.string().default(""),
   reason: z.enum(["no_organic_results"]).optional(),
@@ -98,10 +99,12 @@ async function getSerpLiveAnalysis(
   const { depth } = input;
   const sourceProvider = await resolveSerpProvider();
   if (input.locationName) {
-    if (sourceProvider === "openserp") {
-      throw new OpenSerpError(
-        "unsupported_targeting",
-        "OpenSERP supports a market region hint, not city-level rank tracking.",
+    if (isFreeRankSource(sourceProvider)) {
+      throw toSerpAppError(
+        new OpenSerpError(
+          "unsupported_targeting",
+          "Free SERP providers support a market region hint, not city-level rank tracking.",
+        ),
       );
     } else {
       await assertLocalResearchLocation(input.locationCode, input.locationName);
@@ -133,25 +136,19 @@ async function getSerpLiveAnalysis(
   }
 
   let openSerpSnapshot: OpenSerpSnapshot | null = null;
-  if (sourceProvider === "openserp") {
-    await assertOpenSerpReady({ locationName: input.locationName });
-    const reserved = await RankTrackingRepository.reserveOpenSerpRequest(
-      input.projectId,
-      await getOpenSerpDailyRequestLimit(),
-    );
-    if (!reserved) {
-      throw new OpenSerpError(
-        "quota_exceeded",
-        "OpenSERP daily project request limit reached.",
-      );
+  if (isFreeRankSource(sourceProvider)) {
+    try {
+      openSerpSnapshot = await searchFreeSerp(sourceProvider, {
+        projectId: input.projectId,
+        keyword,
+        region: marketHint,
+        lang: input.languageCode,
+        limit: depth,
+        locationName: input.locationName,
+      });
+    } catch (error) {
+      throw toSerpAppError(error);
     }
-    openSerpSnapshot = await searchOpenSerp({
-      keyword,
-      region: marketHint,
-      lang: input.languageCode,
-      limit: depth,
-      locationName: input.locationName,
-    });
   }
   const fetchedAt = openSerpSnapshot?.fetchedAt ?? new Date().toISOString();
   const items = openSerpSnapshot
@@ -181,7 +178,12 @@ async function getSerpLiveAnalysis(
   const result: SerpAnalysisResult = {
     requestedKeyword: keyword,
     items,
-    depth,
+    // A free provider may return fewer rows than asked for (SerpApi: one page
+    // per search); store the depth actually fetched so a later deeper request
+    // is not answered as if it were complete.
+    depth: openSerpSnapshot
+      ? Math.min(depth, openSerpSnapshot.limitRequested)
+      : depth,
     sourceProvider,
     fetchedAt,
     marketHint,
@@ -204,7 +206,7 @@ async function getSerpLiveAnalysis(
     setCached(
       cacheKey,
       result,
-      sourceProvider === "openserp" ? 6 * 60 * 60 : SERP_CACHE_TTL_SECONDS,
+      isFreeRankSource(sourceProvider) ? 6 * 60 * 60 : SERP_CACHE_TTL_SECONDS,
     ).catch((error) => {
       console.error("keywords.serp.cache-write failed:", error);
     }),

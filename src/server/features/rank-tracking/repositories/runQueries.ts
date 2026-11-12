@@ -1,3 +1,4 @@
+import type { RankSourceProvider } from "@/shared/rank-tracking";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import type { InferInsertModel } from "drizzle-orm";
 import { db } from "@/db";
@@ -22,7 +23,7 @@ export async function tryCreateRun(data: {
   projectId: string;
   keywordsTotal: number;
   isSubsetRun?: boolean;
-  sourceProvider?: "dataforseo" | "openserp";
+  sourceProvider?: RankSourceProvider;
 }) {
   const inserted = await db
     .insert(rankCheckRuns)

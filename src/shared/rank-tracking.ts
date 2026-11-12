@@ -396,3 +396,13 @@ export function scheduleLabel(
 export function devicesCount(devices: RankTrackingConfig["devices"]): number {
   return devices === "both" ? 2 : 1;
 }
+
+/** Where a rank-check run's SERP data came from. */
+export type RankSourceProvider = "dataforseo" | "openserp" | "serpapi";
+
+/** OpenSERP and SerpApi are the free SERP sources; DataForSEO is the paid one. */
+export function isFreeRankSource(
+  provider: RankSourceProvider | null | undefined,
+): provider is "openserp" | "serpapi" {
+  return provider === "openserp" || provider === "serpapi";
+}

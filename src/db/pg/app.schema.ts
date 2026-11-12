@@ -330,7 +330,7 @@ export const rankCheckRuns = pgTable(
       .notNull()
       .default("pending"),
     sourceProvider: text("source_provider", {
-      enum: ["dataforseo", "openserp"],
+      enum: ["dataforseo", "openserp", "serpapi"],
     }),
     keywordsTotal: integer("keywords_total").notNull().default(0),
     keywordsChecked: integer("keywords_checked").notNull().default(0),
@@ -418,6 +418,7 @@ export const openSerpSnapshots = pgTable(
         "invalid_response",
         "no_results_unverified",
         "quota_exceeded",
+        "invalid_input",
       ],
     })
       .notNull()

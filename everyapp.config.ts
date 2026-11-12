@@ -139,6 +139,26 @@ export default {
       optional: true,
       why: "Bearer token for an operator-managed authenticated OpenSERP proxy.",
     },
+    {
+      name: "SERPAPI_API_KEY",
+      optional: true,
+      why: "SerpApi key for SERP_PROVIDER=serpapi (free plan: 250 searches/month, 50/hour). Server-only.",
+    },
+    {
+      name: "SERPAPI_MAX_KEYWORDS_PER_DAY",
+      optional: true,
+      why: "Maximum SerpApi searches per project per UTC day (1–250; default 8).",
+    },
+    {
+      name: "SERPAPI_MAX_SEARCHES_PER_MONTH",
+      optional: true,
+      why: "Account-wide SerpApi searches per UTC month (default 250, the free plan).",
+    },
+    {
+      name: "SERPAPI_MAX_SEARCHES_PER_HOUR",
+      optional: true,
+      why: "Account-wide SerpApi searches per UTC hour (default 50, the free plan).",
+    },
   ],
   // Both Workers, from cloudflare.config.ts and vite-plugin-every-app.ts.
   build: "pnpm build:report-widgets && AUTH_MODE=everyapp pnpm exec vite build",

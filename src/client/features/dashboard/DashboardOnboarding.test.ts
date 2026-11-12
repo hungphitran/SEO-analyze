@@ -10,6 +10,9 @@ import { t } from "@/shared/i18n";
 vi.mock("@/serverFunctions/dashboard", () => ({
   setDashboardStepDismissed: vi.fn(),
 }));
+vi.mock("@/serverFunctions/config", () => ({
+  getSeoApiKeyStatus: vi.fn(),
+}));
 vi.mock("./DashboardSetupAction", () => ({
   DashboardSetupAction: () => createElement("div", null, "Connection setup"),
 }));
@@ -27,11 +30,16 @@ const fresh: DashboardActivation = {
   dismissedSteps: [],
 };
 
-function renderChecklist(activation = fresh) {
+function renderChecklist(
+  activation = fresh,
+  status?: { configured: boolean; freeSourcesOnly: boolean },
+) {
+  const client = new QueryClient();
+  if (status) client.setQueryData(["seoApiKeyStatus"], status);
   return renderToStaticMarkup(
     createElement(
       QueryClientProvider,
-      { client: new QueryClient() },
+      { client },
       createElement(DashboardOnboarding, {
         projectId: "project-a",
         activation,
@@ -60,6 +68,38 @@ describe("dashboard onboarding visibility", () => {
         hasTeammate: true,
         hasMultipleProjects: true,
       }),
+    ).toBe("");
+  });
+
+  it("hides the DataForSEO-only steps when FREE_SOURCES_ONLY is on", () => {
+    const free = renderChecklist(fresh, {
+      configured: false,
+      freeSourcesOnly: true,
+    });
+    expect(free).not.toContain(t("dashboard.exploreCompetitorTitle"));
+    expect(free).not.toContain(t("dashboard.getKeywordIdeas"));
+    expect(free).toContain(t("dashboard.auditYourSite"));
+
+    const paid = renderChecklist(fresh, {
+      configured: true,
+      freeSourcesOnly: false,
+    });
+    expect(paid).toContain(t("dashboard.exploreCompetitorTitle"));
+    expect(paid).toContain(t("dashboard.getKeywordIdeas"));
+  });
+
+  it("is complete in free mode without the hidden steps", () => {
+    expect(
+      renderChecklist(
+        {
+          ...fresh,
+          hasAudit: true,
+          mcp: { ...fresh.mcp, authorizedAt: "2026-09-28" },
+          hasTeammate: true,
+          hasMultipleProjects: true,
+        },
+        { configured: false, freeSourcesOnly: true },
+      ),
     ).toBe("");
   });
 });

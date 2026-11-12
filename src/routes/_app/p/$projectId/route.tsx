@@ -2,10 +2,16 @@ import {
   Outlet,
   createFileRoute,
   useMatch,
+  useLocation,
   useNavigate,
 } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { toast } from "sonner";
+import { Spinner } from "@/client/components/Spinner";
+import { useFreeSourcesStatus } from "@/client/lib/free-sources-mode";
+import { getProjectRouteGate } from "@/shared/free-sources-visibility";
+import { t } from "@/shared/i18n";
 import {
   clearLastProjectId,
   getLastProjectId,
@@ -82,6 +88,37 @@ function ProjectLayout() {
     if (!hasAccess || isSettingsPage) return;
     setLastProjectId(projectId);
   }, [projectId, hasAccess, isSettingsPage]);
+
+  // FREE_SOURCES_ONLY: DataForSEO-only pages are hidden. A direct visit (old
+  // bookmark, typed URL) lands on the dashboard with a short explanation
+  // instead of a page that can only fail. Nothing renders until the mode is
+  // known, so a hidden page never fires its data calls first.
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const modeStatus = useFreeSourcesStatus();
+  const gate = getProjectRouteGate({
+    pathname,
+    freeSourcesOnly: modeStatus.freeSourcesOnly,
+    statusPending: modeStatus.pending,
+  });
+  const hidden = gate === "redirect";
+  useEffect(() => {
+    if (!hidden) return;
+    toast.info(t("freeSources.featureHidden"));
+    void navigate({
+      to: "/p/$projectId",
+      params: { projectId },
+      search: {},
+      replace: true,
+    });
+  }, [hidden, navigate, projectId]);
+  if (gate !== "render") {
+    return (
+      <div className="flex min-h-40 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return <Outlet />;
 }

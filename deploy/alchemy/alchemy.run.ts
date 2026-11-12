@@ -309,12 +309,23 @@ const dataEnv = {
   FREE_SOURCES_ONLY: optionalVar("FREE_SOURCES_ONLY"),
   LIGHTHOUSE_PROVIDER: optionalVar("LIGHTHOUSE_PROVIDER"),
   PAGESPEED_API_KEY: optionalSecret("PAGESPEED_API_KEY"),
+  // Optional real-user Core Web Vitals (CrUX; falls back to PAGESPEED_API_KEY)
+  // and domain authority (Open PageRank). Empty = feature hidden.
+  CRUX_API_KEY: optionalSecret("CRUX_API_KEY"),
+  OPEN_PAGERANK_API_KEY: optionalSecret("OPEN_PAGERANK_API_KEY"),
   SERP_PROVIDER: optionalVar("SERP_PROVIDER"),
   OPENSERP_ENABLED: optionalVar("OPENSERP_ENABLED"),
   OPENSERP_URL: optionalVar("OPENSERP_URL"),
   OPENSERP_TIMEOUT_MS: optionalVar("OPENSERP_TIMEOUT_MS"),
   OPENSERP_MAX_KEYWORDS_PER_DAY: optionalVar("OPENSERP_MAX_KEYWORDS_PER_DAY"),
   OPENSERP_AUTH_TOKEN: optionalSecret("OPENSERP_AUTH_TOKEN"),
+  // SerpApi (SERP_PROVIDER=serpapi). Free plan: 250 searches/month, 50/hour.
+  SERPAPI_API_KEY: optionalSecret("SERPAPI_API_KEY"),
+  SERPAPI_MAX_KEYWORDS_PER_DAY: optionalVar("SERPAPI_MAX_KEYWORDS_PER_DAY"),
+  SERPAPI_MAX_SEARCHES_PER_MONTH: optionalVar("SERPAPI_MAX_SEARCHES_PER_MONTH"),
+  SERPAPI_MAX_SEARCHES_PER_HOUR: optionalVar("SERPAPI_MAX_SEARCHES_PER_HOUR"),
+  SERPAPI_PAGES_PER_KEYWORD: optionalVar("SERPAPI_PAGES_PER_KEYWORD"),
+  SERPAPI_TIMEOUT_MS: optionalVar("SERPAPI_TIMEOUT_MS"),
 };
 
 export default Alchemy.Stack(

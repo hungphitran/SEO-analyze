@@ -39,6 +39,7 @@ import {
 } from "@/types/schemas/search-performance";
 import { saveKeywords } from "@/serverFunctions/keywords";
 import { t } from "@/shared/i18n";
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
 
 export type ExportTarget = "csv" | "sheets";
 
@@ -292,6 +293,8 @@ export function StrikingDistanceTable({
     }
   };
 
+  // The saved-keywords list is a DataForSEO-only page, hidden in free mode.
+  const freeSourcesOnly = useFreeSourcesOnly();
   const save = useMutation({
     mutationFn: (keywords: string[]) =>
       saveKeywords({ data: { projectId, keywords } }),
@@ -367,6 +370,7 @@ export function StrikingDistanceTable({
             >
               {t("ui.copyKeywords")}
             </TableBulkActionButton>
+            {freeSourcesOnly ? null : (
             <TableBulkActionButton
               icon={
                 save.isPending ? (
@@ -380,6 +384,7 @@ export function StrikingDistanceTable({
             >
               {t("ui.saveAsKeywords")}
             </TableBulkActionButton>
+            )}
           </div>
         }
       />

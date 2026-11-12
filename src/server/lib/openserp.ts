@@ -4,6 +4,7 @@ import { getDomain as tldtsGetDomain } from "tldts";
 import { isFreeSourcesOnly } from "@/server/lib/free-sources/mode";
 import { getOptionalEnvValue } from "@/server/lib/runtime-env";
 import { AppError } from "@/server/lib/errors";
+import type { RankSourceProvider } from "@/shared/rank-tracking";
 
 const OPEN_SERP_MAX_RESPONSE_BYTES = 2_000_000;
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -50,7 +51,8 @@ export type OpenSerpErrorCode =
   | "upstream_error"
   | "invalid_response"
   | "no_results_unverified"
-  | "quota_exceeded";
+  | "quota_exceeded"
+  | "invalid_input";
 
 export class OpenSerpError extends Error {
   constructor(
@@ -79,7 +81,7 @@ export interface OpenSerpHit {
 }
 
 export interface OpenSerpSnapshot {
-  provider: "openserp";
+  provider: "openserp" | "serpapi";
   keyword: string;
   region: string;
   lang: string;
@@ -97,32 +99,46 @@ type OpenSerpConfig = {
   authToken?: string;
 };
 
-export async function resolveSerpProvider(): Promise<
-  "dataforseo" | "openserp"
+export type SerpSourceProvider = RankSourceProvider;
+
+/**
+ * Which free SERP provider the operator selected, or null. SerpApi needs
+ * only SERP_PROVIDER=serpapi plus SERPAPI_API_KEY; with no key it stays off
+ * (never a half-configured provider). OpenSERP also needs OPENSERP_ENABLED.
+ */
+async function selectedFreeSerpProvider(): Promise<
+  "openserp" | "serpapi" | null
 > {
-  const [provider, enabled, freeOnly] = await Promise.all([
+  const [provider, enabled, serpApiKey] = await Promise.all([
     getOptionalEnvValue("SERP_PROVIDER"),
     getOptionalEnvValue("OPENSERP_ENABLED"),
-    isFreeSourcesOnly(),
+    getOptionalEnvValue("SERPAPI_API_KEY"),
   ]);
-  if (provider?.trim().toLowerCase() === "openserp" && enabled === "true") {
-    return "openserp";
-  }
-  if (freeOnly) {
+  const name = provider?.trim().toLowerCase();
+  if (name === "openserp" && enabled === "true") return "openserp";
+  if (name === "serpapi" && serpApiKey?.trim()) return "serpapi";
+  return null;
+}
+
+export async function resolveSerpProvider(): Promise<SerpSourceProvider> {
+  const selected = await selectedFreeSerpProvider();
+  if (selected) return selected;
+  if (await isFreeSourcesOnly()) {
     throw new AppError(
       "FREE_SOURCES_ONLY",
-      "Set SERP_PROVIDER=openserp and OPENSERP_ENABLED=true to use OpenSERP in free-sources mode.",
+      "Set SERP_PROVIDER=openserp and OPENSERP_ENABLED=true, or SERP_PROVIDER=serpapi and SERPAPI_API_KEY, to get SERP data in free-sources mode.",
     );
   }
   return "dataforseo";
 }
 
+/**
+ * True when any free SERP provider (OpenSERP or SerpApi) is selected and
+ * usable. The name is kept for the many callers that only need "free SERP
+ * path on".
+ */
 export async function isOpenSerpSelected(): Promise<boolean> {
-  const [provider, enabled] = await Promise.all([
-    getOptionalEnvValue("SERP_PROVIDER"),
-    getOptionalEnvValue("OPENSERP_ENABLED"),
-  ]);
-  return provider?.trim().toLowerCase() === "openserp" && enabled === "true";
+  return (await selectedFreeSerpProvider()) !== null;
 }
 
 export async function getOpenSerpDailyRequestLimit(): Promise<number> {

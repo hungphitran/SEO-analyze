@@ -4,14 +4,9 @@ import {
   createDataforseoClient,
   SERP_ANALYSIS_DEPTH,
 } from "@/server/lib/dataforseo";
-import {
-  assertOpenSerpReady,
-  getOpenSerpDailyRequestLimit,
-  OpenSerpError,
-  resolveSerpProvider,
-  searchOpenSerp,
-} from "@/server/lib/openserp";
-import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
+import { resolveSerpProvider } from "@/server/lib/openserp";
+import { searchFreeSerp } from "@/server/lib/free-serp";
+import { isFreeRankSource } from "@/shared/rank-tracking";
 import { buildCacheKey, getCached, setCached } from "@/server/lib/r2-cache";
 import { mcpResponse } from "@/server/mcp/formatters";
 import { buildProjectMeta } from "@/server/mcp/context";
@@ -173,36 +168,23 @@ export const getSerpResultsTool = {
               fetchedAt: Array.isArray(cached.data)
                 ? undefined
                 : cached.data.fetchedAt,
-              ...(sourceProvider === "openserp"
+              ...(isFreeRankSource(sourceProvider)
                 ? { marketHint: getIsoCountryCode(market.locationCode) }
                 : {}),
               ...scope,
             };
           }
 
-          if (sourceProvider === "openserp" && q.device === "mobile") {
+          if (isFreeRankSource(sourceProvider) && q.device === "mobile") {
             throw new Error(
-              "OpenSERP does not provide device-specific search results.",
+              "Free SERP providers (OpenSERP, SerpApi) do not provide device-specific search results.",
             );
-          }
-          if (sourceProvider === "openserp") {
-            await assertOpenSerpReady({ locationName: q.locationName });
-            const reserved =
-              await RankTrackingRepository.reserveOpenSerpRequest(
-                args.projectId,
-                await getOpenSerpDailyRequestLimit(),
-              );
-            if (!reserved) {
-              throw new OpenSerpError(
-                "quota_exceeded",
-                "OpenSERP daily project request limit reached.",
-              );
-            }
           }
           let fetchedAt: string;
           let trimmed: SerpItem[];
-          if (sourceProvider === "openserp") {
-            const snapshot = await searchOpenSerp({
+          if (isFreeRankSource(sourceProvider)) {
+            const snapshot = await searchFreeSerp(sourceProvider, {
+              projectId: args.projectId,
               keyword: q.keyword,
               region: getIsoCountryCode(market.locationCode),
               lang: market.languageCode,
@@ -250,7 +232,7 @@ export const getSerpResultsTool = {
               setCached(
                 cacheKey,
                 { items: trimmed, fetchedAt },
-                sourceProvider === "openserp"
+                isFreeRankSource(sourceProvider)
                   ? OPEN_SERP_RESULTS_CACHE_TTL_SECONDS
                   : SERP_RESULTS_CACHE_TTL_SECONDS,
               ).catch((error) => {
@@ -264,7 +246,7 @@ export const getSerpResultsTool = {
             items: trimmed,
             fetchedAt,
             marketHint:
-              sourceProvider === "openserp"
+              isFreeRankSource(sourceProvider)
                 ? getIsoCountryCode(market.locationCode)
                 : undefined,
             ...scope,

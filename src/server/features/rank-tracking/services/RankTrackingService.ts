@@ -1,3 +1,4 @@
+import { isFreeRankSource } from "@/shared/rank-tracking";
 import { env } from "cloudflare:workers";
 import {
   customerHasPaidPlan,
@@ -226,10 +227,10 @@ async function triggerCheck(input: {
   const config = await getValidatedConfig(input.configId, input.projectId);
   await requireRankCheckAccess(input.billingCustomer.organizationId);
   const sourceProvider = await resolveSerpProvider();
-  if (sourceProvider === "openserp" && config.locationName) {
+  if (isFreeRankSource(sourceProvider) && config.locationName) {
     throw new AppError(
       "VALIDATION_ERROR",
-      "OpenSERP does not support city-level rank tracking.",
+      "Free SERP providers (OpenSERP, SerpApi) do not support city-level rank tracking.",
     );
   }
 

@@ -1,3 +1,4 @@
+import { isFreeRankSource } from "@/shared/rank-tracking";
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 import { beginRankCheckRun } from "@/server/features/rank-tracking/services/rankCheckRunGuards";
 import { customerHasPaidPlan } from "@/server/billing/subscription";
@@ -50,7 +51,7 @@ export async function runScheduledRankChecks(env: Env) {
   }
   const sourceProvider = await resolveSerpProvider();
   const taskUnitBudget =
-    sourceProvider === "openserp"
+    isFreeRankSource(sourceProvider)
       ? OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET
       : SCHEDULED_TASK_UNIT_BUDGET;
   const nowIso = new Date().toISOString();
@@ -109,10 +110,10 @@ export async function runScheduledRankChecks(env: Env) {
 
       const kwCount = keywordCounts.get(config.id) ?? 0;
       const taskUnits =
-        sourceProvider === "openserp"
+        isFreeRankSource(sourceProvider)
           ? Math.min(kwCount, OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET)
           : kwCount * devicesCount(config.devices);
-      if (sourceProvider === "openserp" && config.locationName) {
+      if (isFreeRankSource(sourceProvider) && config.locationName) {
         const claimed = await RankTrackingRepository.claimDueConfig({
           configId: config.id,
           projectId: config.projectId,
@@ -128,7 +129,7 @@ export async function runScheduledRankChecks(env: Env) {
       // tick is exempt so an oversized config can never starve, and zero-unit
       // rows (no keywords) always advance.
       if (
-        (sourceProvider === "openserp" && started > 0 && kwCount > 0) ||
+        (isFreeRankSource(sourceProvider) && started > 0 && kwCount > 0) ||
         (started > 0 && unitsStarted + taskUnits > taskUnitBudget)
       ) {
         stoppedByBudget = true;

@@ -1,12 +1,14 @@
 import type { WorkflowStep } from "cloudflare:workers";
 import { getIsoCountryCode } from "@/shared/keyword-locations";
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
+import { OpenSerpError } from "@/server/lib/openserp";
 import {
-  assertOpenSerpReady,
-  getOpenSerpDailyRequestLimit,
-  OpenSerpError,
-  searchOpenSerp,
-} from "@/server/lib/openserp";
+  freeSerpProviderLabel,
+  hostnameMatchesTarget,
+  normalizeRankTargetDomain,
+  searchFreeSerp,
+  type FreeSerpProvider,
+} from "@/server/lib/free-serp";
 import { pgStep } from "@/server/workflows/pgStep";
 
 const OPEN_SERP_STEP_CONFIG = {
@@ -18,6 +20,7 @@ export async function runOpenSerpRankCheck(
   step: WorkflowStep,
   input: {
     runId: string;
+    sourceProvider?: FreeSerpProvider;
     projectId: string;
     configId: string;
     domain: string;
@@ -28,6 +31,8 @@ export async function runOpenSerpRankCheck(
     keywords: Array<{ id: string; keyword: string }>;
   },
 ) {
+  const provider = input.sourceProvider ?? "openserp";
+  const label = freeSerpProviderLabel(provider);
   let keywordsChecked = 0;
   for (const [index, keyword] of input.keywords.entries()) {
     const outcome = await pgStep(
@@ -36,19 +41,20 @@ export async function runOpenSerpRankCheck(
       OPEN_SERP_STEP_CONFIG,
       async () => {
         let snapshot;
+        const targetDomain = normalizeRankTargetDomain(input.domain);
+        if (!targetDomain) {
+          // Refuse before spending quota: an unusable domain can only produce
+          // a wrong "not ranked".
+          return {
+            ok: false as const,
+            code: "invalid_input" as const,
+            requestId: undefined,
+            message: `Tracked domain is invalid; no rank was recorded.`,
+          };
+        }
         try {
-          await assertOpenSerpReady({ locationName: input.locationName });
-          const reserved = await RankTrackingRepository.reserveOpenSerpRequest(
-            input.projectId,
-            await getOpenSerpDailyRequestLimit(),
-          );
-          if (!reserved) {
-            throw new OpenSerpError(
-              "quota_exceeded",
-              "OpenSERP daily project request limit reached; no rank was recorded.",
-            );
-          }
-          snapshot = await searchOpenSerp({
+          snapshot = await searchFreeSerp(provider, {
+            projectId: input.projectId,
             keyword: keyword.keyword,
             region: getIsoCountryCode(input.locationCode),
             lang: input.languageCode,
@@ -67,15 +73,14 @@ export async function runOpenSerpRankCheck(
             message:
               error instanceof OpenSerpError
                 ? error.message
-                : "OpenSERP rank check failed; no rank was recorded.",
+                : `${label} rank check failed; no rank was recorded.`,
           };
         }
 
-        const targetDomain = normalizeTargetDomain(input.domain);
-        const match = snapshot.results.find(
-          (result) =>
-            result.hostname === targetDomain ||
-            result.hostname.endsWith(`.${targetDomain}`),
+        // Position stays null ("not ranked in the fetched results") when the
+        // domain is absent; it is never 0 or a guess.
+        const match = snapshot.results.find((result) =>
+          hostnameMatchesTarget(result.hostname, targetDomain),
         );
         await RankTrackingRepository.insertOpenSerpSnapshot({
           id: `${input.runId}:${keyword.id}`,
@@ -113,7 +118,7 @@ export async function runOpenSerpRankCheck(
     }
 
     console.warn(
-      `[rank-check] ${input.runId} OpenSERP request failed (${outcome.code})`,
+      `[rank-check] ${input.runId} ${label} request failed (${outcome.code})`,
     );
     await pgStep(
       step,
@@ -143,13 +148,13 @@ export async function runOpenSerpRankCheck(
         return true;
       },
     );
-    if (outcome.code === "quota_exceeded") break;
+    // Out of quota (or SerpApi throughput): stop instead of burning every
+    // remaining keyword on a request that will be refused.
+    if (
+      outcome.code === "quota_exceeded" ||
+      (provider === "serpapi" && outcome.code === "rate_limited")
+    ) {
+      break;
+    }
   }
-}
-
-function normalizeTargetDomain(domain: string) {
-  return domain
-    .toLowerCase()
-    .replace(/^www\./, "")
-    .replace(/\.$/, "");
 }
