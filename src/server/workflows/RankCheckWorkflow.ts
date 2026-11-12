@@ -30,7 +30,8 @@ import {
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import { isErrorCode } from "@/shared/error-codes";
 import { runOpenSerpRankCheck } from "@/server/workflows/openSerpRankCheck";
-import { getOpenSerpDailyRequestLimit } from "@/server/lib/openserp";
+import { getFreeSerpDailyLimit } from "@/server/lib/free-serp";
+import { isFreeRankSource, type RankSourceProvider } from "@/shared/rank-tracking";
 
 // These steps cost nothing and are safe to repeat: they touch our own rows,
 // prepare's Autumn calls only read balances, and its credits email is sent
@@ -53,7 +54,7 @@ interface RankCheckParams {
   devices: "both" | "desktop" | "mobile";
   serpDepth: number;
   trigger: "manual" | "scheduled";
-  sourceProvider: "dataforseo" | "openserp";
+  sourceProvider: RankSourceProvider;
   keywordIds?: string[];
   maxCostCredits?: number;
 }
@@ -93,8 +94,8 @@ async function prepareRankCheckKeywords(input: {
   }
 
   let isSubsetRun = (input.keywordIds?.length ?? 0) > 0;
-  if (input.sourceProvider === "openserp") {
-    const dailyLimit = await getOpenSerpDailyRequestLimit();
+  if (isFreeRankSource(input.sourceProvider)) {
+    const dailyLimit = await getFreeSerpDailyLimit(input.sourceProvider);
     if (input.keywordIds?.length) {
       trackingKeywords = trackingKeywords.slice(0, dailyLimit);
     } else {
@@ -398,9 +399,10 @@ export class RankCheckWorkflow extends WorkflowEntrypoint<
       let batchError: string | null = null;
 
       try {
-        if (sourceProvider === "openserp") {
+        if (isFreeRankSource(sourceProvider)) {
           await runOpenSerpRankCheck(step, {
             runId,
+            sourceProvider,
             projectId,
             configId,
             domain,
@@ -447,7 +449,7 @@ export class RankCheckWorkflow extends WorkflowEntrypoint<
           projectId,
           billingCustomer,
           trigger,
-          devices: sourceProvider === "openserp" ? "desktop" : devices,
+          devices: isFreeRankSource(sourceProvider) ? "desktop" : devices,
           batchError,
         }),
       );

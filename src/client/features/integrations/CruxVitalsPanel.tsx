@@ -121,6 +121,23 @@ function trendFor(trend: CruxTrend | null, key: CruxMetricKey) {
   return trend?.metrics[key]?.p75s ?? null;
 }
 
+function cruxErrorMessage(
+  result: Extract<CruxTargetResult, { status: "error" }>,
+): string {
+  switch (result.kind) {
+    case "rate_limited":
+      return t("crux.err.rate_limited");
+    case "timeout":
+      return t("crux.err.timeout");
+    case "invalid_response":
+      return t("crux.err.invalid_response");
+    case "invalid_request":
+      return t("crux.err.invalid_request");
+    default:
+      return t("crux.err.unavailable");
+  }
+}
+
 function TargetTable({ result }: { result: CruxTargetResult }) {
   if (result.status === "no_data") {
     return (
@@ -134,7 +151,7 @@ function TargetTable({ result }: { result: CruxTargetResult }) {
       <p className="text-muted-foreground">
         {t("crux.targetError", {
           target: result.target,
-          message: result.message,
+          message: cruxErrorMessage(result),
         })}
       </p>
     );

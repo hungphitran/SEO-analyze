@@ -1,3 +1,4 @@
+import { isFreeRankSource } from "@/shared/rank-tracking";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -109,10 +110,11 @@ export function RankTrackingDomainDetail({
     queryFn: () =>
       estimateRankCheckCost({ data: { projectId, configId: config.id } }),
   });
-  const isDeviceIndependent =
-    (costEstimate?.sourceProvider ??
+  const isDeviceIndependent = isFreeRankSource(
+    costEstimate?.sourceProvider ??
       latestRun?.sourceProvider ??
-      resultsData?.run?.sourceProvider) === "openserp";
+      resultsData?.run?.sourceProvider,
+  );
   // OpenSERP does not return device-specific rankings. Its observations use
   // the existing desktop storage slot only for compatibility.
   const activeDevice = resolveActiveDevice(

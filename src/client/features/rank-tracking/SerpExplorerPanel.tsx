@@ -1,3 +1,4 @@
+import { isFreeRankSource } from "@/shared/rank-tracking";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -79,10 +80,12 @@ export function SerpExplorerPanel({
         {query.data ? (
           <>
             <p className="text-xs text-muted-foreground">
-              {query.data.sourceProvider === "openserp"
-                ? "OpenSERP"
-                : "DataForSEO"}
-              {query.data.sourceProvider === "openserp"
+              {query.data.sourceProvider === "serpapi"
+                ? "SerpApi"
+                : query.data.sourceProvider === "openserp"
+                  ? "OpenSERP"
+                  : "DataForSEO"}
+              {isFreeRankSource(query.data.sourceProvider)
                 ? ` · ${t("rank.marketHint")}: ${query.data.marketHint}`
                 : ""}
               {" · "}

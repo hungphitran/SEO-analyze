@@ -1,3 +1,4 @@
+import { isFreeRankSource } from "@/shared/rank-tracking";
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 import type { rankTrackingKeywords } from "@/db/schema";
 import { AppError } from "@/server/lib/errors";
@@ -158,7 +159,7 @@ async function estimateCost(
   const keywordCount = keywords.length;
   const sourceProvider = await resolveSerpProvider();
   const { costUsd, costCredits } =
-    sourceProvider === "openserp"
+    isFreeRankSource(sourceProvider)
       ? { costUsd: 0, costCredits: 0 }
       : estimateRankCheckCredits(
           keywords,
@@ -177,10 +178,10 @@ async function estimateCost(
     sourceProvider,
     keywordCount,
     devicesCount:
-      sourceProvider === "openserp" ? 1 : devicesCount(config.devices),
+      isFreeRankSource(sourceProvider) ? 1 : devicesCount(config.devices),
     totalChecks:
       keywordCount *
-      (sourceProvider === "openserp" ? 1 : devicesCount(config.devices)),
+      (isFreeRankSource(sourceProvider) ? 1 : devicesCount(config.devices)),
     method: "live" as const,
     existingKeywordCount,
     additionalKeywordCount: keywordCount - existingKeywordCount,

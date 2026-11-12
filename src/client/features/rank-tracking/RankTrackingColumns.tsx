@@ -17,6 +17,7 @@ import {
 } from "./RankTrackingTableParts";
 import type { SelectionAnchor } from "@/client/components/table/tableSelection";
 import { t } from "@/shared/i18n";
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
 
 export const RANK_TRACKING_HEADER_CLASS =
   "text-xs uppercase tracking-wide text-muted-foreground";
@@ -268,6 +269,8 @@ export function useRankTrackingColumns(options: {
   const locationLabel = locationName
     ? formatLocationLabel(locationName, 2)
     : undefined;
+  // Volume, difficulty and CPC come from DataForSEO; free sources have none.
+  const freeSourcesOnly = useFreeSourcesOnly();
   return useMemo(() => {
     const cols: ColumnDef<RankTrackingRow>[] = [
       pinnedColumn,
@@ -282,7 +285,9 @@ export function useRankTrackingColumns(options: {
       cols.push(makeDeviceColumn("mobile"));
       cols.push(makeUrlColumn("mobile", domain));
     }
-    cols.push(makeVolumeColumn(locationLabel), kdColumn, cpcColumn);
+    if (!freeSourcesOnly) {
+      cols.push(makeVolumeColumn(locationLabel), kdColumn, cpcColumn);
+    }
     if (showDesktop) {
       cols.push(makeSerpColumn("desktop"));
     }
@@ -298,5 +303,6 @@ export function useRankTrackingColumns(options: {
     onKeywordClick,
     onSetPinned,
     locationLabel,
+    freeSourcesOnly,
   ]);
 }

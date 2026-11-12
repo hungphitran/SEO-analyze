@@ -1,3 +1,4 @@
+import type { RankSourceProvider } from "@/shared/rank-tracking";
 import { env } from "cloudflare:workers";
 import type { BillingCustomerContext } from "@/server/billing/subscription";
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
@@ -144,7 +145,7 @@ export async function beginRankCheckRun(input: {
   projectId: string;
   billingCustomer: BillingCustomerContext;
   keywordsTotal: number;
-  sourceProvider: "dataforseo" | "openserp";
+  sourceProvider: RankSourceProvider;
   keywordIds?: string[];
   maxCostCredits?: number;
   trigger: "manual" | "scheduled";

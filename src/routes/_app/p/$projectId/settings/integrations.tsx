@@ -1,6 +1,7 @@
 import { queryClient } from "@/client/tanstack-db/queryClient";
 import { googleConnectionOptions } from "@/client/features/integrations/googleProviders";
 import { createFileRoute } from "@tanstack/react-router";
+import { BingWebmasterCard } from "@/client/features/integrations/BingWebmasterCard";
 import { FreeSourcesCard } from "@/client/features/integrations/FreeSourcesCard";
 import { GoogleConnectionCard } from "@/client/features/integrations/GoogleConnectionCard";
 import { CrawlerAccessSettings } from "@/client/features/settings/CrawlerAccessSettings";
@@ -39,6 +40,10 @@ function ProjectIntegrationsRoute() {
 
       <section id="owned-site-sources" className="scroll-mt-6">
         <FreeSourcesCard projectId={projectId} />
+      </section>
+
+      <section id="bing-webmaster" className="scroll-mt-6">
+        <BingWebmasterCard projectId={projectId} />
       </section>
 
       <IndexNowSettings projectId={projectId} />

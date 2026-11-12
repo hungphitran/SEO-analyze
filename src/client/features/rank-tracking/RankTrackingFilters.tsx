@@ -1,3 +1,4 @@
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
 import { useId } from "react";
 import { RotateCcw } from "lucide-react";
 import { Badge } from "@/client/components/ui/badge";
@@ -37,6 +38,7 @@ export function FilterPanel({
   onReset: () => void;
 }) {
   const id = useId();
+  const freeSourcesOnly = useFreeSourcesOnly();
   const update = (key: keyof Filters, value: string) =>
     setDraft({ ...draft, [key]: value });
 
@@ -99,6 +101,7 @@ export function FilterPanel({
           onMaxChange={(v) => update("maxMobilePos", v)}
         />
       </div>
+      {freeSourcesOnly ? null : (
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <RangeFilter
           title={t("kw.volume")}
@@ -122,6 +125,7 @@ export function FilterPanel({
           onMaxChange={(v) => update("maxCpc", v)}
         />
       </div>
+      )}
     </div>
   );
 }

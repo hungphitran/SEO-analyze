@@ -218,3 +218,124 @@ export async function getOpenSerpResultsForSnapshots(snapshotIds: string[]) {
   }
   return rows;
 }
+
+export interface SerpApiLimits {
+  daily: number;
+  monthly: number;
+  hourly: number;
+}
+
+export type SerpApiReservation =
+  | { ok: true; keys: { day: string; month: string; hour: string } }
+  | { ok: false; reason: "daily" | "monthly" | "hourly" };
+
+function serpApiUsageKeys(now: Date) {
+  const iso = now.toISOString();
+  return {
+    day: `serpapi:d:${iso.slice(0, 10)}`,
+    month: `serpapi:m:${iso.slice(0, 7)}`,
+    hour: `serpapi:h:${iso.slice(0, 13)}`,
+  };
+}
+
+async function sumUsageForKey(usageDate: string) {
+  const [row] = await db
+    .select({ total: sql<number>`coalesce(sum(${openSerpUsage.requests}), 0)` })
+    .from(openSerpUsage)
+    .where(eq(openSerpUsage.usageDate, usageDate));
+  return Number(row?.total ?? 0);
+}
+
+async function bumpUsage(projectId: string, usageDate: string, delta: 1 | -1) {
+  if (delta === 1) {
+    await db
+      .insert(openSerpUsage)
+      .values({ projectId, usageDate, requests: 1 })
+      .onConflictDoUpdate({
+        target: [openSerpUsage.projectId, openSerpUsage.usageDate],
+        set: { requests: sql`${openSerpUsage.requests} + 1` },
+      });
+    return;
+  }
+  await db
+    .update(openSerpUsage)
+    .set({ requests: sql`${openSerpUsage.requests} - 1` })
+    .where(
+      and(
+        eq(openSerpUsage.projectId, projectId),
+        eq(openSerpUsage.usageDate, usageDate),
+        sql`${openSerpUsage.requests} > 0`,
+      ),
+    );
+}
+
+/**
+ * Reserve one SerpApi search. The hourly and monthly limits belong to the
+ * SerpApi account, so they are summed across projects; the daily limit is per
+ * project. Counters live in open_serp_usage under prefixed usage_date keys
+ * (serpapi:d:/m:/h:), so no schema change is needed.
+ *
+ * Concurrency: the daily counter is one atomic conditional upsert. Month and
+ * hour are increment-then-verify: every caller increments first and then reads
+ * the account total, so parallel callers can never push the total past the cap
+ * (at the boundary all but the allowed ones roll back; the cost is occasionally
+ * refusing a request that would have fit, never overspending the free plan).
+ */
+export async function reserveSerpApiRequest(
+  projectId: string,
+  limits: SerpApiLimits,
+  now = new Date(),
+): Promise<SerpApiReservation> {
+  const keys = serpApiUsageKeys(now);
+  const rows = await db
+    .insert(openSerpUsage)
+    .values({ projectId, usageDate: keys.day, requests: 1 })
+    .onConflictDoUpdate({
+      target: [openSerpUsage.projectId, openSerpUsage.usageDate],
+      set: { requests: sql`${openSerpUsage.requests} + 1` },
+      setWhere: lt(openSerpUsage.requests, limits.daily),
+    })
+    .returning({ requests: openSerpUsage.requests });
+  if (rows.length === 0) return { ok: false, reason: "daily" };
+
+  await bumpUsage(projectId, keys.month, 1);
+  await bumpUsage(projectId, keys.hour, 1);
+  const [month, hour] = await Promise.all([
+    sumUsageForKey(keys.month),
+    sumUsageForKey(keys.hour),
+  ]);
+  if (month > limits.monthly || hour > limits.hourly) {
+    await releaseSerpApiRequest(projectId, keys);
+    return { ok: false, reason: month > limits.monthly ? "monthly" : "hourly" };
+  }
+  return { ok: true, keys };
+}
+
+/** Give a reservation back when SerpApi did not run (and so did not bill) the search. */
+export async function releaseSerpApiRequest(
+  projectId: string,
+  keys: { day: string; month: string; hour: string },
+) {
+  await bumpUsage(projectId, keys.day, -1);
+  await bumpUsage(projectId, keys.month, -1);
+  await bumpUsage(projectId, keys.hour, -1);
+}
+
+/** Month and day usage for display/diagnostics. */
+export async function getSerpApiUsage(projectId: string, now = new Date()) {
+  const keys = serpApiUsageKeys(now);
+  const [dayRow] = await db
+    .select({ requests: openSerpUsage.requests })
+    .from(openSerpUsage)
+    .where(
+      and(
+        eq(openSerpUsage.projectId, projectId),
+        eq(openSerpUsage.usageDate, keys.day),
+      ),
+    );
+  return {
+    day: dayRow?.requests ?? 0,
+    month: await sumUsageForKey(keys.month),
+    hour: await sumUsageForKey(keys.hour),
+  };
+}

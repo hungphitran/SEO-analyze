@@ -165,6 +165,57 @@ describe("getCruxVitals", () => {
   });
 });
 
+describe("getCruxVitals edge cases", () => {
+  it("refetches when the cached entry is corrupt instead of failing", async () => {
+    mocks.env.CRUX_API_KEY = "k";
+    mocks.cache.set(
+      'crux:target:{"target":{"origin":"https://example.com"},"formFactor":"ALL"}',
+      { status: "ok", target: 123, record: "garbage" },
+    );
+    mocks.fetch.mockImplementation(async (url: string) =>
+      respond(url.includes("History") ? historyBody : recordBody),
+    );
+    const result = await getCruxVitals({ domain: "example.com" });
+    expect(result).toMatchObject({ state: "ready", origin: { status: "ok" } });
+    expect(mocks.fetch).toHaveBeenCalled();
+  });
+
+  it("shows a stable rate-limit reason (no retry, no cache) on 429", async () => {
+    mocks.env.CRUX_API_KEY = "k";
+    mocks.fetch.mockImplementation(async () => respond({}, 429));
+    const result = await getCruxVitals({ domain: "example.com" });
+    expect(result).toMatchObject({
+      state: "ready",
+      origin: { status: "error", kind: "rate_limited" },
+    });
+    // record + history for origin and homepage, one attempt each.
+    expect(mocks.fetch).toHaveBeenCalledTimes(4);
+    expect(mocks.cache.size).toBe(0);
+  });
+
+  it("reports a malformed 200 as an error, not as 'no data'", async () => {
+    mocks.env.CRUX_API_KEY = "k";
+    mocks.fetch.mockImplementation(
+      async () => new Response("<html>gateway</html>"),
+    );
+    const result = await getCruxVitals({ domain: "example.com" });
+    expect(result).toMatchObject({
+      state: "ready",
+      origin: { status: "error", kind: "invalid_response" },
+    });
+    expect(mocks.cache.size).toBe(0);
+  });
+
+  it("never leaks the key in an error result", async () => {
+    mocks.env.CRUX_API_KEY = "super-secret-key";
+    mocks.fetch.mockImplementation(async () =>
+      respond({ error: { message: "bad super-secret-key" } }, 400),
+    );
+    const result = await getCruxVitals({ domain: "example.com" });
+    expect(JSON.stringify(result)).not.toContain("super-secret-key");
+  });
+});
+
 describe("getOpenPageRank", () => {
   const body = {
     as_of: "2026-10-01",

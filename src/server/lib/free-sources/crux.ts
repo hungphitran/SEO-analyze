@@ -39,20 +39,44 @@ export const CRUX_API_METRICS: Record<CruxMetricKey, string> = {
 /** Weekly points requested from the History API (the API allows 1 to 40). */
 export const CRUX_HISTORY_PERIODS = 26;
 
+export type CruxErrorKind =
+  | "not_configured"
+  | "permission"
+  | "rate_limited"
+  | "timeout"
+  | "unavailable"
+  | "invalid_response"
+  | "invalid_request";
+
 export class CruxError extends Error {
   readonly status: number;
   readonly retryable: boolean;
   /** True when Google refuses the key: API not enabled, key restricted or invalid. */
   readonly permission: boolean;
+  readonly kind: CruxErrorKind;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, kind?: CruxErrorKind) {
     super(message);
     this.name = "CruxError";
     this.status = status;
     this.retryable = status === 0 || status === 429 || status >= 500;
     this.permission = status === 401 || status === 403;
+    this.kind =
+      kind ??
+      (this.permission
+        ? "permission"
+        : status === 429
+          ? "rate_limited"
+          : status >= 500 || status === 0
+            ? "unavailable"
+            : "invalid_request");
   }
 }
+
+/** Per-attempt budget; the Worker has to answer a page load, not wait on Google. */
+export const CRUX_REQUEST_TIMEOUT_MS = 15_000;
+/** Retries on network errors and 5xx only (never 429 or 4xx: that would burn quota). */
+const CRUX_RETRY_DELAYS_MS = [400, 1200];
 
 export type CruxTarget = { origin: string } | { url: string };
 
@@ -158,49 +182,86 @@ async function postCrux(input: {
   body: Record<string, unknown>;
   apiKey: string;
   fetchImpl?: typeof fetch;
+  retryDelaysMs?: readonly number[];
+  timeoutMs?: number;
 }): Promise<unknown> {
   const apiKey = input.apiKey.trim();
   if (!apiKey) {
     throw new CruxError(
       "Chrome UX Report is not configured. Set CRUX_API_KEY.",
       0,
+      "not_configured",
     );
   }
   const fetchImpl = input.fetchImpl ?? fetch;
-  let response: Response;
-  try {
-    response = await fetchImpl(input.endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-goog-api-key": apiKey,
-      },
-      body: JSON.stringify(input.body),
-    });
-  } catch (error) {
-    throw new CruxError(
-      `Chrome UX Report request failed: ${safeErrorMessage(error, apiKey)}`,
-      0,
-    );
-  }
+  const delays = input.retryDelaysMs ?? CRUX_RETRY_DELAYS_MS;
 
-  const bodyText = await response.text();
-  let payload: unknown = null;
-  try {
-    payload = bodyText ? JSON.parse(bodyText) : null;
-  } catch {
-    payload = null;
-  }
+  for (let attempt = 0; ; attempt++) {
+    const retryLater = async (): Promise<boolean> => {
+      if (attempt >= delays.length) return false;
+      await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+      return true;
+    };
 
-  if (response.status === 404) return null;
-  if (!response.ok) {
-    const error = asRecord(asRecord(payload)?.error);
-    const message =
-      (typeof error?.message === "string" && error.message) ||
-      `Chrome UX Report returned HTTP ${response.status}.`;
-    throw new CruxError(safeErrorMessage(message, apiKey), response.status);
+    let response: Response;
+    try {
+      response = await fetchImpl(input.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-goog-api-key": apiKey,
+        },
+        body: JSON.stringify(input.body),
+        signal: AbortSignal.timeout(input.timeoutMs ?? CRUX_REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      const timedOut =
+        error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError");
+      const failure = new CruxError(
+        `Chrome UX Report request failed: ${safeErrorMessage(error, apiKey)}`,
+        0,
+        timedOut ? "timeout" : "unavailable",
+      );
+      if (await retryLater()) continue;
+      throw failure;
+    }
+
+    const bodyText = await response.text().catch(() => "");
+    let payload: unknown = null;
+    let malformed = false;
+    try {
+      payload = bodyText ? JSON.parse(bodyText) : null;
+    } catch {
+      malformed = true;
+    }
+
+    // 404 is Google's "not enough real-user data for this target", not an error.
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      const error = asRecord(asRecord(payload)?.error);
+      const message =
+        (typeof error?.message === "string" && error.message) ||
+        `Chrome UX Report returned HTTP ${response.status}.`;
+      const failure = new CruxError(
+        safeErrorMessage(message, apiKey),
+        response.status,
+      );
+      // Only a server-side blip is worth another try.
+      if (response.status >= 500 && (await retryLater())) continue;
+      throw failure;
+    }
+    // A 200 whose body is not JSON (a proxy page, truncation) must not read as
+    // "no data": that would hide a real outage behind a calm message.
+    if (malformed || payload === null) {
+      throw new CruxError(
+        "Chrome UX Report returned an unreadable response.",
+        502,
+        "invalid_response",
+      );
+    }
+    return payload;
   }
-  return payload;
 }
 
 function requestBody(
@@ -222,12 +283,14 @@ export async function queryCruxRecord(input: {
   formFactor?: CruxFormFactor;
   apiKey: string;
   fetchImpl?: typeof fetch;
+  retryDelaysMs?: readonly number[];
 }): Promise<CruxRecordSummary | null> {
   const payload = await postCrux({
     endpoint: CRUX_RECORD_ENDPOINT,
     body: requestBody(input.target, input.formFactor ?? "ALL"),
     apiKey: input.apiKey,
     fetchImpl: input.fetchImpl,
+    retryDelaysMs: input.retryDelaysMs,
   });
   return payload == null ? null : parseCruxRecord(payload);
 }
@@ -239,6 +302,7 @@ export async function queryCruxHistory(input: {
   apiKey: string;
   periods?: number;
   fetchImpl?: typeof fetch;
+  retryDelaysMs?: readonly number[];
 }): Promise<CruxTrend | null> {
   const payload = await postCrux({
     endpoint: CRUX_HISTORY_ENDPOINT,
@@ -247,6 +311,7 @@ export async function queryCruxHistory(input: {
     }),
     apiKey: input.apiKey,
     fetchImpl: input.fetchImpl,
+    retryDelaysMs: input.retryDelaysMs,
   });
   return payload == null ? null : parseCruxHistory(payload);
 }

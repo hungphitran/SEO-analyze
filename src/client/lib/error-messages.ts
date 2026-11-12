@@ -2,6 +2,7 @@ import { FREE_MAX_AUDIT_PAGES } from "@/shared/audit-limits";
 import { GATEWAY_RENDERING_NOT_SET_UP_MESSAGE } from "@/shared/audit-rendering";
 import { isErrorCode, type ErrorCode } from "@/shared/error-codes";
 import { t } from "@/shared/i18n";
+import { localizeSerpMessage } from "@/shared/serp-error-messages";
 import {
   isEveryAppClientAuthMode,
   isHostedClientAuthMode,
@@ -46,6 +47,12 @@ const STANDARD_MESSAGES: Record<ErrorCode, string> = {
   FREE_SOURCES_ONLY: t("errors.FREE_SOURCES_ONLY"),
   RATE_LIMITED: t("errors.RATE_LIMITED"),
   UPSTREAM_UNAVAILABLE: t("errors.UPSTREAM_UNAVAILABLE"),
+  SERP_NOT_CONFIGURED: t("errors.SERP_NOT_CONFIGURED"),
+  SERP_QUOTA_EXCEEDED: t("errors.SERP_QUOTA_EXCEEDED"),
+  SERP_UNAVAILABLE: t("errors.SERP_UNAVAILABLE"),
+  BING_KEY_REJECTED: t("errors.BING_KEY_REJECTED"),
+  BING_SITE_NOT_VERIFIED: t("errors.BING_SITE_NOT_VERIFIED"),
+  BING_UNAVAILABLE: t("errors.BING_UNAVAILABLE"),
   CONFLICT: t("errors.CONFLICT"),
   INTERNAL_ERROR: UNEXPECTED_ERROR_MESSAGE,
 };
@@ -56,7 +63,7 @@ export function getStandardErrorMessage(
 ): string {
   if (!(error instanceof Error)) return fallback;
   if (isErrorCode(error.message)) return STANDARD_MESSAGES[error.message];
-  if (error.message) return error.message;
+  if (error.message) return localizeSerpMessage(error.message) ?? error.message;
   return fallback;
 }
 

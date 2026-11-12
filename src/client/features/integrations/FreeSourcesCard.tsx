@@ -1,18 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { toast } from "sonner";
 import { CardShell } from "@/client/components/CardShell";
 import { QueryError } from "@/client/components/QueryState";
 import { SafeExternalLink } from "@/client/components/SafeExternalLink";
 import { Button } from "@/client/components/ui/button";
-import { Input } from "@/client/components/ui/input";
 import { getStandardErrorMessage } from "@/client/lib/error-messages";
 import {
-  disconnectBingWebmasterFn,
   getFreeSourcesStatusFn,
-  listBingWebmasterSitesFn,
   refreshOwnedSiteSourcesFn,
-  saveBingWebmasterConnectionFn,
 } from "@/serverFunctions/free-sources";
 import type {
   FreeSourceSnapshotView,
@@ -44,60 +39,7 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
         data: { projectId },
       }),
   });
-  const [apiKey, setApiKey] = useState("");
-  const [sites, setSites] = useState<{ url: string }[] | null>(null);
-  const [selectedSite, setSelectedSite] = useState("");
-
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
-
-  const listSites = useMutation({
-    mutationFn: () =>
-      listBingWebmasterSitesFn({ data: { projectId, apiKey: apiKey.trim() } }),
-    onSuccess: (result: { url: string }[]) => {
-      setSites(result);
-      setSelectedSite(result[0]?.url ?? "");
-      if (result.length === 0) {
-        toast.error(t("freeSources.noVerifiedSites"));
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(getStandardErrorMessage(error));
-    },
-  });
-
-  const saveBing = useMutation({
-    mutationFn: () =>
-      saveBingWebmasterConnectionFn({
-        data: {
-          projectId,
-          apiKey: apiKey.trim(),
-          siteUrl: selectedSite,
-        },
-      }),
-    onSuccess: (result: { siteUrl: string }) => {
-      setApiKey("");
-      setSites(null);
-      setSelectedSite("");
-      toast.success(
-        t("freeSources.bingConnectedToast", { url: result.siteUrl }),
-      );
-      void invalidate();
-    },
-    onError: (error: Error) => {
-      toast.error(getStandardErrorMessage(error));
-    },
-  });
-
-  const disconnectBing = useMutation({
-    mutationFn: () => disconnectBingWebmasterFn({ data: { projectId } }),
-    onSuccess: () => {
-      toast.success(t("freeSources.bingDisconnectedToast"));
-      void invalidate();
-    },
-    onError: (error: Error) => {
-      toast.error(getStandardErrorMessage(error));
-    },
-  });
 
   const refresh = useMutation({
     mutationFn: () => refreshOwnedSiteSourcesFn({ data: { projectId } }),
@@ -168,76 +110,9 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
                 ? t("freeSources.bingConnected", {
                     url: status.bing.siteUrl ?? "",
                   })
-                : t("freeSources.bingNotConnected")}
+                : t("freeSources.bingNotConnectedSeeCard")}
             </li>
           </ul>
-
-          {status.bing.connected ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() => disconnectBing.mutate()}
-                disabled={disconnectBing.isPending}
-              >
-                {t("freeSources.disconnectBing")}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label htmlFor="bing-api-key" className="font-medium">
-                  {t("freeSources.bingApiKey")}
-                </label>
-                <Input
-                  id="bing-api-key"
-                  type="password"
-                  autoComplete="off"
-                  value={apiKey}
-                  onChange={(event) => {
-                    setApiKey(event.target.value);
-                    setSites(null);
-                  }}
-                  placeholder={t("freeSources.bingApiKeyPlaceholder")}
-                />
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => listSites.mutate()}
-                disabled={!apiKey.trim() || listSites.isPending}
-              >
-                {listSites.isPending
-                  ? t("onboarding.checking")
-                  : t("freeSources.listVerifiedSites")}
-              </Button>
-              {sites && sites.length > 0 ? (
-                <div className="space-y-1.5">
-                  <label htmlFor="bing-site" className="font-medium">
-                    {t("freeSources.verifiedSite")}
-                  </label>
-                  <select
-                    id="bing-site"
-                    className="border-input bg-background w-full rounded-md border px-3 py-2"
-                    value={selectedSite}
-                    onChange={(event) => setSelectedSite(event.target.value)}
-                  >
-                    {sites.map((site) => (
-                      <option key={site.url} value={site.url}>
-                        {site.url}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    onClick={() => saveBing.mutate()}
-                    disabled={!selectedSite || saveBing.isPending}
-                  >
-                    {saveBing.isPending
-                      ? t("common.saving")
-                      : t("freeSources.saveBing")}
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          )}
 
           <div className="flex flex-wrap items-center gap-3">
             <Button

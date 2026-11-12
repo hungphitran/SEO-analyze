@@ -5,6 +5,8 @@ import { OwnedSiteSnapshotRepository } from "@/server/features/free-sources/repo
 import { AppError } from "@/server/lib/errors";
 import {
   assertVerifiedBingSite,
+  bingRefreshMessage,
+  toBingAppError,
   getBingQueryStats,
   listVerifiedBingSites,
   type BingQuerySummary,
@@ -182,7 +184,11 @@ export async function getFreeSourcesStatus(input: {
 }
 
 export async function listBingSitesForKey(apiKey: string) {
-  return listVerifiedBingSites({ apiKey });
+  try {
+    return await listVerifiedBingSites({ apiKey });
+  } catch (error) {
+    throw toBingAppError(error);
+  }
 }
 
 export async function saveBingConnection(input: {
@@ -200,7 +206,12 @@ export async function saveBingConnection(input: {
       "Enter a Bing Webmaster API key and choose a verified site.",
     );
   }
-  const site = await assertVerifiedBingSite({ apiKey, siteUrl });
+  let site: BingVerifiedSite;
+  try {
+    site = await assertVerifiedBingSite({ apiKey, siteUrl });
+  } catch (error) {
+    throw toBingAppError(error);
+  }
   const encryptedApiKey = await sealSecret(apiKey);
   await BingWebmasterConnectionRepository.upsert({
     projectId: input.projectId,
@@ -376,7 +387,7 @@ async function refreshBing(input: {
       ...input,
       source: "bing",
       status: "error",
-      message: safeErrorMessage(error, apiKey),
+      message: bingRefreshMessage(error, apiKey),
       summary: { siteUrl: connection.siteUrl },
     });
   }

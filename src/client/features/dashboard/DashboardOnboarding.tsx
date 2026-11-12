@@ -21,6 +21,8 @@ import {
   CollapsibleTrigger,
 } from "@/client/components/ui/collapsible";
 import { t } from "@/shared/i18n";
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
+import { PAID_ONLY_SETUP_STEPS } from "@/shared/free-sources-visibility";
 
 export function DashboardOnboarding({
   projectId,
@@ -30,6 +32,7 @@ export function DashboardOnboarding({
   activation: DashboardActivation;
 }) {
   const queryClient = useQueryClient();
+  const freeSourcesOnly = useFreeSourcesOnly();
   const [selected, setSelected] = useState<DashboardSetupStep | null>(null);
   const dismiss = useMutation({
     mutationFn: ({
@@ -48,7 +51,13 @@ export function DashboardOnboarding({
     },
   });
   const steps = setupSteps.filter(
-    (step) => step.id !== "team" || usesBetterAuthClient(),
+    (step) =>
+      (step.id !== "team" || usesBetterAuthClient()) &&
+      // These steps open DataForSEO-only pages (domain overview, keyword research).
+      !(
+        freeSourcesOnly &&
+        (PAID_ONLY_SETUP_STEPS as readonly string[]).includes(step.id)
+      ),
   );
   const remaining = steps.filter(
     (step) => getStepStatus(activation, step.id) === "todo",

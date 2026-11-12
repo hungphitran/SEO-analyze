@@ -1,3 +1,4 @@
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
 import { useState } from "react";
 import { MoreHorizontal, Play, RefreshCw } from "lucide-react";
 import { ConfirmDialog } from "@/client/components/ConfirmDialog";
@@ -41,6 +42,8 @@ export function MoreMenu({
   hasData: boolean;
 }) {
   const [confirmingRefresh, setConfirmingRefresh] = useState(false);
+  // Keyword stats (volume/KD/CPC) are DataForSEO-only: no action without them.
+  const freeSourcesOnly = useFreeSourcesOnly();
   return (
     <>
       <DropdownMenu>
@@ -64,6 +67,7 @@ export function MoreMenu({
               description={t("rank.fetchPositions")}
             />
           </DropdownMenuItem>
+          {freeSourcesOnly ? null : (
           <DropdownMenuItem
             onClick={() => setConfirmingRefresh(true)}
             disabled={metricsRefreshing || !hasData}
@@ -76,9 +80,10 @@ export function MoreMenu({
               description={t("rank.statsNotRankings")}
             />
           </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
-      {confirmingRefresh ? (
+      {confirmingRefresh && !freeSourcesOnly ? (
         <ConfirmDialog
           title={t("saved.updateStatsTitle")}
           confirmLabel={t("saved.updateStats")}

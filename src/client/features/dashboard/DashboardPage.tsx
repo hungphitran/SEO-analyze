@@ -34,6 +34,8 @@ import {
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { usesBetterAuthClient } from "@/lib/auth-mode";
 import { t } from "@/shared/i18n";
+import { useFreeSourcesOnly } from "@/client/lib/free-sources-mode";
+import { isPaidOnlyDashboardTab } from "@/shared/free-sources-visibility";
 
 export function DashboardPage({
   projectId,
@@ -44,6 +46,10 @@ export function DashboardPage({
   tab?: z.infer<typeof dashboardSiteTabSchema>;
   onTabChange: (tab: z.infer<typeof dashboardSiteTabSchema>) => void;
 }) {
+  // FREE_SOURCES_ONLY hides the DataForSEO-only backlinks tab and card; a
+  // stale ?tab=backlinks falls back to the overview.
+  const freeSourcesOnly = useFreeSourcesOnly();
+  if (freeSourcesOnly && isPaidOnlyDashboardTab(tab)) tab = "overview";
   const activationQuery = useQuery({
     queryKey: ["dashboardActivation", projectId],
     queryFn: () => getDashboardActivation({ data: { projectId } }),
@@ -91,7 +97,7 @@ export function DashboardPage({
     );
   }
 
-  const showBacklinks = activation.domain !== null;
+  const showBacklinks = activation.domain !== null && !freeSourcesOnly;
   const gscConnected = activation.gsc.connected;
   const ga4Connected = activation.ga4.connected;
 
@@ -231,7 +237,11 @@ export function DashboardPage({
                 ["keywords", t("dashboard.tabKeywords")],
                 ["backlinks", t("dashboard.tabBacklinks")],
               ] as const
-            ).map(([value, label]) => (
+            )
+              .filter(
+                ([value]) => !(freeSourcesOnly && isPaidOnlyDashboardTab(value)),
+              )
+              .map(([value, label]) => (
               <TabsTrigger key={value} value={value} className="px-3">
                 {label}
               </TabsTrigger>
@@ -259,6 +269,7 @@ export function DashboardPage({
               siteUrl={activation.gsc.siteUrl}
             />
           </TabsContent>
+          {freeSourcesOnly ? null : (
           <TabsContent value="backlinks" keepMounted={false}>
             {activation.domain ? (
               <DashboardBacklinks
@@ -288,6 +299,7 @@ export function DashboardPage({
               />
             )}
           </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

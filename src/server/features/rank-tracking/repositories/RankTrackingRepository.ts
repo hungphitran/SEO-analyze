@@ -47,6 +47,9 @@ import {
   insertOpenSerpFailure,
   insertOpenSerpSnapshot,
   reserveOpenSerpRequest,
+  reserveSerpApiRequest,
+  releaseSerpApiRequest,
+  getSerpApiUsage,
 } from "./openSerpQueries";
 
 // ---------------------------------------------------------------------------
@@ -435,6 +438,9 @@ export const RankTrackingRepository = {
   insertOpenSerpSnapshot,
   insertOpenSerpFailure,
   reserveOpenSerpRequest,
+  reserveSerpApiRequest,
+  releaseSerpApiRequest,
+  getSerpApiUsage,
   getOpenSerpSnapshotsForConfig,
   getOpenSerpResultsForSnapshots,
   getOpenSerpKeywordsForConfig,

@@ -29,6 +29,7 @@ import { buildCacheKey, getCached, setCached } from "@/server/lib/r2-cache";
 import { getOptionalEnvValue, getWorkersEnv } from "@/server/lib/runtime-env";
 import type {
   CruxFormFactor,
+  CruxTargetErrorKind,
   CruxTargetResult,
   CruxVitalsResult,
   OpenPageRankResult,
@@ -106,7 +107,10 @@ async function loadCruxTarget(input: {
     target: input.target,
     formFactor: input.formFactor,
   });
-  const cached = cachedCruxTargetSchema.safeParse(await getCached(cacheKey));
+  const cached = cachedCruxTargetSchema.safeParse(
+    // An unreadable cache must cost a refetch, never the page.
+    await getCached(cacheKey).catch(() => null),
+  );
   if (cached.success) return cached.data as CruxTargetResult;
 
   const [record, trend] = await Promise.all([
@@ -144,6 +148,21 @@ async function loadCruxTarget(input: {
   return result;
 }
 
+function cruxTargetErrorKind(error: unknown): CruxTargetErrorKind {
+  if (error instanceof CruxError) {
+    switch (error.kind) {
+      case "rate_limited":
+      case "timeout":
+      case "invalid_response":
+      case "invalid_request":
+        return error.kind;
+      default:
+        return "unavailable";
+    }
+  }
+  return "unavailable";
+}
+
 /** Real-user Core Web Vitals for a project's website (origin and homepage URL). */
 export async function getCruxVitals(input: {
   domain: string | null | undefined;
@@ -170,6 +189,7 @@ export async function getCruxVitals(input: {
         status: "error",
         target: label,
         message: safeErrorMessage(error, apiKey),
+        kind: cruxTargetErrorKind(error),
       };
     }
   };

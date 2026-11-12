@@ -72,7 +72,20 @@ export type CruxTargetResult =
       trend: CruxTrend | null;
     }
   | { status: "no_data"; target: string }
-  | { status: "error"; target: string; message: string };
+  | {
+      status: "error";
+      target: string;
+      message: string;
+      /** Stable reason the UI shows in Vietnamese; `message` is the English detail. */
+      kind?: CruxTargetErrorKind;
+    };
+
+export type CruxTargetErrorKind =
+  | "rate_limited"
+  | "timeout"
+  | "unavailable"
+  | "invalid_response"
+  | "invalid_request";
 
 export type CruxVitalsResult =
   | { state: "disabled" }

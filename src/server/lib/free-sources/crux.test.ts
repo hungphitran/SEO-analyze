@@ -231,6 +231,95 @@ describe("queryCruxRecord", () => {
   });
 });
 
+describe("queryCruxRecord resilience", () => {
+  const target = { origin: "https://example.com" } as const;
+  const noWait = { retryDelaysMs: [0, 0] } as const;
+
+  it("retries a 5xx and returns the later success", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockImplementationOnce(async () => jsonResponse({}, 503))
+      .mockImplementation(async () => jsonResponse(recordFixture));
+    const record = await queryCruxRecord({
+      target,
+      apiKey: "k",
+      fetchImpl,
+      ...noWait,
+    });
+    expect(record).not.toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries a network error, then gives up after the bounded attempts", async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("fetch failed key=secret-key");
+    });
+    const error = await rejection(
+      queryCruxRecord({ target, apiKey: "secret-key", fetchImpl, ...noWait }),
+    );
+    if (!(error instanceof CruxError)) throw error;
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(error.kind).toBe("unavailable");
+    expect(error.retryable).toBe(true);
+    expect(error.message).not.toContain("secret-key");
+  });
+
+  it.each([
+    [429, "rate_limited"],
+    [403, "permission"],
+    [401, "permission"],
+    [400, "invalid_request"],
+  ])("never retries HTTP %i (would only burn quota)", async (status, kind) => {
+    const fetchImpl = vi.fn(async () => jsonResponse({}, status));
+    const error = await rejection(
+      queryCruxRecord({ target, apiKey: "k", fetchImpl, ...noWait }),
+    );
+    if (!(error instanceof CruxError)) throw error;
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(error.kind).toBe(kind);
+  });
+
+  it("classifies a timeout and passes an abort signal", async () => {
+    const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
+      throw new DOMException("timed out", "TimeoutError");
+    });
+    const error = await rejection(
+      queryCruxRecord({ target, apiKey: "k", fetchImpl, retryDelaysMs: [] }),
+    );
+    if (!(error instanceof CruxError)) throw error;
+    expect(error.kind).toBe("timeout");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not mistake a malformed 200 body for 'no data'", async () => {
+    const fetchImpl = vi.fn(async () => new Response("<html>oops</html>"));
+    const error = await rejection(
+      queryCruxRecord({ target, apiKey: "k", fetchImpl, ...noWait }),
+    );
+    if (!(error instanceof CruxError)) throw error;
+    expect(error.kind).toBe("invalid_response");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats a 200 with an unrecognised record shape as no data, not a crash", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ unexpected: true }));
+    await expect(
+      queryCruxRecord({ target, apiKey: "k", fetchImpl, ...noWait }),
+    ).resolves.toBeNull();
+  });
+
+  it("reports a missing key before any network call", async () => {
+    const fetchImpl = vi.fn();
+    const error = await rejection(
+      queryCruxRecord({ target, apiKey: "", fetchImpl }),
+    );
+    if (!(error instanceof CruxError)) throw error;
+    expect(error.kind).toBe("not_configured");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
 describe("queryCruxHistory", () => {
   it("asks the History API for weekly periods", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse(historyFixture));

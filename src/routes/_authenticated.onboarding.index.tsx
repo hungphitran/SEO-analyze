@@ -1,3 +1,4 @@
+import { getSeoApiKeyStatus } from "@/serverFunctions/config";
 import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
@@ -113,7 +114,17 @@ function OnboardingPage() {
     // Visitors who signed up from the free keyword check came to see the rest
     // of its results, so land them on the saved website's keywords ranking
     // #4-20 instead of the dashboard.
-    if (domain) {
+    // Domain overview is DataForSEO-only: hidden when FREE_SOURCES_ONLY is on.
+    const freeSourcesOnly = domain
+      ? await queryClient
+          .fetchQuery({
+            queryKey: ["seoApiKeyStatus"],
+            queryFn: () => getSeoApiKeyStatus(),
+          })
+          .then((status) => status.freeSourcesOnly)
+          .catch(() => false)
+      : false;
+    if (domain && !freeSourcesOnly) {
       const [project] = await queryClient
         .fetchQuery(projectsQueryOptions())
         .catch(() => []);

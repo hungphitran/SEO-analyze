@@ -23,6 +23,12 @@ const ERROR_CODES = [
   "FREE_SOURCES_ONLY",
   "RATE_LIMITED",
   "UPSTREAM_UNAVAILABLE",
+  "SERP_NOT_CONFIGURED",
+  "SERP_QUOTA_EXCEEDED",
+  "SERP_UNAVAILABLE",
+  "BING_KEY_REJECTED",
+  "BING_SITE_NOT_VERIFIED",
+  "BING_UNAVAILABLE",
   "CONFLICT",
   "INTERNAL_ERROR",
 ] as const;
@@ -56,6 +62,15 @@ const NON_REPORTABLE_ERROR_CODES = new Set<ErrorCode>([
   // the failure rate visible in Workers Observability.
   "UPSTREAM_UNAVAILABLE",
   "FREE_SOURCES_ONLY",
+  // Free SERP providers (SerpApi, OpenSERP): missing/rejected key, spent
+  // quota, and provider outages are operator-visible states, not app faults.
+  "SERP_NOT_CONFIGURED",
+  "SERP_QUOTA_EXCEEDED",
+  "SERP_UNAVAILABLE",
+  // Bing Webmaster: the operator's own key/site state, shown with guidance.
+  "BING_KEY_REJECTED",
+  "BING_SITE_NOT_VERIFIED",
+  "BING_UNAVAILABLE",
 ]);
 
 export function isErrorCode(value: string): value is ErrorCode {
