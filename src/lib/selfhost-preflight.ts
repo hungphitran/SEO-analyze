@@ -5,6 +5,7 @@ import {
   validateTeamDomain,
 } from "@/shared/selfhost-checks";
 import { isFreeSourcesOnlyValue } from "@/shared/free-sources-mode";
+import { checkOptionalFreeSignals } from "@/lib/selfhost-preflight-free-signals";
 
 // Startup preflight for self-host containers: validate the environment BEFORE
 // the multi-minute build/boot so misconfiguration fails in seconds with the
@@ -13,9 +14,18 @@ import { isFreeSourcesOnlyValue } from "@/shared/free-sources-mode";
 
 type PreflightLevel = "ok" | "info" | "warn" | "fail";
 
-type PreflightItem = {
+export type PreflightItem = {
   // Stable identifier shared with /api/health's check map.
-  key: "auth" | "dataforseo" | "gsc" | "pagespeed" | "ai" | "rendering" | "runtime";
+  key:
+    | "auth"
+    | "dataforseo"
+    | "gsc"
+    | "pagespeed"
+    | "crux"
+    | "open-pagerank"
+    | "ai"
+    | "rendering"
+    | "runtime";
   name: string;
   level: PreflightLevel;
   message: string;
@@ -26,7 +36,7 @@ type PreflightResult = {
   failed: boolean;
 };
 
-type EnvRecord = Record<string, string | undefined>;
+export type EnvRecord = Record<string, string | undefined>;
 
 function get(env: EnvRecord, name: string): string | undefined {
   const value = env[name]?.trim();
@@ -289,6 +299,8 @@ function checkOptionalFeatures(env: EnvRecord, items: PreflightItem[]): void {
             "PAGESPEED_API_KEY not set (optional). See docs/SELF_HOSTING_FREE_SOURCES.md for the official PageSpeed Insights API.",
         },
   );
+
+  checkOptionalFreeSignals(env, items);
 
   items.push(
     get(env, "AUTH_MODE") === "everyapp"

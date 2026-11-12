@@ -68,6 +68,14 @@ export type FreeSourcesStatus = {
   pagespeed: {
     configured: boolean;
   };
+  /** Chrome UX Report: CRUX_API_KEY, or the PageSpeed key as a fallback. */
+  crux: {
+    configured: boolean;
+  };
+  /** Open PageRank: OPEN_PAGERANK_API_KEY. */
+  openPageRank: {
+    configured: boolean;
+  };
   bing: {
     connected: boolean;
     siteUrl: string | null;

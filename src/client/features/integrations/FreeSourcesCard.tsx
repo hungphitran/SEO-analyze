@@ -19,6 +19,7 @@ import type {
   FreeSourcesStatus,
 } from "@/shared/free-sources-mode";
 import { t } from "@/shared/i18n";
+import { CruxVitalsPanel } from "@/client/features/integrations/CruxVitalsPanel";
 import { localizeFreeSourceMessage } from "@/client/features/integrations/freeSourceMessages";
 
 function StatusBadge({ status }: { status: FreeSourceSnapshotView["status"] }) {
@@ -47,8 +48,7 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
   const [sites, setSites] = useState<{ url: string }[] | null>(null);
   const [selectedSite, setSelectedSite] = useState("");
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const listSites = useMutation({
     mutationFn: () =>
@@ -57,9 +57,7 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
       setSites(result);
       setSelectedSite(result[0]?.url ?? "");
       if (result.length === 0) {
-        toast.error(
-          t("freeSources.noVerifiedSites"),
-        );
+        toast.error(t("freeSources.noVerifiedSites"));
       }
     },
     onError: (error: Error) => {
@@ -133,11 +131,7 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
           <p>
             {t("freeSources.intro")} {status.limitations}
           </p>
-          {status.freeSourcesOnly ? (
-            <p>
-              {t("freeSources.freeOnlyOn")}
-            </p>
-          ) : null}
+          {status.freeSourcesOnly ? <p>{t("freeSources.freeOnlyOn")}</p> : null}
 
           <ul className="space-y-2">
             <li>
@@ -155,6 +149,18 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
               {status.pagespeed.configured
                 ? t("freeSources.psiConfigured")
                 : t("freeSources.psiNotConfigured")}
+            </li>
+            <li>
+              <strong>{t("freeSources.cruxName")}</strong>{" "}
+              {status.crux.configured
+                ? t("freeSources.cruxConfigured")
+                : t("freeSources.cruxNotConfigured")}
+            </li>
+            <li>
+              <strong>{t("freeSources.oprName")}</strong>{" "}
+              {status.openPageRank.configured
+                ? t("freeSources.oprConfigured")
+                : t("freeSources.oprNotConfigured")}
             </li>
             <li>
               <strong>{t("freeSources.bingName")}</strong>{" "}
@@ -256,10 +262,16 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
                     <strong>{snapshot.label}</strong>
                     <StatusBadge status={snapshot.status} />
                   </div>
-                  <p className="text-muted-foreground">{localizeFreeSourceMessage(snapshot.message)}</p>
+                  <p className="text-muted-foreground">
+                    {localizeFreeSourceMessage(snapshot.message)}
+                  </p>
                 </div>
               ))}
             </div>
+          ) : null}
+
+          {status.crux.configured ? (
+            <CruxVitalsPanel projectId={projectId} />
           ) : null}
 
           <p className="text-muted-foreground">

@@ -12,9 +12,7 @@ import {
   DEFAULT_DOMAIN_KEYWORDS_PAGE_SIZE,
   type DomainSearchParams,
 } from "@/types/schemas/domain";
-import {
-  isLabsLocationCode,
-} from "@/client/features/keywords/locations";
+import { isLabsLocationCode } from "@/client/features/keywords/locations";
 import { useDomainSearchHistory } from "@/client/hooks/useDomainSearchHistory";
 import type { DomainSearchHistoryItem } from "@/client/hooks/useDomainSearchHistory";
 import {
@@ -26,6 +24,7 @@ import { DomainOverviewLoadingState } from "@/client/features/domain/components/
 import { RecentSearches } from "@/client/components/RecentSearches";
 import { QueryError } from "@/client/components/QueryState";
 import { DomainSearchCard } from "@/client/features/domain/components/DomainSearchCard";
+import { OpenPageRankCard } from "@/client/features/domain/components/OpenPageRankCard";
 import { KeywordsTab } from "@/client/features/domain/components/KeywordsTab";
 import { PagesTab } from "@/client/features/domain/components/PagesTab";
 import { HelpLabel } from "@/client/components/HelpLabel";
@@ -580,6 +579,10 @@ export function DomainOverviewPage({
             state.applyLocationChange(locationCode)
           }
         />
+
+        {routeState.domain.trim() !== "" ? (
+          <OpenPageRankCard projectId={projectId} domain={routeState.domain} />
+        ) : null}
 
         {state.isLoading ? (
           <>

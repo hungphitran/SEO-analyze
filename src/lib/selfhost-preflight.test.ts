@@ -73,4 +73,25 @@ describe("runSelfhostPreflight", () => {
     );
     expect(itemFor(result, "PageSpeed Insights")?.level).toBe("info");
   });
+
+  it("reports the optional CrUX and Open PageRank keys without failing", () => {
+    const base = { AUTH_MODE: "local_noauth" };
+    const none = runSelfhostPreflight(base);
+    expect(none.failed).toBe(false);
+    expect(itemFor(none, "Chrome UX Report")?.level).toBe("info");
+    expect(itemFor(none, "Open PageRank")?.level).toBe("info");
+
+    const shared = runSelfhostPreflight({ ...base, PAGESPEED_API_KEY: "k" });
+    expect(itemFor(shared, "Chrome UX Report")?.message).toContain(
+      "PAGESPEED_API_KEY will be tried",
+    );
+
+    const set = runSelfhostPreflight({
+      ...base,
+      CRUX_API_KEY: "k",
+      OPEN_PAGERANK_API_KEY: "k",
+    });
+    expect(itemFor(set, "Chrome UX Report")?.level).toBe("ok");
+    expect(itemFor(set, "Open PageRank")?.level).toBe("ok");
+  });
 });

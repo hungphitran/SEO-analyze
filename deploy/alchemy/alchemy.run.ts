@@ -309,6 +309,10 @@ const dataEnv = {
   FREE_SOURCES_ONLY: optionalVar("FREE_SOURCES_ONLY"),
   LIGHTHOUSE_PROVIDER: optionalVar("LIGHTHOUSE_PROVIDER"),
   PAGESPEED_API_KEY: optionalSecret("PAGESPEED_API_KEY"),
+  // Optional real-user Core Web Vitals (CrUX; falls back to PAGESPEED_API_KEY)
+  // and domain authority (Open PageRank). Empty = feature hidden.
+  CRUX_API_KEY: optionalSecret("CRUX_API_KEY"),
+  OPEN_PAGERANK_API_KEY: optionalSecret("OPEN_PAGERANK_API_KEY"),
   SERP_PROVIDER: optionalVar("SERP_PROVIDER"),
   OPENSERP_ENABLED: optionalVar("OPENSERP_ENABLED"),
   OPENSERP_URL: optionalVar("OPENSERP_URL"),

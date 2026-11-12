@@ -51,6 +51,25 @@ Rank tracking stores only successful observations. CAPTCHA, blocked, rate-limite
 
 Google's public API documentation does not publish a guaranteed daily quota. Keyless requests are not a usable fallback. Check the real limits under **APIs & Services → PageSpeed Insights API → Quotas** in Google Cloud Console. This app does not run PageSpeed on a cron, so a background job cannot spend that quota by itself.
 
+## Optional: real-user Core Web Vitals (Chrome UX Report)
+
+The [Chrome UX Report API](https://developer.chrome.com/docs/crux/api) returns Core Web Vitals measured from real Chrome users (LCP, INP, CLS, plus FCP and TTFB), for the project's origin and homepage URL, with a weekly p75 trend from the [History API](https://developer.chrome.com/docs/crux/history-api). It appears in the Integrations card next to PageSpeed Insights.
+
+1. In Google Cloud, enable the **Chrome UX Report API** and create an API key (no billing account is needed; 150 queries per minute per project, free).
+2. Set `CRUX_API_KEY` in `.env.selfhost`. If it is unset, `PAGESPEED_API_KEY` is tried instead, which works only when that key may also call the Chrome UX Report API (a key restricted to the PageSpeed API gets `403 PERMISSION_DENIED`).
+3. Redeploy. With no usable key the panel is hidden (a one-line hint shows when a key exists but Google refuses it).
+
+Results are cached in R2 (12 hours; "no data" for 6 hours; errors are never cached). A `404` means Chrome has too little real-user traffic for that origin or URL and is shown as "not enough real-user data", not as an error. Works with `FREE_SOURCES_ONLY=true`; no DataForSEO call is made.
+
+## Optional: Open PageRank domain authority
+
+[Open PageRank](https://www.domcop.com/openpagerank/documentation) gives a 0 to 10 authority score, a global rank and an authority-weighted referring-domain count. It shows as its own card at the top of Domain Overview, also in `FREE_SOURCES_ONLY` mode. It is link-graph authority, **not** traffic or ranking keywords.
+
+1. Create a free account at [Keywords Everywhere / Open PageRank](https://keywordseverywhere.com/openpagerank/pricing) (30,000 domains per month, 60 requests per minute, no card) and copy the API key from the Open PageRank tab.
+2. Set `OPEN_PAGERANK_API_KEY` in `.env.selfhost` and redeploy. Without it the card is hidden.
+
+Lookups are batched (up to 100 domains per request), cached for 24 hours, and held to 60 requests per minute (a shared counter in KV plus an in-process limiter; a `429` is also honored). **Caveat:** since 1 November 2026 a free key is tied to one IPv4 address and other addresses get `403 address_error`. Cloudflare Workers do not call from a fixed address, so a free key can fail from a Worker; the card then says so instead of showing a wrong score. A paid plan is not bound to an address.
+
 ## Bing Webmaster setup
 
 1. Sign in to [Bing Webmaster Tools](https://www.bing.com/webmasters), add the site, and complete verification.
@@ -73,6 +92,8 @@ Connect a verified property in the existing Search Console card. Free-source ref
 | Clicks, impressions, queries for a verified Google property | Search Console                                             |
 | Clicks, impressions, queries for a verified Bing site       | Bing Webmaster                                             |
 | Lighthouse lab scores for the project website               | PageSpeed Insights                                         |
+| Real-user Core Web Vitals (origin, homepage)                | Chrome UX Report (optional key)                            |
+| Domain authority score (not traffic or keywords)            | Open PageRank (optional key)                               |
 | Built-in site crawl / on-page audit                         | Already in OpenSEO; Lighthouse uses PageSpeed in free mode |
 | Market search volume, keyword difficulty                    | Not available without a paid dataset                       |
 | Competitor keyword or backlink graphs                       | Not available without a paid dataset                       |
@@ -82,7 +103,7 @@ Connect a verified property in the existing Search Console card. Free-source ref
 This work does not deploy itself. After review:
 
 1. Apply the SQLite (and, if you use Postgres, Postgres) migrations in `drizzle/`.
-2. Set `FREE_SOURCES_ONLY`, `PAGESPEED_API_KEY`, and keep existing secrets in `.env.selfhost`.
+2. Set `FREE_SOURCES_ONLY`, `PAGESPEED_API_KEY` (and optionally `CRUX_API_KEY`, `OPEN_PAGERANK_API_KEY`), and keep existing secrets in `.env.selfhost`.
 3. Confirm you have already created the first admin account on the live instance before opening sign-up more widely.
 4. OAuth and site verification still require operator / site-owner action listed above. Do not paste API keys or OAuth secrets into chat.
 

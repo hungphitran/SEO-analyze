@@ -23,6 +23,10 @@ import {
   sealSecret,
 } from "@/server/lib/free-sources/secret-box";
 import { getOptionalEnvValue } from "@/server/lib/runtime-env";
+import {
+  getCruxApiKey,
+  getOpenPageRankApiKey,
+} from "@/server/features/free-sources/services/RealUserSignalsService";
 import { hasGoogleOAuthConfig } from "@/server/features/google/oauth-config";
 import {
   FREE_SOURCE_LABELS,
@@ -125,16 +129,27 @@ async function recordSnapshot(input: {
 export async function getFreeSourcesStatus(input: {
   projectId: string;
 }): Promise<FreeSourcesStatus> {
-  const [gsc, bing, snapshots, pagespeedKey, canStoreKey, oauth, freeOnly] =
-    await Promise.all([
-      GscService.getConnection(input.projectId),
-      BingWebmasterConnectionRepository.getByProjectId(input.projectId),
-      OwnedSiteSnapshotRepository.listByProjectId(input.projectId),
-      getOptionalEnvValue("PAGESPEED_API_KEY"),
-      hasFreeSourcesEncryptionKey(),
-      hasGoogleOAuthConfig(),
-      isFreeSourcesOnly(),
-    ]);
+  const [
+    gsc,
+    bing,
+    snapshots,
+    pagespeedKey,
+    canStoreKey,
+    oauth,
+    freeOnly,
+    cruxKey,
+    oprKey,
+  ] = await Promise.all([
+    GscService.getConnection(input.projectId),
+    BingWebmasterConnectionRepository.getByProjectId(input.projectId),
+    OwnedSiteSnapshotRepository.listByProjectId(input.projectId),
+    getOptionalEnvValue("PAGESPEED_API_KEY"),
+    hasFreeSourcesEncryptionKey(),
+    hasGoogleOAuthConfig(),
+    isFreeSourcesOnly(),
+    getCruxApiKey(),
+    getOpenPageRankApiKey(),
+  ]);
 
   const snapshotBySource = new Map(
     snapshots.map((row) => [row.source, row] as const),
@@ -151,6 +166,8 @@ export async function getFreeSourcesStatus(input: {
     pagespeed: {
       configured: Boolean(pagespeedKey?.trim()),
     },
+    crux: { configured: Boolean(cruxKey) },
+    openPageRank: { configured: Boolean(oprKey) },
     bing: {
       connected: Boolean(bing),
       siteUrl: bing?.siteUrl ?? null,

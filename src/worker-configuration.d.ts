@@ -15,6 +15,8 @@ declare namespace Cloudflare {
 		FREE_SOURCES_ONLY?: string;
 		LIGHTHOUSE_PROVIDER?: string;
 		PAGESPEED_API_KEY?: string;
+		CRUX_API_KEY?: string;
+		OPEN_PAGERANK_API_KEY?: string;
 		PORT: string;
 		AUTH_MODE: string;
 		BETTER_AUTH_SECRET: string;

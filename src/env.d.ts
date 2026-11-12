@@ -102,6 +102,12 @@ declare namespace Cloudflare {
     FREE_SOURCES_ONLY?: string;
     LIGHTHOUSE_PROVIDER?: string;
     PAGESPEED_API_KEY?: string;
+    // Optional real-user and authority signals (hidden when unset).
+    // CRUX_API_KEY falls back to PAGESPEED_API_KEY (one Google API key can
+    // carry both APIs); OPEN_PAGERANK_API_KEY is a free key from
+    // https://www.domcop.com/openpagerank. Server-only: never a VITE_ var.
+    CRUX_API_KEY?: string;
+    OPEN_PAGERANK_API_KEY?: string;
     LOCAL_RANK_WORKFLOW: Workflow<
       Parameters<
         // oxlint-disable-next-line typescript-eslint/consistent-type-imports -- preserve ambient Env augmentation
