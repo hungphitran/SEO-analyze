@@ -175,9 +175,14 @@ export function KeywordTrendModal({
         <DialogHeader className="flex-row items-start justify-between gap-3">
           <div className="space-y-1">
             <DialogTitle>{target.keyword}</DialogTitle>
-            <DialogDescription className="text-xs">{t("ui.positionOverTime", { v0: domain, v1: locationName
-                ? formatLocationLabel(locationName, 2)
-                : (getLocationDisplayName(locationCode) ?? "US") })}</DialogDescription>
+            <DialogDescription className="text-xs">
+              {t("ui.positionOverTime", {
+                v0: domain,
+                v1: locationName
+                  ? formatLocationLabel(locationName, 2)
+                  : (getLocationDisplayName(locationCode) ?? "US"),
+              })}
+            </DialogDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -256,7 +261,9 @@ export function KeywordTrendModal({
                     <TableHeader className="sticky top-0 z-10 bg-popover">
                       <TableRow>
                         <TableHead>{t("common.date")}</TableHead>
-                        {devices.length > 1 && <TableHead>{t("common.device")}</TableHead>}
+                        {devices.length > 1 && (
+                          <TableHead>{t("common.device")}</TableHead>
+                        )}
                         <TableHead>{t("rank.position")}</TableHead>
                         <TableHead>{t("ui.vsPreviousCheck")}</TableHead>
                       </TableRow>
@@ -318,6 +325,7 @@ export function KeywordTrendModal({
                                 <DeviceRankCell
                                   result={{
                                     position: r.position,
+                                    absolutePosition: null,
                                     previousPosition: r.previousPosition,
                                     rankingUrl: null,
                                     serpFeatures: [],
@@ -415,7 +423,12 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, "");
 }
 
-const HISTORY_HEADERS = [t("common.date"), t("common.device"), t("rank.position"), t("rank.changeVsPrevious")];
+const HISTORY_HEADERS = [
+  t("common.date"),
+  t("common.device"),
+  t("rank.position"),
+  t("rank.changeVsPrevious"),
+];
 
 function historyExportRow(row: HistoryRow): CsvValue[] {
   return [

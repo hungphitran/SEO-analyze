@@ -35,6 +35,7 @@ export function mapResultsToSnapshotRows(
     keyword: r.keyword,
     device: r.device,
     position: r.position,
+    absolutePosition: r.absolutePosition ?? null,
     url: r.url,
     serpFeatures:
       r.serpFeatures.length > 0 ? JSON.stringify(r.serpFeatures) : null,

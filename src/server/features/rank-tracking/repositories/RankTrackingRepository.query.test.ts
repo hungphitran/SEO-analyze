@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- repository query contracts use real SQLite */
 import { createClient, type Client } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { eq } from "drizzle-orm";
@@ -93,12 +94,36 @@ beforeAll(async () => {
       keyword TEXT NOT NULL,
       device TEXT NOT NULL,
       position INTEGER,
+      absolute_position INTEGER,
       url TEXT,
       serp_features TEXT,
       checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
     CREATE UNIQUE INDEX rank_snapshots_run_keyword_device_idx
       ON rank_snapshots (run_id, tracking_keyword_id, device);
+    CREATE TABLE open_serp_usage (
+      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      usage_date TEXT NOT NULL,
+      requests INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (project_id, usage_date)
+    );
+    CREATE TABLE open_serp_snapshots (
+      id TEXT PRIMARY KEY,
+      run_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      config_id TEXT NOT NULL,
+      tracking_keyword_id TEXT NOT NULL,
+      keyword TEXT NOT NULL,
+      engine TEXT NOT NULL,
+      region TEXT NOT NULL,
+      lang TEXT NOT NULL,
+      request_id TEXT,
+      status TEXT NOT NULL,
+      error_code TEXT,
+      limit_requested INTEGER NOT NULL,
+      results_returned INTEGER NOT NULL,
+      fetched_at TEXT NOT NULL
+    );
   `);
 
   ({ RankTrackingRepository } = await import("./RankTrackingRepository"));
@@ -110,12 +135,57 @@ afterAll(() => {
 
 beforeEach(async () => {
   await client.executeMultiple(`
+    DELETE FROM open_serp_usage;
+    DELETE FROM open_serp_snapshots;
     DELETE FROM rank_snapshots;
     DELETE FROM rank_check_runs;
     DELETE FROM rank_tracking_keywords;
     DELETE FROM rank_tracking_configs;
     DELETE FROM projects;
   `);
+});
+
+describe("reserveOpenSerpRequest", () => {
+  it("enforces the project daily request limit without blocking a later day", async () => {
+    await seedProject("proj_1");
+
+    await expect(
+      RankTrackingRepository.reserveOpenSerpRequest("proj_1", 2, "2026-08-01"),
+    ).resolves.toBe(true);
+    await expect(
+      RankTrackingRepository.reserveOpenSerpRequest("proj_1", 2, "2026-08-01"),
+    ).resolves.toBe(true);
+    await expect(
+      RankTrackingRepository.reserveOpenSerpRequest("proj_1", 2, "2026-08-01"),
+    ).resolves.toBe(false);
+    await expect(
+      RankTrackingRepository.reserveOpenSerpRequest("proj_1", 2, "2026-08-02"),
+    ).resolves.toBe(true);
+  });
+});
+
+describe("getOpenSerpKeywordsForConfig", () => {
+  it("prioritizes never-checked and oldest-successful keywords", async () => {
+    await seedProject("proj_1");
+    await seedConfig({ id: "cfg_1" });
+    await client.executeMultiple(`
+      INSERT INTO rank_tracking_keywords (id, config_id, keyword, created_at)
+        VALUES ('kw_old', 'cfg_1', 'old', '2026-01-01'),
+               ('kw_new', 'cfg_1', 'new', '2026-01-02'),
+               ('kw_never', 'cfg_1', 'never', '2026-01-03');
+      INSERT INTO open_serp_snapshots
+        (id, run_id, project_id, config_id, tracking_keyword_id, keyword,
+         engine, region, lang, status, limit_requested, results_returned, fetched_at)
+        VALUES ('snap_old', 'run_1', 'proj_1', 'cfg_1', 'kw_old', 'old',
+                'google', 'US', 'en', 'success', 20, 1, '2026-01-01'),
+               ('snap_new', 'run_1', 'proj_1', 'cfg_1', 'kw_new', 'new',
+                'google', 'US', 'en', 'success', 20, 1, '2026-01-02');
+    `);
+
+    await expect(
+      RankTrackingRepository.getOpenSerpKeywordsForConfig("cfg_1", 2),
+    ).resolves.toEqual(["kw_never", "kw_old"]);
+  });
 });
 
 const NOW = "2026-08-01T12:00:00.000Z";

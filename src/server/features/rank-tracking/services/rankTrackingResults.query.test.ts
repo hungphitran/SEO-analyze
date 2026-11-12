@@ -41,12 +41,24 @@ beforeAll(async () => {
     );
     CREATE TABLE rank_check_runs (
       id TEXT PRIMARY KEY, config_id TEXT, project_id TEXT, status TEXT,
-      keywords_total INTEGER, keywords_checked INTEGER, is_subset_run INTEGER,
+      source_provider TEXT, keywords_total INTEGER, keywords_checked INTEGER, is_subset_run INTEGER,
       error_message TEXT, started_at TEXT, completed_at TEXT
     );
     CREATE TABLE rank_snapshots (
       id INTEGER PRIMARY KEY, run_id TEXT, tracking_keyword_id TEXT, keyword TEXT,
-      device TEXT, position INTEGER, url TEXT, serp_features TEXT, checked_at TEXT
+      device TEXT, position INTEGER, absolute_position INTEGER, url TEXT,
+      serp_features TEXT, checked_at TEXT
+    );
+    CREATE TABLE open_serp_snapshots (
+      id TEXT PRIMARY KEY, run_id TEXT, project_id TEXT, config_id TEXT,
+      tracking_keyword_id TEXT, keyword TEXT, engine TEXT, region TEXT, lang TEXT,
+      request_id TEXT, status TEXT, error_code TEXT, limit_requested INTEGER,
+      results_returned INTEGER, fetched_at TEXT
+    );
+    CREATE TABLE open_serp_results (
+      id INTEGER PRIMARY KEY, snapshot_id TEXT, source_id TEXT, organic_rank INTEGER,
+      absolute_position INTEGER, title TEXT, url TEXT, hostname TEXT,
+      registrable_domain TEXT, snippet TEXT
     );
     INSERT INTO rank_tracking_configs (id, project_id) VALUES ('config', 'project');
     INSERT INTO rank_tracking_keywords (id, config_id, keyword)

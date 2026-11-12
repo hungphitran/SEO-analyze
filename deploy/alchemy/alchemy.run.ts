@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- deployment config declarations */
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as CfWorkers from "@distilled.cloud/cloudflare/workers";
@@ -308,6 +309,12 @@ const dataEnv = {
   FREE_SOURCES_ONLY: optionalVar("FREE_SOURCES_ONLY"),
   LIGHTHOUSE_PROVIDER: optionalVar("LIGHTHOUSE_PROVIDER"),
   PAGESPEED_API_KEY: optionalSecret("PAGESPEED_API_KEY"),
+  SERP_PROVIDER: optionalVar("SERP_PROVIDER"),
+  OPENSERP_ENABLED: optionalVar("OPENSERP_ENABLED"),
+  OPENSERP_URL: optionalVar("OPENSERP_URL"),
+  OPENSERP_TIMEOUT_MS: optionalVar("OPENSERP_TIMEOUT_MS"),
+  OPENSERP_MAX_KEYWORDS_PER_DAY: optionalVar("OPENSERP_MAX_KEYWORDS_PER_DAY"),
+  OPENSERP_AUTH_TOKEN: optionalSecret("OPENSERP_AUTH_TOKEN"),
 };
 
 export default Alchemy.Stack(

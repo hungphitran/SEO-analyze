@@ -159,7 +159,8 @@ type ScheduledRankTrackingInterval = Exclude<
 export type RankTrackingSkipReason =
   | "plan_required"
   | "no_keywords"
-  | "insufficient_credits";
+  | "insufficient_credits"
+  | "openserp_unsupported_targeting";
 
 export function estimateScheduledRankCheckCredits(
   keywords: readonly string[],

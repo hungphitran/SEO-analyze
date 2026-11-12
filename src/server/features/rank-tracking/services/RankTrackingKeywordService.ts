@@ -1,6 +1,7 @@
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 import type { rankTrackingKeywords } from "@/db/schema";
 import { AppError } from "@/server/lib/errors";
+import { isOpenSerpSelected, resolveSerpProvider } from "@/server/lib/openserp";
 import {
   devicesCount,
   estimateRankCheckCredits,
@@ -65,7 +66,7 @@ async function addKeywords(
   let scheduledEstimate:
     | ReturnType<typeof estimateScheduledRankCheckCredits>
     | undefined;
-  if (rows.length > 0 && scheduleInterval) {
+  if (rows.length > 0 && scheduleInterval && !(await isOpenSerpSelected())) {
     scheduledEstimate = estimateScheduledRankCheckCredits(
       [...existing, ...rows].map((kw) => kw.keyword),
       config.devices,
@@ -155,12 +156,16 @@ async function estimateCost(
     ...additionalKeywords,
   ].slice(0, Math.max(existingKeywordCount, MAX_KEYWORDS_PER_CONFIG));
   const keywordCount = keywords.length;
-  const { costUsd, costCredits } = estimateRankCheckCredits(
-    keywords,
-    config.devices,
-    config.serpDepth,
-    "live",
-  );
+  const sourceProvider = await resolveSerpProvider();
+  const { costUsd, costCredits } =
+    sourceProvider === "openserp"
+      ? { costUsd: 0, costCredits: 0 }
+      : estimateRankCheckCredits(
+          keywords,
+          config.devices,
+          config.serpDepth,
+          "live",
+        );
   const scheduleInterval = isScheduledRankTrackingInterval(
     config.scheduleInterval,
   )
@@ -169,20 +174,25 @@ async function estimateCost(
   return {
     costUsd,
     costCredits,
+    sourceProvider,
     keywordCount,
-    devicesCount: devicesCount(config.devices),
-    totalChecks: keywordCount * devicesCount(config.devices),
+    devicesCount:
+      sourceProvider === "openserp" ? 1 : devicesCount(config.devices),
+    totalChecks:
+      keywordCount *
+      (sourceProvider === "openserp" ? 1 : devicesCount(config.devices)),
     method: "live" as const,
     existingKeywordCount,
     additionalKeywordCount: keywordCount - existingKeywordCount,
-    scheduledEstimate: scheduleInterval
-      ? estimateScheduledRankCheckCredits(
-          keywords,
-          config.devices,
-          config.serpDepth,
-          scheduleInterval,
-        )
-      : undefined,
+    scheduledEstimate:
+      scheduleInterval && sourceProvider === "dataforseo"
+        ? estimateScheduledRankCheckCredits(
+            keywords,
+            config.devices,
+            config.serpDepth,
+            scheduleInterval,
+          )
+        : undefined,
   };
 }
 

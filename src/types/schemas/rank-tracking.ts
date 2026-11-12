@@ -30,6 +30,7 @@ export type RankCheckTriggerResult =
 
 export interface RankTrackingDeviceResult {
   position: number | null;
+  absolutePosition: number | null;
   previousPosition: number | null;
   rankingUrl: string | null;
   serpFeatures: string[];

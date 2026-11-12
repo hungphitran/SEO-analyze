@@ -109,6 +109,36 @@ export default {
       optional: true,
       why: "Picks the OpenRouter model for SAM, prompt suggestions and website research (default openai/gpt-5.6-luna). The key itself is the gateway's OPENROUTER_API_KEY.",
     },
+    {
+      name: "SERP_PROVIDER",
+      optional: true,
+      why: "Set to openserp to use the operator-configured OpenSERP service for Google SERPs.",
+    },
+    {
+      name: "OPENSERP_ENABLED",
+      optional: true,
+      why: "Enable server-side requests to the configured OpenSERP service.",
+    },
+    {
+      name: "OPENSERP_URL",
+      optional: true,
+      why: "Server-only HTTPS URL for OpenSERP or an authenticated proxy; never expose it to clients.",
+    },
+    {
+      name: "OPENSERP_TIMEOUT_MS",
+      optional: true,
+      why: "OpenSERP request timeout in milliseconds (100–60000; default 15000).",
+    },
+    {
+      name: "OPENSERP_MAX_KEYWORDS_PER_DAY",
+      optional: true,
+      why: "Maximum OpenSERP requests per project per UTC day (1–1000; default 20).",
+    },
+    {
+      name: "OPENSERP_AUTH_TOKEN",
+      optional: true,
+      why: "Bearer token for an operator-managed authenticated OpenSERP proxy.",
+    },
   ],
   // Both Workers, from cloudflare.config.ts and vite-plugin-every-app.ts.
   build: "pnpm build:report-widgets && AUTH_MODE=everyapp pnpm exec vite build",

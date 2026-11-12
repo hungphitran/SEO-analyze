@@ -9,6 +9,7 @@ import {
   isScheduledRankTrackingInterval,
 } from "@/shared/rank-tracking";
 import { describeError } from "@/server/lib/errors";
+import { isOpenSerpSelected, resolveSerpProvider } from "@/server/lib/openserp";
 
 // Work admitted per tick, in task units (keywords × devices). Admission
 // control, not a hard rate limit: the first start of a tick is always
@@ -24,6 +25,7 @@ import { describeError } from "@/server/lib/errors";
 // 1,000/tick ≈ 288,000 units/day, ~45× steady-state demand — it only binds
 // during backlog catch-up.
 const SCHEDULED_TASK_UNIT_BUDGET = 1000;
+const OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET = 20;
 
 // Wall-clock guard for the per-config loop: sub-hourly crons are killed at 15
 // minutes, and a skip-heavy tick pays serial Autumn round-trips per distinct
@@ -38,13 +40,19 @@ const ALREADY_RUNNING_IDS_CAP = 20;
 // Cron body for the `scheduled` Worker handler: start a rank-check run for every
 // config that's due. Wrapped in `withPgClient` at the entrypoint (server.ts).
 export async function runScheduledRankChecks(env: Env) {
-  if (await isFreeSourcesOnly()) {
+  const freeOnly = await isFreeSourcesOnly();
+  if (freeOnly && !(await isOpenSerpSelected())) {
     console.log({
       event: "rank_tracking_scheduler_summary",
       skipped: "free_sources_only",
     });
     return;
   }
+  const sourceProvider = await resolveSerpProvider();
+  const taskUnitBudget =
+    sourceProvider === "openserp"
+      ? OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET
+      : SCHEDULED_TASK_UNIT_BUDGET;
   const nowIso = new Date().toISOString();
   const dueConfigs =
     await RankTrackingRepository.getDueConfigsWithOrganization(nowIso);
@@ -74,6 +82,7 @@ export async function runScheduledRankChecks(env: Env) {
   let stoppedByDeadline = false;
   let skippedFree = 0;
   let skippedNoKeywords = 0;
+  let skippedUnsupportedTargeting = 0;
   let concurrentChangeSkips = 0;
   let alreadyRunning = 0;
   const alreadyRunningConfigIds: string[] = [];
@@ -99,13 +108,28 @@ export async function runScheduledRankChecks(env: Env) {
       if (!interval || !config.nextCheckAt) continue;
 
       const kwCount = keywordCounts.get(config.id) ?? 0;
-      const taskUnits = kwCount * devicesCount(config.devices);
+      const taskUnits =
+        sourceProvider === "openserp"
+          ? Math.min(kwCount, OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET)
+          : kwCount * devicesCount(config.devices);
+      if (sourceProvider === "openserp" && config.locationName) {
+        const claimed = await RankTrackingRepository.claimDueConfig({
+          configId: config.id,
+          projectId: config.projectId,
+          observedNextCheckAt: config.nextCheckAt,
+          nextCheckAt: computeNextCheckAt(interval, config.nextCheckAt),
+          lastSkipReason: "openserp_unsupported_targeting",
+        });
+        if (claimed) skippedUnsupportedTargeting++;
+        else concurrentChangeSkips++;
+        continue;
+      }
       // Projected stop: admit only what fits the budget. The first start of a
       // tick is exempt so an oversized config can never starve, and zero-unit
       // rows (no keywords) always advance.
       if (
-        started > 0 &&
-        unitsStarted + taskUnits > SCHEDULED_TASK_UNIT_BUDGET
+        (sourceProvider === "openserp" && started > 0 && kwCount > 0) ||
+        (started > 0 && unitsStarted + taskUnits > taskUnitBudget)
       ) {
         stoppedByBudget = true;
         break;
@@ -187,6 +211,7 @@ export async function runScheduledRankChecks(env: Env) {
             projectId: config.projectId,
           },
           keywordsTotal: kwCount,
+          sourceProvider,
           trigger: "scheduled",
           workflowStartErrorMessage: "Failed to start scheduled workflow",
         });
@@ -247,11 +272,12 @@ export async function runScheduledRankChecks(env: Env) {
     candidates: dueConfigs.length,
     started,
     unitsStarted,
-    budget: SCHEDULED_TASK_UNIT_BUDGET,
+    budget: taskUnitBudget,
     stoppedByBudget,
     stoppedByDeadline,
     skippedFree,
     skippedNoKeywords,
+    skippedUnsupportedTargeting,
     concurrentChangeSkips,
     alreadyRunning,
     alreadyRunningConfigIds,

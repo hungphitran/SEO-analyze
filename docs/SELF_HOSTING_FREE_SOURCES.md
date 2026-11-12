@@ -15,12 +15,32 @@ Set `FREE_SOURCES_ONLY=true` in `.env.selfhost` (or the equivalent runtime env).
 When that flag is on:
 
 - Every DataForSEO client call fails before a network request, including from background jobs.
-- Scheduled rank checks and scheduled AI visibility runs exit immediately.
+- Scheduled AI visibility runs stay disabled. Scheduled rank checks run only when the operator explicitly selects a ready OpenSERP service.
 - Site-audit Lighthouse uses PageSpeed Insights, not DataForSEO. If `PAGESPEED_API_KEY` is missing, the Lighthouse row records a configuration error; it does **not** fall back to DataForSEO.
 
 Leave `DATAFORSEO_API_KEY` in `.env.selfhost` if it is already set. Alchemy reconciles Worker secrets on every deploy, so removing that line can wipe a previously stored production secret. The flag keeps the key unused even when it is present.
 
 You can also set `LIGHTHOUSE_PROVIDER=pagespeed` to use PageSpeed Insights for Lighthouse without turning the rest of free-sources mode on.
+
+## Google SERPs and rank tracking with OpenSERP
+
+OpenSERP supplies Google result pages, not keyword-market metrics. In free-sources mode, set `SERP_PROVIDER=openserp`, `OPENSERP_ENABLED=true`, and a server-only `OPENSERP_URL`. The app sends requests only from its server, caches results, and never falls back to DataForSEO. SERP requests are limited to 20 uncached requests per project per UTC day by default; set `OPENSERP_MAX_KEYWORDS_PER_DAY` to an integer from 1 to 1000 to change the limit. A cache hit does not use quota.
+
+For a private Docker deployment, use the fork's build and the pinned OpenSERP overlay together:
+
+```sh
+export COMPOSE_FILE=deploy/standalone/compose.yaml:deploy/standalone/compose.build.yaml:deploy/standalone/compose.openserp.yaml
+cp deploy/standalone/.env.example deploy/standalone/.env
+# Set unique storage credentials and FREE_SOURCES_ONLY=true in the env file.
+docker compose up -d --build
+docker compose exec runtime curl -fsS http://openserp:7000/ready
+```
+
+The overlay runs OpenSERP `v0.8.17` on the Compose network without publishing its port. The app builds from this checkout rather than using the upstream OpenSEO image. Check `/ready` from the private network; do not expose port 7000 publicly.
+
+For Cloudflare Workers, Docker hostnames are not reachable from the Worker. Set `OPENSERP_URL` to an HTTPS endpoint behind an authenticated reverse proxy, and set `OPENSERP_AUTH_TOKEN` only when that proxy accepts a Bearer token. Restrict access to the proxy where possible. Configure these values as server secrets/variables using the deployment's normal env-file or secret mechanism; never use `VITE_` variables.
+
+Rank tracking stores only successful observations. CAPTCHA, blocked, rate-limited, timeout, invalid, empty, unsupported-targeting, and quota failures are recorded as errors and do not write a false rank. OpenSERP's region is only a market hint, not precise city targeting. Its rankings are device-independent; the existing desktop storage slot is used for compatibility, not as a desktop-specific measurement. Search volume, CPC, difficulty, backlinks, and traffic estimates remain unavailable without their original data sources.
 
 ## PageSpeed Insights setup
 
@@ -48,14 +68,14 @@ Connect a verified property in the existing Search Console card. Free-source ref
 
 ## Honest gaps
 
-| Need | Free path |
-| --- | --- |
-| Clicks, impressions, queries for a verified Google property | Search Console |
-| Clicks, impressions, queries for a verified Bing site | Bing Webmaster |
-| Lighthouse lab scores for the project website | PageSpeed Insights |
-| Built-in site crawl / on-page audit | Already in OpenSEO; Lighthouse uses PageSpeed in free mode |
-| Market search volume, keyword difficulty | Not available without a paid dataset |
-| Competitor keyword or backlink graphs | Not available without a paid dataset |
+| Need                                                        | Free path                                                  |
+| ----------------------------------------------------------- | ---------------------------------------------------------- |
+| Clicks, impressions, queries for a verified Google property | Search Console                                             |
+| Clicks, impressions, queries for a verified Bing site       | Bing Webmaster                                             |
+| Lighthouse lab scores for the project website               | PageSpeed Insights                                         |
+| Built-in site crawl / on-page audit                         | Already in OpenSEO; Lighthouse uses PageSpeed in free mode |
+| Market search volume, keyword difficulty                    | Not available without a paid dataset                       |
+| Competitor keyword or backlink graphs                       | Not available without a paid dataset                       |
 
 ## Deploy notes
 

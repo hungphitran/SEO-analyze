@@ -34,6 +34,7 @@ import {
 import { getLatestResults } from "./rankTrackingResults";
 import { toRankTrackingTimestamp } from "@/server/features/rank-tracking/rankTrackingTimestamps";
 import { RankTrackingKeywordService } from "./RankTrackingKeywordService";
+import { resolveSerpProvider } from "@/server/lib/openserp";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -223,8 +224,14 @@ async function triggerCheck(input: {
   maxCostCredits?: number;
 }): Promise<RankCheckTriggerResult> {
   const config = await getValidatedConfig(input.configId, input.projectId);
-
   await requireRankCheckAccess(input.billingCustomer.organizationId);
+  const sourceProvider = await resolveSerpProvider();
+  if (sourceProvider === "openserp" && config.locationName) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "OpenSERP does not support city-level rank tracking.",
+    );
+  }
 
   const keywords = await RankTrackingRepository.getKeywordsForConfig(config.id);
   if (keywords.length === 0) {
@@ -234,7 +241,7 @@ async function triggerCheck(input: {
     );
   }
 
-  if (input.maxCostCredits != null) {
+  if (sourceProvider === "dataforseo" && input.maxCostCredits != null) {
     const { costCredits } = estimateRankCheckCredits(
       keywords.map((kw) => kw.keyword),
       config.devices,
@@ -260,6 +267,7 @@ async function triggerCheck(input: {
       projectId: input.billingCustomer.projectId,
     },
     keywordsTotal: input.keywordIds ? input.keywordIds.length : keywords.length,
+    sourceProvider,
     keywordIds: input.keywordIds,
     maxCostCredits: input.maxCostCredits,
     trigger: "manual",
@@ -447,6 +455,7 @@ function formatRun(
     keywordsTotal: run.keywordsTotal,
     keywordsChecked: run.keywordsChecked,
     isSubsetRun: run.isSubsetRun,
+    sourceProvider: run.sourceProvider,
     errorMessage: run.errorMessage,
     startedAt: run.startedAt,
     completedAt: run.completedAt,

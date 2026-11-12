@@ -147,6 +147,27 @@ describe("runScheduledRankChecks", () => {
     );
   });
 
+  it("skips scheduled OpenSERP checks for city-level configs before starting a workflow", async () => {
+    mocks.getOptionalEnvValue.mockImplementation(async (name) => {
+      if (name === "SERP_PROVIDER") return "openserp";
+      if (name === "OPENSERP_ENABLED") return "true";
+      return undefined;
+    });
+    mocks.getDueConfigsWithOrganization.mockResolvedValue([
+      dueConfig({ locationName: "San Francisco" }),
+    ]);
+
+    await runScheduledRankChecks(testEnv);
+
+    expect(mocks.claimDueConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configId: "config_1",
+        lastSkipReason: "openserp_unsupported_targeting",
+      }),
+    );
+    expect(mocks.beginRankCheckRun).not.toHaveBeenCalled();
+  });
+
   it("claims a paid config and starts its workflow", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 

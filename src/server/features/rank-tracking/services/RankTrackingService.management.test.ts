@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   beginRankCheckRun: vi.fn(),
   createDataforseoClient: vi.fn(),
   fetchKeywordMetricsForList: vi.fn(),
+  getOptionalEnvValue: vi.fn<(name: string) => Promise<string | undefined>>(),
 }));
 
 vi.mock("cloudflare:workers", () => ({ env: { RANK_CHECK_WORKFLOW: {} } }));
@@ -20,6 +21,7 @@ vi.mock(
   () => ({ RankTrackingRepository: mocks }),
 );
 vi.mock("@/server/lib/runtime-env", () => ({
+  getOptionalEnvValue: mocks.getOptionalEnvValue,
   isHostedServerAuthMode: mocks.isHostedServerAuthMode,
 }));
 vi.mock("@/server/billing/subscription", () => ({
@@ -64,6 +66,7 @@ describe("RankTrackingService management invariants", () => {
     // explicit defaults; the plan tests override them per case.
     mocks.isHostedServerAuthMode.mockResolvedValue(true);
     mocks.customerHasPaidPlan.mockResolvedValue(true);
+    mocks.getOptionalEnvValue.mockResolvedValue(undefined);
   });
 
   it("reports only keyword rows actually inserted", async () => {
@@ -250,6 +253,24 @@ describe("RankTrackingService management invariants", () => {
       }),
     ).resolves.toEqual({ ok: true, runId: "run_1" });
     expect(mocks.customerHasPaidPlan).not.toHaveBeenCalled();
+  });
+
+  it("estimates OpenSERP as one device-independent check per keyword with no provider cost", async () => {
+    mocks.getOptionalEnvValue.mockImplementation(async (name: string) => {
+      if (name === "SERP_PROVIDER") return "openserp";
+      if (name === "OPENSERP_ENABLED") return "true";
+      return undefined;
+    });
+
+    await expect(
+      RankTrackingService.estimateCost("config_1", "project_1"),
+    ).resolves.toMatchObject({
+      sourceProvider: "openserp",
+      costUsd: 0,
+      costCredits: 0,
+      devicesCount: 1,
+      totalChecks: 2,
+    });
   });
 
   it("starts a run only at or below its approved credit ceiling", async () => {

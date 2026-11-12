@@ -22,6 +22,7 @@ export async function tryCreateRun(data: {
   projectId: string;
   keywordsTotal: number;
   isSubsetRun?: boolean;
+  sourceProvider?: "dataforseo" | "openserp";
 }) {
   const inserted = await db
     .insert(rankCheckRuns)
@@ -136,6 +137,7 @@ export async function upsertSnapshots(
         ],
         set: {
           position: snapshot.position,
+          absolutePosition: snapshot.absolutePosition,
           url: snapshot.url,
           serpFeatures: snapshot.serpFeatures,
         },

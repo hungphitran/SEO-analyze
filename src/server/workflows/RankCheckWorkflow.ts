@@ -29,6 +29,8 @@ import {
 } from "@/shared/rank-tracking";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import { isErrorCode } from "@/shared/error-codes";
+import { runOpenSerpRankCheck } from "@/server/workflows/openSerpRankCheck";
+import { getOpenSerpDailyRequestLimit } from "@/server/lib/openserp";
 
 // These steps cost nothing and are safe to repeat: they touch our own rows,
 // prepare's Autumn calls only read balances, and its credits email is sent
@@ -51,6 +53,7 @@ interface RankCheckParams {
   devices: "both" | "desktop" | "mobile";
   serpDepth: number;
   trigger: "manual" | "scheduled";
+  sourceProvider: "dataforseo" | "openserp";
   keywordIds?: string[];
   maxCostCredits?: number;
 }
@@ -62,6 +65,7 @@ async function prepareRankCheckKeywords(input: {
   devices: RankCheckParams["devices"];
   serpDepth: number;
   trigger: RankCheckParams["trigger"];
+  sourceProvider: RankCheckParams["sourceProvider"];
   keywordIds?: string[];
   maxCostCredits?: number;
 }) {
@@ -81,10 +85,34 @@ async function prepareRankCheckKeywords(input: {
   let trackingKeywords = await RankTrackingRepository.getKeywordsForConfig(
     input.configId,
   );
+  const configuredKeywordCount = trackingKeywords.length;
 
   if (input.keywordIds && input.keywordIds.length > 0) {
     const idSet = new Set(input.keywordIds);
     trackingKeywords = trackingKeywords.filter((kw) => idSet.has(kw.id));
+  }
+
+  let isSubsetRun = (input.keywordIds?.length ?? 0) > 0;
+  if (input.sourceProvider === "openserp") {
+    const dailyLimit = await getOpenSerpDailyRequestLimit();
+    if (input.keywordIds?.length) {
+      trackingKeywords = trackingKeywords.slice(0, dailyLimit);
+    } else {
+      const priorityIds =
+        await RankTrackingRepository.getOpenSerpKeywordsForConfig(
+          input.configId,
+          dailyLimit,
+        );
+      const keywordsById = new Map(
+        trackingKeywords.map((keyword) => [keyword.id, keyword]),
+      );
+      trackingKeywords = priorityIds
+        .map((id) => keywordsById.get(id))
+        .filter((keyword): keyword is NonNullable<typeof keyword> =>
+          Boolean(keyword),
+        );
+    }
+    isSubsetRun ||= trackingKeywords.length < configuredKeywordCount;
   }
 
   // Refusals are not retried: a retry would only repeat them, and send the
@@ -93,12 +121,15 @@ async function prepareRankCheckKeywords(input: {
     throw new NonRetryableError("No keywords to track");
   }
 
-  const { costCredits } = estimateRankCheckCredits(
-    trackingKeywords.map((kw) => kw.keyword),
-    input.devices,
-    input.serpDepth,
-    input.trigger === "scheduled" ? "queued" : "live",
-  );
+  const costCredits =
+    input.sourceProvider === "dataforseo"
+      ? estimateRankCheckCredits(
+          trackingKeywords.map((kw) => kw.keyword),
+          input.devices,
+          input.serpDepth,
+          input.trigger === "scheduled" ? "queued" : "live",
+        ).costCredits
+      : 0;
   if (input.maxCostCredits != null && costCredits > input.maxCostCredits) {
     throw new NonRetryableError(
       rankCheckCostApprovalError(costCredits, input.maxCostCredits),
@@ -109,7 +140,10 @@ async function prepareRankCheckKeywords(input: {
   // Scheduled checks go through the cheaper task queue, so estimate at queued
   // pricing — a live-price estimate would skip checks the user can afford.
   // The estimate is the worst case, so it covers every retry.
-  if (await isHostedServerAuthMode()) {
+  if (
+    input.sourceProvider === "dataforseo" &&
+    (await isHostedServerAuthMode())
+  ) {
     const [monthlyCheck, topupCheck] = await Promise.all([
       autumn.check({
         customerId: input.billingCustomer.organizationId,
@@ -132,6 +166,8 @@ async function prepareRankCheckKeywords(input: {
 
   await RankTrackingRepository.updateRun(input.runId, {
     keywordsTotal: trackingKeywords.length,
+    sourceProvider: input.sourceProvider,
+    isSubsetRun,
   });
 
   return {
@@ -309,6 +345,7 @@ export class RankCheckWorkflow extends WorkflowEntrypoint<
       devices,
       serpDepth,
       trigger,
+      sourceProvider,
       keywordIds,
       maxCostCredits,
     } = event.payload;
@@ -348,39 +385,54 @@ export class RankCheckWorkflow extends WorkflowEntrypoint<
             devices,
             serpDepth,
             trigger,
+            sourceProvider,
             keywordIds,
             maxCostCredits,
           }),
       );
 
       const keywords = prepareResult.keywords;
-      const client = createDataforseoClient(billingCustomer);
 
       console.log(`[rank-check] ${runId} loaded ${keywords.length} keywords`);
 
       let batchError: string | null = null;
 
       try {
-        const checkContext = {
-          client,
-          keywords,
-          devices,
-          serpDepth,
-          domain,
-          locationCode,
-          languageCode,
-          locationName,
-          runId,
-        };
-        // Scheduled checks use DataForSEO's task queue (~30% of live cost);
-        // manual checks stay on the live endpoint for instant results.
-        // Retries always go through the queue.
-        if (trigger === "scheduled") {
-          await runQueuedCheck(step, checkContext);
+        if (sourceProvider === "openserp") {
+          await runOpenSerpRankCheck(step, {
+            runId,
+            projectId,
+            configId,
+            domain,
+            locationCode,
+            languageCode,
+            locationName,
+            serpDepth,
+            keywords,
+          });
         } else {
-          await runLiveCheck(step, checkContext);
+          const client = createDataforseoClient(billingCustomer);
+          const checkContext = {
+            client,
+            keywords,
+            devices,
+            serpDepth,
+            domain,
+            locationCode,
+            languageCode,
+            locationName,
+            runId,
+          };
+          // Scheduled checks use DataForSEO's task queue (~30% of live cost);
+          // manual checks stay on the live endpoint for instant results.
+          // Retries always go through the queue.
+          if (trigger === "scheduled") {
+            await runQueuedCheck(step, checkContext);
+          } else {
+            await runLiveCheck(step, checkContext);
+          }
+          await retryRankChecks(step, checkContext, configId, trigger);
         }
-        await retryRankChecks(step, checkContext, configId, trigger);
       } catch (error) {
         // Batch failure — snapshots for completed batches are already
         // persisted incrementally. Continue to finalization.
@@ -395,7 +447,7 @@ export class RankCheckWorkflow extends WorkflowEntrypoint<
           projectId,
           billingCustomer,
           trigger,
-          devices,
+          devices: sourceProvider === "openserp" ? "desktop" : devices,
           batchError,
         }),
       );

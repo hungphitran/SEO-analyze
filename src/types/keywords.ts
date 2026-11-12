@@ -52,6 +52,7 @@ export type SavedKeywordTagSummary = SavedKeywordTag & {
 
 export type SerpResultItem = {
   rank: number;
+  absolutePosition?: number | null;
   title: string;
   url: string;
   domain: string;

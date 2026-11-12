@@ -6,7 +6,7 @@ Already running the older single-container image (`ghcr.io/every-app/open-seo`)?
 
 ## Install
 
-You need Docker Engine or Docker Desktop with Compose, at least 4 GiB of memory for Docker, and a [DataForSEO API key](./DATAFORSEO_API_KEY.md). Every command below runs from the repository root:
+You need Docker Engine or Docker Desktop with Compose and at least 4 GiB of memory for Docker. DataForSEO is optional when using OpenSERP in free-sources mode. Every command below runs from the repository root:
 
 ```sh
 git clone https://github.com/every-app/open-seo.git
@@ -59,13 +59,36 @@ Set credentials in `deploy/standalone/.env`, then apply them without rebuilding:
 docker compose up -d --force-recreate init web crawl-gateway
 ```
 
-| Variable                                   | Purpose                                                                      |
-| ------------------------------------------ | ---------------------------------------------------------------------------- |
-| `DATAFORSEO_API_KEY`                       | Base64-encoded `login:password`; keyword, backlink, rank and site data       |
-| `OPENROUTER_API_KEY`                       | SAM conversations, website research and summaries                            |
-| `OPENROUTER_MODEL`                         | Optional model override                                                      |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Search Console and Analytics linking with your own Google OAuth app |
-| `CONTEXT_API_KEY`                          | Optional JavaScript rendering for site audits                                |
+| Variable                                   | Purpose                                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------- |
+| `DATAFORSEO_API_KEY`                       | Base64-encoded `login:password`; keyword, backlink, rank and site data          |
+| `OPENROUTER_API_KEY`                       | SAM conversations, website research and summaries                               |
+| `OPENROUTER_MODEL`                         | Optional model override                                                         |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Search Console and Analytics linking with your own Google OAuth app    |
+| `CONTEXT_API_KEY`                          | Optional JavaScript rendering for site audits                                   |
+| `FREE_SOURCES_ONLY`                        | Blocks DataForSEO; OpenSERP rank checks require its explicit provider selection |
+| `OPENSERP_TIMEOUT_MS`                      | OpenSERP HTTP timeout (default 15000)                                           |
+| `OPENSERP_MAX_KEYWORDS_PER_DAY`            | Uncached OpenSERP requests per project per UTC day (default 20, max 1000)       |
+| `OPENSERP_AUTH_TOKEN`                      | Optional Bearer token for an authenticated HTTPS proxy                          |
+
+### Use private OpenSERP for Google SERPs
+
+The standalone image does not include OpenSERP. To run it as a private service and build the app from this checkout, set all three Compose files:
+
+```sh
+export COMPOSE_FILE=deploy/standalone/compose.yaml:deploy/standalone/compose.build.yaml:deploy/standalone/compose.openserp.yaml
+```
+
+Set `FREE_SOURCES_ONLY=true` in `deploy/standalone/.env`, then start or recreate the stack:
+
+```sh
+docker compose up -d --build
+docker compose exec runtime curl -fsS http://openserp:7000/ready
+```
+
+The overlay pins OpenSERP `v0.8.17` and does not publish its port. OpenSEO reaches it over the private Compose network. It uses no service token on that network; `OPENSERP_AUTH_TOKEN` is only for an authenticated HTTPS proxy. The default limit is 20 uncached OpenSERP requests per project per UTC day; `OPENSERP_MAX_KEYWORDS_PER_DAY` accepts 1–1000.
+
+For a Cloudflare Worker deployment, configure `SERP_PROVIDER=openserp`, `OPENSERP_ENABLED=true`, and an HTTPS `OPENSERP_URL` behind an authenticated reverse proxy. Set `OPENSERP_AUTH_TOKEN` if that proxy requires Bearer authentication. Do not point a Worker at `http://openserp:7000`; Docker service names are not reachable from Cloudflare.
 
 For Google, register your own OAuth application with these redirect URLs under your public address: `/api/gsc/oauth/callback` for Search Console and `/api/ga4/oauth/callback` for Analytics. See [`SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md`](./SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md). Signing in with Google is not offered; accounts use email and password.
 

@@ -37,6 +37,7 @@ const input = {
     projectId: "project_1",
   },
   keywordsTotal: 2,
+  sourceProvider: "dataforseo" as const,
   trigger: "manual" as const,
   workflowStartErrorMessage: "failed",
 };
@@ -49,7 +50,14 @@ describe("beginRankCheckRun", () => {
     async (maxCostCredits) => {
       mocks.tryCreateRun.mockResolvedValue(true);
       const create = vi
-        .fn<(input: { params: { maxCostCredits?: number } }) => Promise<void>>()
+        .fn<
+          (input: {
+            params: {
+              maxCostCredits?: number;
+              sourceProvider: "dataforseo" | "openserp";
+            };
+          }) => Promise<void>
+        >()
         .mockResolvedValue(undefined);
       // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- only create is exercised by this unit test
       const workflow = { create } as unknown as Env["RANK_CHECK_WORKFLOW"];
@@ -65,6 +73,12 @@ describe("beginRankCheckRun", () => {
       expect(create).toHaveBeenCalledTimes(1);
       expect(create.mock.calls[0]?.[0].params.maxCostCredits).toBe(
         maxCostCredits,
+      );
+      expect(create.mock.calls[0]?.[0].params.sourceProvider).toBe(
+        "dataforseo",
+      );
+      expect(mocks.tryCreateRun).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceProvider: "dataforseo" }),
       );
     },
   );

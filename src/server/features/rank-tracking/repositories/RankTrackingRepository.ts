@@ -40,6 +40,14 @@ import {
   deleteNotFoundSnapshots,
   getSnapshotsForRun,
 } from "./runQueries";
+import {
+  getOpenSerpResultsForSnapshots,
+  getOpenSerpKeywordsForConfig,
+  getOpenSerpSnapshotsForConfig,
+  insertOpenSerpFailure,
+  insertOpenSerpSnapshot,
+  reserveOpenSerpRequest,
+} from "./openSerpQueries";
 
 // ---------------------------------------------------------------------------
 // Config CRUD
@@ -424,4 +432,10 @@ export const RankTrackingRepository = {
   getKeywordHistory,
   getConfigTrend,
   getPositionMatrix,
+  insertOpenSerpSnapshot,
+  insertOpenSerpFailure,
+  reserveOpenSerpRequest,
+  getOpenSerpSnapshotsForConfig,
+  getOpenSerpResultsForSnapshots,
+  getOpenSerpKeywordsForConfig,
 };

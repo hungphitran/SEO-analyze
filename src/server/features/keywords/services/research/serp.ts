@@ -10,6 +10,16 @@ import type { BillingCustomerContext } from "@/server/billing/subscription";
 import { createDataforseoClient } from "@/server/lib/dataforseo";
 import { normalizeKeyword } from "./helpers";
 import { assertLocalResearchLocation } from "./local-volume";
+import {
+  assertOpenSerpReady,
+  getOpenSerpDailyRequestLimit,
+  OpenSerpError,
+  resolveSerpProvider,
+  searchOpenSerp,
+  type OpenSerpSnapshot,
+} from "@/server/lib/openserp";
+import { getIsoCountryCode } from "@/shared/keyword-locations";
+import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 
 const SERP_CACHE_TTL_SECONDS = 12 * 60 * 60;
 
@@ -20,11 +30,15 @@ type SerpAnalysisResult = {
   items: SerpResultItem[];
   /** SERP depth this snapshot was crawled at — how deep the results go. */
   depth: number;
+  sourceProvider: "dataforseo" | "openserp";
+  fetchedAt: string;
+  marketHint: string;
   reason?: SerpAnalysisReason;
 };
 
 const serpResultItemSchema = z.object({
   rank: z.number().int(),
+  absolutePosition: z.number().int().nullable().optional(),
   title: z.string(),
   url: z.string(),
   domain: z.string(),
@@ -44,6 +58,9 @@ const serpCacheSchema = z.object({
   // they're treated as the shallow floor: worst case a user re-buys a deeper
   // crawl once, rather than being shown 20 results as if they were 100.
   depth: z.number().int().default(SERP_ANALYSIS_DEPTH),
+  sourceProvider: z.enum(["dataforseo", "openserp"]).default("dataforseo"),
+  fetchedAt: z.string().optional(),
+  marketHint: z.string().default(""),
   reason: z.enum(["no_organic_results"]).optional(),
 });
 
@@ -52,6 +69,7 @@ function mapOrganicSerpItems(items: SerpLiveItem[]): SerpResultItem[] {
     .filter((item) => item.type === "organic")
     .map((item) => ({
       rank: item.rank_group ?? item.rank_absolute ?? 0,
+      absolutePosition: item.rank_absolute ?? null,
       title: item.title ?? "",
       url: item.url ?? "",
       domain: item.domain ?? "",
@@ -78,13 +96,23 @@ async function getSerpLiveAnalysis(
 ): Promise<SerpAnalysisResult> {
   const keyword = normalizeKeyword(input.keyword);
   const { depth } = input;
+  const sourceProvider = await resolveSerpProvider();
   if (input.locationName) {
-    await assertLocalResearchLocation(input.locationCode, input.locationName);
+    if (sourceProvider === "openserp") {
+      throw new OpenSerpError(
+        "unsupported_targeting",
+        "OpenSERP supports a market region hint, not city-level rank tracking.",
+      );
+    } else {
+      await assertLocalResearchLocation(input.locationCode, input.locationName);
+    }
   }
 
+  const marketHint = getIsoCountryCode(input.locationCode);
   const cacheKey = await buildCacheKey("serp:analysis", {
     organizationId: billingCustomer.organizationId,
     projectId: input.projectId,
+    sourceProvider,
     keyword,
     locationCode: input.locationCode,
     languageCode: input.languageCode,
@@ -98,22 +126,65 @@ async function getSerpLiveAnalysis(
   const cachedRaw = await getCached(cacheKey);
   const cached = serpCacheSchema.safeParse(cachedRaw);
   if (cached.success && cached.data.depth >= depth) {
-    return cached.data;
+    return {
+      ...cached.data,
+      fetchedAt: cached.data.fetchedAt ?? new Date().toISOString(),
+    };
   }
 
-  const liveItems = await createDataforseoClient(billingCustomer).serp.live({
-    keyword,
-    locationCode: input.locationCode,
-    languageCode: input.languageCode,
-    locationName: input.locationName,
-    depth,
-  });
-
-  const items = mapOrganicSerpItems(liveItems);
+  let openSerpSnapshot: OpenSerpSnapshot | null = null;
+  if (sourceProvider === "openserp") {
+    await assertOpenSerpReady({ locationName: input.locationName });
+    const reserved = await RankTrackingRepository.reserveOpenSerpRequest(
+      input.projectId,
+      await getOpenSerpDailyRequestLimit(),
+    );
+    if (!reserved) {
+      throw new OpenSerpError(
+        "quota_exceeded",
+        "OpenSERP daily project request limit reached.",
+      );
+    }
+    openSerpSnapshot = await searchOpenSerp({
+      keyword,
+      region: marketHint,
+      lang: input.languageCode,
+      limit: depth,
+      locationName: input.locationName,
+    });
+  }
+  const fetchedAt = openSerpSnapshot?.fetchedAt ?? new Date().toISOString();
+  const items = openSerpSnapshot
+    ? openSerpSnapshot.results.map((item) => ({
+        rank: item.organicRank,
+        absolutePosition: item.absolutePosition,
+        title: item.title,
+        url: item.url,
+        domain: item.hostname,
+        description: item.snippet,
+        etv: null,
+        estimatedPaidTrafficCost: null,
+        referringDomains: null,
+        backlinks: null,
+        isNew: false,
+        rankChange: null,
+      }))
+    : mapOrganicSerpItems(
+        await createDataforseoClient(billingCustomer).serp.live({
+          keyword,
+          locationCode: input.locationCode,
+          languageCode: input.languageCode,
+          locationName: input.locationName,
+          depth,
+        }),
+      );
   const result: SerpAnalysisResult = {
     requestedKeyword: keyword,
     items,
     depth,
+    sourceProvider,
+    fetchedAt,
+    marketHint,
   };
   if (items.length === 0) {
     result.reason = "no_organic_results";
@@ -130,7 +201,11 @@ async function getSerpLiveAnalysis(
   // waitUntil, not void: workerd cancels unregistered pending I/O once the
   // response is sent, so a fire-and-forget put never persists the cache.
   waitUntil(
-    setCached(cacheKey, result, SERP_CACHE_TTL_SECONDS).catch((error) => {
+    setCached(
+      cacheKey,
+      result,
+      sourceProvider === "openserp" ? 6 * 60 * 60 : SERP_CACHE_TTL_SECONDS,
+    ).catch((error) => {
       console.error("keywords.serp.cache-write failed:", error);
     }),
   );

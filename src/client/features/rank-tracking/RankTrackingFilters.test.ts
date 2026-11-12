@@ -28,12 +28,14 @@ function makeRow(
     cpc: metrics.cpc ?? null,
     desktop: {
       position: desktopPosition,
+      absolutePosition: null,
       previousPosition: null,
       rankingUrl: null,
       serpFeatures: [],
     },
     mobile: {
       position: mobilePosition,
+      absolutePosition: null,
       previousPosition: null,
       rankingUrl: null,
       serpFeatures: [],

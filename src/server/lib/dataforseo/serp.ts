@@ -130,6 +130,7 @@ export interface RankCheckResult {
   keywordId: string;
   keyword: string;
   position: number | null;
+  absolutePosition?: number | null;
   url: string | null;
   serpFeatures: string[];
 }
@@ -154,6 +155,7 @@ function buildRankCheckResult(
     position: organicMatch
       ? (organicMatch.rank_group ?? organicMatch.rank_absolute ?? null)
       : null,
+    absolutePosition: organicMatch?.rank_absolute ?? null,
     url: organicMatch?.url ?? null,
     serpFeatures: [...new Set(items.map((item) => item.type).filter(Boolean))],
   };

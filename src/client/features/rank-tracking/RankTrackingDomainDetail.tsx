@@ -29,10 +29,16 @@ import { exportRankTracking } from "./RankTrackingTableParts";
 import type { RankTrackingConfig } from "@/types/schemas/rank-tracking";
 import {
   rankTrackingDetailSearchSchema,
-  type ComparePeriod,
   type RankTrackingDetailSearch,
 } from "@/types/schemas/rank-tracking-search";
 import { AddKeywordsPanel } from "./AddKeywordsPanel";
+import { SerpExplorerPanel } from "./SerpExplorerPanel";
+import { CompetitorOverlapCard } from "./CompetitorOverlapCard";
+import {
+  defaultComparePeriod,
+  getRankTrackingViewState,
+  resolveActiveDevice,
+} from "./rankTrackingDomainDetailState";
 import {
   FilterPanel,
   applyFilters,
@@ -51,30 +57,6 @@ import {
 } from "@/client/lib/filterSearchParams";
 import { useDebouncedDraft } from "@/client/hooks/useDebouncedDraft";
 import { t } from "@/shared/i18n";
-
-function deviceVisibility(
-  devices: RankTrackingConfig["devices"],
-  activeDevice: "desktop" | "mobile",
-): { showDesktop: boolean; showMobile: boolean } {
-  if (devices === "both") {
-    return {
-      showDesktop: activeDevice === "desktop",
-      showMobile: activeDevice === "mobile",
-    };
-  }
-  return {
-    showDesktop: devices !== "mobile",
-    showMobile: devices !== "desktop",
-  };
-}
-
-function defaultComparePeriod(
-  interval: RankTrackingConfig["scheduleInterval"],
-): ComparePeriod {
-  if (interval === "daily") return "1d";
-  if (interval === "monthly") return "30d";
-  return "7d";
-}
 
 export function RankTrackingDomainDetail({
   config,
@@ -107,9 +89,6 @@ export function RankTrackingDomainDetail({
   );
   const comparePeriod =
     search.compare ?? defaultComparePeriod(config.scheduleInterval);
-  // A single-device config has only one device to show.
-  const activeDevice =
-    config.devices === "both" ? (search.device ?? "desktop") : config.devices;
   const viewMode = search.view ?? "table";
 
   // The route keys this component by config, so previous data here is always
@@ -125,6 +104,22 @@ export function RankTrackingDomainDetail({
   const resultsData = resultsQuery.data;
 
   const latestRun = useRankRunPolling(projectId, config.id);
+  const { data: costEstimate } = useQuery({
+    queryKey: ["rankTrackingCostEstimate", projectId, config.id],
+    queryFn: () =>
+      estimateRankCheckCost({ data: { projectId, configId: config.id } }),
+  });
+  const isDeviceIndependent =
+    (costEstimate?.sourceProvider ??
+      latestRun?.sourceProvider ??
+      resultsData?.run?.sourceProvider) === "openserp";
+  // OpenSERP does not return device-specific rankings. Its observations use
+  // the existing desktop storage slot only for compatibility.
+  const activeDevice = resolveActiveDevice(
+    isDeviceIndependent,
+    config.devices,
+    search.device,
+  );
 
   // Also feeds the History toggle: the matrix view only earns its tab once
   // there are two checks to compare.
@@ -136,12 +131,15 @@ export function RankTrackingDomainDetail({
       }),
   });
   const historyAvailable = countMatrixRuns(matrixCells ?? []) >= 2;
-
-  const { data: costEstimate } = useQuery({
-    queryKey: ["rankTrackingCostEstimate", projectId, config.id],
-    queryFn: () =>
-      estimateRankCheckCost({ data: { projectId, configId: config.id } }),
-  });
+  const { showDesktop, showMobile, defaultSortId, sortId, effectiveViewMode } =
+    getRankTrackingViewState({
+      devices: config.devices,
+      activeDevice,
+      isDeviceIndependent,
+      historyAvailable,
+      viewMode,
+      sort: search.sort,
+    });
 
   const [pendingCheck, setPendingCheck] = useState<{
     count: number;
@@ -164,9 +162,7 @@ export function RankTrackingDomainDetail({
     });
     setShowAddKeywords(false);
     captureClientEvent("rank_tracking:keywords_add");
-    toast.success(
-      t("ui.keywordAdded", { v0: result.added }),
-    );
+    toast.success(t("ui.keywordAdded", { v0: result.added }));
     if (result.checkScheduledSoon) {
       toast.info(t("rank.scheduledCovers"));
     } else if (
@@ -204,25 +200,12 @@ export function RankTrackingDomainDetail({
   const rows = resultsData?.rows;
   const run = resultsData?.run;
   const trackedKeywordCount = costEstimate?.keywordCount ?? rows?.length ?? 0;
-  const hasBothDevices = config.devices === "both";
-  const { showDesktop, showMobile } = deviceVisibility(
-    config.devices,
-    activeDevice,
-  );
+  const hasBothDevices = config.devices === "both" && !isDeviceIndependent;
   const filtered = useMemo(
     () => applyFilters(rows ?? [], filters),
     [rows, filters],
   );
   const activeFilterCount = countActiveFilters(filters);
-  const defaultSortId = showDesktop ? "desktopPosition" : "mobilePosition";
-  // A position sort for the hidden device falls back to the default.
-  const sortId =
-    (search.sort === "desktopPosition" && !showDesktop) ||
-    (search.sort === "mobilePosition" && !showMobile)
-      ? undefined
-      : search.sort;
-  // Fall back to the table if history disappears (e.g. device switch).
-  const effectiveViewMode = historyAvailable ? viewMode : "table";
   const exportFiltered = (format: "csv" | "sheets") =>
     exportRankTracking({
       format,
@@ -246,6 +229,11 @@ export function RankTrackingDomainDetail({
         {/* Domain header */}
         <RankTrackingDetailHeader
           config={config}
+          sourceProvider={
+            costEstimate?.sourceProvider ??
+            latestRun?.sourceProvider ??
+            resultsData?.run?.sourceProvider
+          }
           run={run}
           costEstimate={costEstimate}
           hasBothDevices={hasBothDevices}
@@ -259,6 +247,9 @@ export function RankTrackingDomainDetail({
           onEdit={onEdit}
           onToggleAddKeywords={() => setShowAddKeywords((c) => !c)}
         />
+
+        <SerpExplorerPanel config={config} projectId={projectId} />
+        <CompetitorOverlapCard overlap={resultsData?.competitorOverlap} />
 
         {showAddKeywords && (
           <div className="px-4 pb-3">
@@ -378,6 +369,7 @@ export function RankTrackingDomainDetail({
         <CheckConfirmModal
           keywordCount={pendingCheck.count}
           devices={config.devices}
+          deviceIndependent={isDeviceIndependent}
           costUsd={costEstimate?.costUsd}
           isPending={isPending}
           onRunNow={() =>

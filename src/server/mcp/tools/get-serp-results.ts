@@ -4,12 +4,21 @@ import {
   createDataforseoClient,
   SERP_ANALYSIS_DEPTH,
 } from "@/server/lib/dataforseo";
+import {
+  assertOpenSerpReady,
+  getOpenSerpDailyRequestLimit,
+  OpenSerpError,
+  resolveSerpProvider,
+  searchOpenSerp,
+} from "@/server/lib/openserp";
+import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 import { buildCacheKey, getCached, setCached } from "@/server/lib/r2-cache";
 import { mcpResponse } from "@/server/mcp/formatters";
 import { buildProjectMeta } from "@/server/mcp/context";
 import { serpSchema, serpItemSchema } from "@/shared/mcp-contracts";
 import { withMcpProjectAuth } from "@/server/mcp/project-auth";
 import { resolveMarket } from "@/shared/keyword-locations";
+import { getIsoCountryCode } from "@/shared/keyword-locations";
 import { assertLocalResearchLocation } from "@/server/features/keywords/services/research/local-volume";
 import { toolErrorMessage } from "@/server/mcp/tool-error-message";
 import {
@@ -27,6 +36,14 @@ import {
 // A repeat within this window is answered from the saved rows, uncharged, so a
 // caller that lost a response can call again instead of paying twice.
 const SERP_RESULTS_CACHE_TTL_SECONDS = 12 * 60 * 60;
+const OPEN_SERP_RESULTS_CACHE_TTL_SECONDS = 6 * 60 * 60;
+const serpResultsCacheSchema = z.union([
+  z.array(serpItemSchema),
+  z.object({
+    items: z.array(serpItemSchema),
+    fetchedAt: z.string(),
+  }),
+]);
 
 type SerpItem = z.infer<typeof serpItemSchema>;
 
@@ -63,7 +80,7 @@ const querySchema = z.object({
     .enum(["desktop", "mobile"])
     .optional()
     .describe(
-      "Device to fetch the SERP for, default desktop. Use mobile to compare against a mobile rank tracker. Same price.",
+      "Device to fetch when using DataForSEO (default desktop). OpenSERP does not provide device-specific results; an explicit mobile request is rejected.",
     ),
 });
 
@@ -95,7 +112,7 @@ export const getSerpResultsTool = {
   config: {
     title: "Get Google SERP results",
     description:
-      "Fetch live Google organic search results for 1-10 keywords. Use this to inspect who ranks for a query, verify competitors, compare SERPs across keywords, or gather source URLs before content planning. Returns the top `depth` result rows per keyword (default 20). `rank` counts every SERP element (ads, People Also Ask, ...); `organicRank` counts organic results only and matches rank tracker positions. Charges credits per keyword: ~5 each at the default depth 20, and each additional 10 of depth adds ~2.5. A keyword fetched in this project in the last 12 hours with the same market, device, and depth returns those rows again at no charge once the original call has finished, so if a response is lost, wait a minute and repeat the same call. Per-keyword errors don't fail the batch.",
+      "Fetch live Google organic search results for 1-10 keywords. Use this to inspect who ranks for a query, verify competitors, compare SERPs across keywords, or gather source URLs before content planning. Returns up to `depth` organic results per keyword (default 20), with organic rank separate from absolute SERP position. The selected SERP provider and freshness are returned. DataForSEO calls use credits; OpenSERP calls do not use DataForSEO and do not provide device-specific results. Cached queries are returned without another provider request. Per-keyword errors don't fail the batch.",
     inputSchema,
     outputSchema: serpSchema,
     annotations: {
@@ -105,7 +122,11 @@ export const getSerpResultsTool = {
     },
   },
   handler: withMcpProjectAuth(async (args: Args, context) => {
-    const client = createDataforseoClient(context.billing);
+    const sourceProvider = await resolveSerpProvider();
+    const client =
+      sourceProvider === "dataforseo"
+        ? createDataforseoClient(context.billing)
+        : undefined;
     const depth = args.depth ?? SERP_ANALYSIS_DEPTH;
     const results = await Promise.all(
       args.queries.map(async (q) => {
@@ -114,7 +135,10 @@ export const getSerpResultsTool = {
           const scope = {
             ...market,
             locationName: q.locationName,
-            device: q.device ?? "desktop",
+            ...(sourceProvider === "dataforseo"
+              ? { device: q.device ?? "desktop" }
+              : { deviceIndependent: true }),
+            sourceProvider,
           };
           if (q.locationName) {
             await assertLocalResearchLocation(
@@ -126,43 +150,98 @@ export const getSerpResultsTool = {
             organizationId: context.billing.organizationId,
             projectId: args.projectId,
             keyword: q.keyword,
+            sourceProvider,
             ...market,
             locationName: q.locationName,
             depth,
-            // Omitted for desktop, explicit or default, so desktop keys match
-            // rows cached before the device option existed.
-            device: q.device === "mobile" ? "mobile" : undefined,
+            device:
+              sourceProvider === "dataforseo" && q.device === "mobile"
+                ? "mobile"
+                : undefined,
           });
-          const cached = z
-            .array(serpItemSchema)
-            .safeParse(await getCached(cacheKey));
+          const cached = serpResultsCacheSchema.safeParse(
+            await getCached(cacheKey),
+          );
           if (cached.success) {
+            const cachedItems = Array.isArray(cached.data)
+              ? cached.data
+              : cached.data.items;
             return {
               keyword: q.keyword,
               ok: true as const,
-              items: cached.data,
+              items: cachedItems,
+              fetchedAt: Array.isArray(cached.data)
+                ? undefined
+                : cached.data.fetchedAt,
+              ...(sourceProvider === "openserp"
+                ? { marketHint: getIsoCountryCode(market.locationCode) }
+                : {}),
               ...scope,
             };
           }
 
-          const items = await client.serp.live({
-            keyword: q.keyword,
-            ...market,
-            locationName: q.locationName,
-            depth,
-            device: q.device,
-          });
-          // Trim noise — return only essentials per item.
-          const trimmed = items.slice(0, depth).map((item) => ({
-            type: item.type,
-            rank: item.rank_absolute ?? item.rank_group ?? null,
-            organicRank:
-              item.type === "organic" ? (item.rank_group ?? null) : null,
-            title: item.title ?? null,
-            url: item.url ?? null,
-            domain: item.domain ?? null,
-            description: item.description ?? null,
-          }));
+          if (sourceProvider === "openserp" && q.device === "mobile") {
+            throw new Error(
+              "OpenSERP does not provide device-specific search results.",
+            );
+          }
+          if (sourceProvider === "openserp") {
+            await assertOpenSerpReady({ locationName: q.locationName });
+            const reserved =
+              await RankTrackingRepository.reserveOpenSerpRequest(
+                args.projectId,
+                await getOpenSerpDailyRequestLimit(),
+              );
+            if (!reserved) {
+              throw new OpenSerpError(
+                "quota_exceeded",
+                "OpenSERP daily project request limit reached.",
+              );
+            }
+          }
+          let fetchedAt: string;
+          let trimmed: SerpItem[];
+          if (sourceProvider === "openserp") {
+            const snapshot = await searchOpenSerp({
+              keyword: q.keyword,
+              region: getIsoCountryCode(market.locationCode),
+              lang: market.languageCode,
+              limit: depth,
+              locationName: q.locationName,
+            });
+            fetchedAt = snapshot.fetchedAt;
+            trimmed = snapshot.results.map((item) => ({
+              type: "organic",
+              rank: item.absolutePosition,
+              organicRank: item.organicRank,
+              title: item.title,
+              url: item.url,
+              domain: item.hostname,
+              description: item.snippet,
+            }));
+          } else {
+            if (!client) {
+              throw new Error("DataForSEO client is unavailable.");
+            }
+            const items = await client.serp.live({
+              keyword: q.keyword,
+              ...market,
+              locationName: q.locationName,
+              depth,
+              device: q.device,
+            });
+            fetchedAt = new Date().toISOString();
+            trimmed = items.slice(0, depth).map((item) => ({
+              type: item.type,
+              rank: item.rank_absolute ?? item.rank_group ?? null,
+              organicRank:
+                item.type === "organic" ? (item.rank_group ?? null) : null,
+              title: item.title ?? null,
+              url: item.url ?? null,
+              domain: item.domain ?? null,
+              description: item.description ?? null,
+            }));
+          }
           // DataForSEO reports "no results" transiently; don't pin that for
           // the whole window. waitUntil, not void: workerd cancels
           // unregistered pending I/O once the response is sent.
@@ -170,8 +249,10 @@ export const getSerpResultsTool = {
             waitUntil(
               setCached(
                 cacheKey,
-                trimmed,
-                SERP_RESULTS_CACHE_TTL_SECONDS,
+                { items: trimmed, fetchedAt },
+                sourceProvider === "openserp"
+                  ? OPEN_SERP_RESULTS_CACHE_TTL_SECONDS
+                  : SERP_RESULTS_CACHE_TTL_SECONDS,
               ).catch((error) => {
                 console.error("mcp.serp-results.cache-write failed:", error);
               }),
@@ -181,6 +262,11 @@ export const getSerpResultsTool = {
             keyword: q.keyword,
             ok: true as const,
             items: trimmed,
+            fetchedAt,
+            marketHint:
+              sourceProvider === "openserp"
+                ? getIsoCountryCode(market.locationCode)
+                : undefined,
             ...scope,
           };
         } catch (error) {

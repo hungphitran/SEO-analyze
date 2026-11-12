@@ -144,6 +144,7 @@ export async function beginRankCheckRun(input: {
   projectId: string;
   billingCustomer: BillingCustomerContext;
   keywordsTotal: number;
+  sourceProvider: "dataforseo" | "openserp";
   keywordIds?: string[];
   maxCostCredits?: number;
   trigger: "manual" | "scheduled";
@@ -158,6 +159,7 @@ export async function beginRankCheckRun(input: {
       projectId: input.projectId,
       keywordsTotal: input.keywordsTotal,
       isSubsetRun: (input.keywordIds?.length ?? 0) > 0,
+      sourceProvider: input.sourceProvider,
     });
 
     if (created) {
@@ -171,6 +173,7 @@ export async function beginRankCheckRun(input: {
               configId: input.config.id,
               billingCustomer: input.billingCustomer,
               projectId: input.projectId,
+              sourceProvider: input.sourceProvider,
               domain: input.config.domain,
               locationCode: input.config.locationCode,
               languageCode: input.config.languageCode,

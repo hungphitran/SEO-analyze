@@ -6,15 +6,18 @@ const mocks = vi.hoisted(() => ({
   getConfigById: vi.fn(),
   getRunById: vi.fn(),
   getKeywordsForConfig: vi.fn(),
+  getOpenSerpKeywordsForConfig: vi.fn(),
   updateRun: vi.fn(),
   updateConfig: vi.fn(),
   getSnapshotsForRun: vi.fn(),
   autumnCheck: vi.fn(),
   createDataforseoClient: vi.fn(),
   runLiveCheck: vi.fn(),
+  runOpenSerpRankCheck: vi.fn(),
   failRunIfActive: vi.fn(),
   captureServerEvent: vi.fn(),
   isHostedServerAuthMode: vi.fn(),
+  getOptionalEnvValue: vi.fn(async () => undefined),
 }));
 
 vi.mock("cloudflare:workers", () => ({
@@ -32,9 +35,13 @@ vi.mock("@/server/features/rank-tracking/services/rankCheckRunGuards", () => ({
   failRunIfActive: mocks.failRunIfActive,
 }));
 vi.mock("@/server/workflows/rankCheckPaths", () => ({
+  COLLECT_STEP_CONFIG: {},
   runLiveCheck: mocks.runLiveCheck,
   runQueuedCheck: vi.fn(),
   retryRankChecks: vi.fn(),
+}));
+vi.mock("@/server/workflows/openSerpRankCheck", () => ({
+  runOpenSerpRankCheck: mocks.runOpenSerpRankCheck,
 }));
 vi.mock("@/server/workflows/pgStep", () => ({
   // Like the engine, run() gets a rebuilt Error, never the thrown object.
@@ -64,6 +71,7 @@ vi.mock("@/server/billing/autumn", () => ({
   autumn: { check: mocks.autumnCheck },
 }));
 vi.mock("@/server/lib/runtime-env", () => ({
+  getOptionalEnvValue: mocks.getOptionalEnvValue,
   isHostedServerAuthMode: mocks.isHostedServerAuthMode,
 }));
 vi.mock("@/server/email/onboarding-drip", () => ({
@@ -93,6 +101,7 @@ const payload = {
   devices: "desktop" as "desktop" | "mobile" | "both",
   serpDepth: 10,
   trigger: "manual" as const,
+  sourceProvider: "dataforseo" as "dataforseo" | "openserp",
 };
 
 function keywords(count: number) {
@@ -164,12 +173,44 @@ describe("rank check workflow credit ceiling", () => {
 
     await runWorkflow({ maxCostCredits });
 
-    expect(mocks.updateRun).toHaveBeenCalledWith("run_1", {
-      keywordsTotal: count,
-    });
+    expect(mocks.updateRun).toHaveBeenCalledWith(
+      "run_1",
+      expect.objectContaining({
+        keywordsTotal: count,
+        sourceProvider: "dataforseo",
+      }),
+    );
     expect(mocks.runLiveCheck).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ keywords: keywords(count) }),
+    );
+  });
+
+  it("runs OpenSERP without DataForSEO billing and finalizes one device-independent result", async () => {
+    const trackingKeywords = keywords(2);
+    mocks.getKeywordsForConfig.mockResolvedValue(trackingKeywords);
+    mocks.getOpenSerpKeywordsForConfig.mockResolvedValue(
+      trackingKeywords.map((keyword) => keyword.id),
+    );
+    mocks.getSnapshotsForRun.mockResolvedValue(
+      trackingKeywords.map((keyword) => ({
+        trackingKeywordId: keyword.id,
+        device: "desktop",
+      })),
+    );
+
+    await runWorkflow({
+      sourceProvider: "openserp",
+      devices: "both",
+      maxCostCredits: 1,
+    });
+
+    expect(mocks.runOpenSerpRankCheck).toHaveBeenCalledTimes(1);
+    expect(mocks.autumnCheck).not.toHaveBeenCalled();
+    expect(mocks.createDataforseoClient).not.toHaveBeenCalled();
+    expect(mocks.updateRun).toHaveBeenCalledWith(
+      "run_1",
+      expect.objectContaining({ status: "completed", keywordsChecked: 2 }),
     );
   });
 });

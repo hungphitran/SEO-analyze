@@ -33,6 +33,7 @@ const COMPARE_ITEMS: { value: ComparePeriod; label: string }[] = [
 
 export function RankTrackingDetailHeader({
   config,
+  sourceProvider,
   run,
   costEstimate,
   hasBothDevices,
@@ -44,8 +45,21 @@ export function RankTrackingDetailHeader({
   onToggleAddKeywords,
 }: {
   config: RankTrackingConfig;
-  run: { lastCheckedAt: string | null } | null | undefined;
-  costEstimate: { keywordCount: number; costUsd: number } | undefined;
+  sourceProvider: "dataforseo" | "openserp" | null | undefined;
+  run:
+    | {
+        lastCheckedAt: string | null;
+        sourceProvider: "dataforseo" | "openserp" | null;
+      }
+    | null
+    | undefined;
+  costEstimate:
+    | {
+        keywordCount: number;
+        costUsd: number;
+        sourceProvider: "dataforseo" | "openserp";
+      }
+    | undefined;
   hasBothDevices: boolean;
   activeDevice: "desktop" | "mobile";
   onActiveDeviceChange: (v: "desktop" | "mobile") => void;
@@ -63,7 +77,9 @@ export function RankTrackingDetailHeader({
             ? formatLocationLabel(config.locationName, 2)
             : (getLocationDisplayName(config.locationCode) ?? "US")}{" "}
           &middot;{" "}
-          {config.devices === "desktop" ? (
+          {(sourceProvider ?? run?.sourceProvider) === "openserp" ? (
+            t("rank.deviceIndependent")
+          ) : config.devices === "desktop" ? (
             devicesLabel(config.devices)
           ) : (
             <Tooltip>
@@ -85,11 +101,16 @@ export function RankTrackingDetailHeader({
             <>{t("ui.next", { v0: formatNextCheck(config.nextCheckAt) })}</>
           )}
           {run?.lastCheckedAt && (
-            <>{t("ui.last_a875", { v0: new Date(run.lastCheckedAt).toLocaleDateString() })}</>
+            <>
+              {t("ui.last_a875", {
+                v0: new Date(run.lastCheckedAt).toLocaleDateString(),
+              })}
+            </>
           )}
-          {costEstimate && costEstimate.keywordCount > 0 && (
-            <>{t("ui.upToCheck", { v0: costEstimate.costUsd.toFixed(2) })}</>
-          )}
+          {costEstimate?.sourceProvider === "dataforseo" &&
+            costEstimate.keywordCount > 0 && (
+              <>{t("ui.upToCheck", { v0: costEstimate.costUsd.toFixed(2) })}</>
+            )}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">

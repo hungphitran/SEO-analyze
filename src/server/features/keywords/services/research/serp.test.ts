@@ -1,11 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BillingCustomerContext } from "@/server/billing/subscription";
 
 const mocks = vi.hoisted(() => ({
   assertLocalResearchLocation: vi.fn(async () => {}),
+  assertOpenSerpReady: vi.fn(async () => {}),
   buildCacheKey: vi.fn(async () => "serp:analysis:key"),
   createDataforseoClient: vi.fn(),
   getCached: vi.fn(),
+  getOpenSerpDailyRequestLimit: vi.fn(async () => 20),
+  resolveSerpProvider: vi.fn<() => Promise<"dataforseo" | "openserp">>(),
+  reserveOpenSerpRequest: vi.fn(),
+  searchOpenSerp: vi.fn(),
   setCached: vi.fn(async () => {}),
 }));
 
@@ -24,6 +29,21 @@ vi.mock("./local-volume", () => ({
 vi.mock("@/server/lib/dataforseo", () => ({
   SERP_ANALYSIS_DEPTH: 20,
   createDataforseoClient: mocks.createDataforseoClient,
+}));
+vi.mock(
+  "@/server/features/rank-tracking/repositories/RankTrackingRepository",
+  () => ({
+    RankTrackingRepository: {
+      reserveOpenSerpRequest: mocks.reserveOpenSerpRequest,
+    },
+  }),
+);
+vi.mock("@/server/lib/openserp", () => ({
+  assertOpenSerpReady: mocks.assertOpenSerpReady,
+  OpenSerpError: class extends Error {},
+  getOpenSerpDailyRequestLimit: mocks.getOpenSerpDailyRequestLimit,
+  resolveSerpProvider: mocks.resolveSerpProvider,
+  searchOpenSerp: mocks.searchOpenSerp,
 }));
 
 import { getSerpAnalysis } from "./serp";
@@ -78,6 +98,11 @@ function mockLiveSerp() {
 }
 
 describe("getSerpAnalysis cache depth", () => {
+  beforeEach(() => {
+    mocks.resolveSerpProvider.mockResolvedValue("dataforseo");
+    mocks.reserveOpenSerpRequest.mockResolvedValue(true);
+  });
+
   it("keeps a good snapshot when the deeper crawl comes back empty", async () => {
     mocks.getCached.mockResolvedValue(cachedSnapshot(20));
     mocks.createDataforseoClient.mockReturnValue({
@@ -150,5 +175,52 @@ describe("getSerpAnalysis cache depth", () => {
       "serp:analysis",
       expect.objectContaining({ locationName }),
     );
+  });
+
+  it("uses OpenSERP rankings without DataForSEO metrics or requests", async () => {
+    mocks.resolveSerpProvider.mockResolvedValue("openserp");
+    mocks.getCached.mockResolvedValue(null);
+    mocks.searchOpenSerp.mockResolvedValue({
+      provider: "openserp",
+      keyword: "seo tools",
+      region: "US",
+      lang: "en",
+      fetchedAt: "2026-10-01T12:00:00.000Z",
+      requestId: "request_1",
+      results: [
+        {
+          organicRank: 1,
+          absolutePosition: 3,
+          title: "Result",
+          url: "https://result.example/",
+          hostname: "result.example",
+          registrableDomain: "result.example",
+          snippet: "Snippet",
+        },
+      ],
+      serpFeatures: [],
+      limitRequested: 20,
+      resultsReturned: 1,
+    });
+
+    const result = await getSerpAnalysis(
+      { ...input, depth: 20 },
+      billingCustomer,
+    );
+
+    expect(result).toMatchObject({
+      sourceProvider: "openserp",
+      items: [
+        {
+          rank: 1,
+          absolutePosition: 3,
+          etv: null,
+          backlinks: null,
+          description: "Snippet",
+        },
+      ],
+    });
+    expect(mocks.reserveOpenSerpRequest).toHaveBeenCalledWith("proj_1", 20);
+    expect(mocks.createDataforseoClient).not.toHaveBeenCalled();
   });
 });

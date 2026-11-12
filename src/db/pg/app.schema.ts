@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- application table declarations */
 import { sql } from "drizzle-orm";
 import {
   bigint,
@@ -328,6 +329,9 @@ export const rankCheckRuns = pgTable(
     })
       .notNull()
       .default("pending"),
+    sourceProvider: text("source_provider", {
+      enum: ["dataforseo", "openserp"],
+    }),
     keywordsTotal: integer("keywords_total").notNull().default(0),
     keywordsChecked: integer("keywords_checked").notNull().default(0),
     isSubsetRun: boolean("is_subset_run").notNull().default(false),
@@ -359,6 +363,7 @@ export const rankSnapshots = pgTable(
     keyword: text("keyword").notNull(),
     device: text("device", { enum: ["desktop", "mobile"] }).notNull(),
     position: integer("position"), // null = not found in top 20
+    absolutePosition: integer("absolute_position"),
     url: text("url"),
     serpFeatures: text("serp_features"), // JSON array of feature type strings
     checkedAt: timestampColumn("checked_at").notNull().default(isoNow),
@@ -376,6 +381,105 @@ export const rankSnapshots = pgTable(
       table.trackingKeywordId,
       table.device,
     ),
+  ],
+);
+
+export const openSerpSnapshots = pgTable(
+  "open_serp_snapshots",
+  {
+    id: text("id").primaryKey(),
+    runId: text("run_id")
+      .notNull()
+      .references(() => rankCheckRuns.id, { onDelete: "cascade" }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    configId: text("config_id")
+      .notNull()
+      .references(() => rankTrackingConfigs.id, { onDelete: "cascade" }),
+    trackingKeywordId: text("tracking_keyword_id").notNull(),
+    keyword: text("keyword").notNull(),
+    engine: text("engine", { enum: ["google"] })
+      .notNull()
+      .default("google"),
+    region: text("region").notNull(),
+    lang: text("lang").notNull(),
+    requestId: text("request_id"),
+    status: text("status", {
+      enum: [
+        "success",
+        "configuration_error",
+        "unsupported_targeting",
+        "timeout",
+        "rate_limited",
+        "captcha",
+        "blocked",
+        "upstream_error",
+        "invalid_response",
+        "no_results_unverified",
+        "quota_exceeded",
+      ],
+    })
+      .notNull()
+      .default("success"),
+    errorCode: text("error_code"),
+    limitRequested: integer("limit_requested").notNull(),
+    resultsReturned: integer("results_returned").notNull().default(0),
+    fetchedAt: timestampColumn("fetched_at").notNull().default(isoNow),
+  },
+  (table) => [
+    uniqueIndex("open_serp_snapshots_run_keyword_idx").on(
+      table.runId,
+      table.trackingKeywordId,
+    ),
+    index("open_serp_snapshots_project_config_fetched_idx").on(
+      table.projectId,
+      table.configId,
+      table.fetchedAt,
+    ),
+  ],
+);
+
+export const openSerpResults = pgTable(
+  "open_serp_results",
+  {
+    id: serial("id").primaryKey(),
+    snapshotId: text("snapshot_id")
+      .notNull()
+      .references(() => openSerpSnapshots.id, { onDelete: "cascade" }),
+    sourceId: text("source_id"),
+    organicRank: integer("organic_rank").notNull(),
+    absolutePosition: integer("absolute_position"),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    hostname: text("hostname").notNull(),
+    registrableDomain: text("registrable_domain"),
+    snippet: text("snippet").notNull(),
+  },
+  (table) => [
+    uniqueIndex("open_serp_results_snapshot_rank_idx").on(
+      table.snapshotId,
+      table.organicRank,
+    ),
+    index("open_serp_results_snapshot_domain_idx").on(
+      table.snapshotId,
+      table.registrableDomain,
+    ),
+  ],
+);
+
+export const openSerpUsage = pgTable(
+  "open_serp_usage",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    usageDate: text("usage_date").notNull(),
+    requests: integer("requests").notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.projectId, table.usageDate] }),
+    index("open_serp_usage_date_idx").on(table.usageDate),
   ],
 );
 

@@ -1,0 +1,15 @@
+services:
+  openserp:
+    image: karust/openserp:v0.8.17
+    command: [serve, -a, 0.0.0.0, -p, "7000"]
+    expose: ["7000"]
+    restart: unless-stopped
+  init:
+    environment:
+      FREE_SOURCES_ONLY: ${FREE_SOURCES_ONLY:-true}
+      SERP_PROVIDER: openserp
+      OPENSERP_ENABLED: "true"
+      OPENSERP_URL: http://openserp:7000
+      OPENSERP_TIMEOUT_MS: ${OPENSERP_TIMEOUT_MS:-15000}
+      OPENSERP_MAX_KEYWORDS_PER_DAY: ${OPENSERP_MAX_KEYWORDS_PER_DAY:-20}
+      OPENSERP_AUTH_TOKEN: ${OPENSERP_AUTH_TOKEN:-}

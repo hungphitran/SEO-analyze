@@ -278,7 +278,11 @@ function DomainRow({
             <>{t("ui.next", { v0: formatNextCheck(summary.nextCheckAt) })}</>
           )}
           {summary.lastRunCompletedAt && (
-            <>{t("ui.last_a875", { v0: new Date(summary.lastRunCompletedAt).toLocaleDateString() })}</>
+            <>
+              {t("ui.last_a875", {
+                v0: new Date(summary.lastRunCompletedAt).toLocaleDateString(),
+              })}
+            </>
           )}
         </p>
         {summary.lastSkipReason === "insufficient_credits" && (
@@ -295,6 +299,12 @@ function DomainRow({
           <p className="flex items-center gap-1 text-xs text-warning">
             <AlertTriangle className="size-3" />
             {t("ui.scheduledCheckSkippedPaidPlanRequired")}
+          </p>
+        )}
+        {summary.lastSkipReason === "openserp_unsupported_targeting" && (
+          <p className="flex items-center gap-1 text-xs text-warning">
+            <AlertTriangle className="size-3" />
+            {t("rank.openSerpUnsupportedTargeting")}
           </p>
         )}
       </div>

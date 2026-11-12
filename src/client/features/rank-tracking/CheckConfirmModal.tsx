@@ -10,6 +10,7 @@ import { t } from "@/shared/i18n";
 export function CheckConfirmModal({
   keywordCount,
   devices,
+  deviceIndependent,
   costUsd,
   isPending,
   onRunNow,
@@ -17,6 +18,7 @@ export function CheckConfirmModal({
 }: {
   keywordCount: number;
   devices: RankTrackingConfig["devices"];
+  deviceIndependent: boolean;
   /** Server estimate; it prices each keyword's text (operators cost 5x). */
   costUsd: number | undefined;
   isPending: boolean;
@@ -29,7 +31,9 @@ export function CheckConfirmModal({
     Math.ceil(totalChecks / KEYWORDS_PER_BATCH) * SECONDS_PER_BATCH;
 
   const eta =
-    liveTime < 60 ? `${liveTime}s` : t("ui.min_6d5c", { v0: Math.ceil(liveTime / 60) });
+    liveTime < 60
+      ? `${liveTime}s`
+      : t("ui.min_6d5c", { v0: Math.ceil(liveTime / 60) });
 
   return (
     <ConfirmDialog
@@ -39,13 +43,15 @@ export function CheckConfirmModal({
       onConfirm={onRunNow}
       onClose={onCancel}
     >
-      {t("ui.rankCheckEstimate", {
-        keywords: keywordCount,
-        devices: dc,
-        checks: totalChecks,
-        eta,
-      })}
-      {costUsd != null ? (
+      {deviceIndependent
+        ? t("rank.deviceIndependent")
+        : t("ui.rankCheckEstimate", {
+            keywords: keywordCount,
+            devices: dc,
+            checks: totalChecks,
+            eta,
+          })}
+      {!deviceIndependent && costUsd != null ? (
         <>
           {" "}
           {t("ui.costsUpToLabel")}{" "}

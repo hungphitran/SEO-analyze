@@ -24,11 +24,25 @@ export async function getLatestResults(
   comparePeriod: ComparePeriod = "7d",
 ): Promise<{
   rows: RankTrackingRow[];
+  competitorOverlap: {
+    trackedKeywords: number;
+    coveredKeywords: number;
+    since: string;
+    domains: Array<{
+      domain: string;
+      keywordsPresent: number;
+      appearances: number;
+      bestPosition: number;
+      averagePosition: number;
+      sampleUrls: string[];
+    }>;
+  };
   run: {
     id: string;
     lastCheckedAt: string | null;
     completedAt: string | null;
     status: "pending" | "running" | "completed" | "failed";
+    sourceProvider: "dataforseo" | "openserp" | null;
     errorMessage: string | null;
   } | null;
 }> {
@@ -48,6 +62,7 @@ export async function getLatestResults(
     currentSnapshots,
     comparisonSnapshots,
     latestRun,
+    openSerpSnapshots,
   ] = await Promise.all([
     RankTrackingRepository.getConfigById({ configId, projectId }),
     RankTrackingRepository.getKeywordsForConfig(configId),
@@ -56,6 +71,11 @@ export async function getLatestResults(
     // Comparison snapshots from before the target date
     RankTrackingRepository.getSnapshotsBeforeDate(configId, targetDate),
     RankTrackingRepository.getLatestRunForConfig(configId),
+    RankTrackingRepository.getOpenSerpSnapshotsForConfig({
+      projectId,
+      configId,
+      since: targetDate,
+    }),
   ]);
   if (!config) {
     throw new AppError("INTERNAL_ERROR", "Rank tracking config not found");
@@ -135,8 +155,93 @@ export async function getLatestResults(
     }
   }
 
+  const latestOpenSerpSnapshots: typeof openSerpSnapshots = [];
+  const seenOpenSerpKeywords = new Set<string>();
+  for (const snapshot of openSerpSnapshots) {
+    if (seenOpenSerpKeywords.has(snapshot.trackingKeywordId)) continue;
+    seenOpenSerpKeywords.add(snapshot.trackingKeywordId);
+    latestOpenSerpSnapshots.push(snapshot);
+  }
+  const snapshotKeywords = new Map(
+    latestOpenSerpSnapshots.map((snapshot) => [
+      snapshot.id,
+      snapshot.trackingKeywordId,
+    ]),
+  );
+  const openSerpResults =
+    await RankTrackingRepository.getOpenSerpResultsForSnapshots(
+      latestOpenSerpSnapshots.map((snapshot) => snapshot.id),
+    );
+  const targetDomain = config.domain?.toLowerCase().replace(/^www\./, "");
+  const overlapByDomain = new Map<
+    string,
+    {
+      keywordPositions: Map<string, number>;
+      appearances: number;
+      sampleUrls: Set<string>;
+    }
+  >();
+  // oxlint-disable-next-line eslint-plugin-unicorn/no-array-sort -- this array is local and the Worker target is ES2022
+  for (const result of openSerpResults.sort(
+    (a, b) => a.organicRank - b.organicRank,
+  )) {
+    const trackingKeywordId = snapshotKeywords.get(result.snapshotId);
+    if (!trackingKeywordId) continue;
+    const domain = result.registrableDomain ?? result.hostname;
+    if (
+      targetDomain &&
+      (result.hostname === targetDomain ||
+        result.hostname.endsWith(`.${targetDomain}`) ||
+        domain === targetDomain)
+    ) {
+      continue;
+    }
+    let aggregate = overlapByDomain.get(domain);
+    if (!aggregate) {
+      aggregate = {
+        keywordPositions: new Map(),
+        appearances: 0,
+        sampleUrls: new Set(),
+      };
+      overlapByDomain.set(domain, aggregate);
+    }
+    aggregate.appearances++;
+    const priorPosition = aggregate.keywordPositions.get(trackingKeywordId);
+    if (priorPosition === undefined || result.organicRank < priorPosition) {
+      aggregate.keywordPositions.set(trackingKeywordId, result.organicRank);
+    }
+    if (aggregate.sampleUrls.size < 3) aggregate.sampleUrls.add(result.url);
+  }
+  const domains = [...overlapByDomain].map(([domain, aggregate]) => {
+    const positions = [...aggregate.keywordPositions.values()];
+    return {
+      domain,
+      keywordsPresent: positions.length,
+      appearances: aggregate.appearances,
+      bestPosition: Math.min(...positions),
+      averagePosition:
+        positions.reduce((sum, position) => sum + position, 0) /
+        positions.length,
+      sampleUrls: [...aggregate.sampleUrls],
+    };
+  });
+  // oxlint-disable-next-line eslint-plugin-unicorn/no-array-sort -- this array is local and the Worker target is ES2022
+  domains.sort(
+    (a, b) =>
+      b.keywordsPresent - a.keywordsPresent ||
+      a.averagePosition - b.averagePosition ||
+      a.domain.localeCompare(b.domain),
+  );
+  const competitorOverlap = {
+    trackedKeywords: activeKeywords.length,
+    coveredKeywords: latestOpenSerpSnapshots.length,
+    since: targetDate,
+    domains: domains.slice(0, 20),
+  };
+
   return {
     rows: [...rows.values()],
+    competitorOverlap,
     run: latestRun
       ? {
           id: latestRun.id,
@@ -145,6 +250,7 @@ export async function getLatestResults(
           lastCheckedAt: latestStartedAt,
           completedAt: latestRun.completedAt,
           status: latestRun.status,
+          sourceProvider: latestRun.sourceProvider,
           errorMessage: latestRun.errorMessage,
         }
       : null,
@@ -169,6 +275,7 @@ function createEmptyDeviceResult(
 ): RankTrackingDeviceResult {
   return {
     position: null,
+    absolutePosition: null,
     previousPosition,
     rankingUrl: null,
     serpFeatures: [],
@@ -181,6 +288,7 @@ function toDeviceResult(
 ): RankTrackingDeviceResult {
   return {
     position: snapshot.position,
+    absolutePosition: snapshot.absolutePosition,
     previousPosition,
     rankingUrl: snapshot.url,
     serpFeatures: parseSerpFeatures(snapshot.serpFeatures),
