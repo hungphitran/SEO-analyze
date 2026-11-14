@@ -109,6 +109,9 @@ declare namespace Cloudflare {
     // CRUX_API_KEY falls back to PAGESPEED_API_KEY (one Google API key can
     // carry both APIs); OPEN_PAGERANK_API_KEY is a free key from
     // https://www.domcop.com/openpagerank. Server-only: never a VITE_ var.
+    // Minimum gap between Browser Run renders in ms (0 = unpaced). Self-host
+    // deploys default it to 10000 for the Workers Free plan's 1 request / 10 s.
+    BROWSER_RENDER_MIN_INTERVAL_MS?: string;
     CRUX_API_KEY?: string;
     OPEN_PAGERANK_API_KEY?: string;
     LOCAL_RANK_WORKFLOW: Workflow<

@@ -145,6 +145,12 @@ const optionalVar = (name: string) =>
     Config.map((value) => value.trim()),
   );
 
+/** Self-host pacing default for Browser Run on the Workers Free plan. */
+function defaultRenderInterval(configured: string, selfHostPlan: boolean) {
+  if (configured) return configured;
+  return selfHostPlan ? "10000" : "";
+}
+
 const optionalSecret = (name: string) =>
   Config.redacted(name).pipe(Config.withDefault(Redacted.make("")));
 
@@ -279,6 +285,7 @@ const dataEnv = {
   OPENROUTER_API_KEY: optionalSecret("OPENROUTER_API_KEY"),
   OPENROUTER_MODEL: optionalVar("OPENROUTER_MODEL"),
   CONTEXT_API_KEY: optionalSecret("CONTEXT_API_KEY"),
+  BROWSER_RENDER_MIN_INTERVAL_MS: optionalVar("BROWSER_RENDER_MIN_INTERVAL_MS"),
   AUTUMN_SECRET_KEY: optionalSecret("AUTUMN_SECRET_KEY"),
   AUTUMN_WEBHOOK_SECRET: optionalSecret("AUTUMN_WEBHOOK_SECRET"),
   DUB_API_KEY: optionalSecret("DUB_API_KEY"),
@@ -416,6 +423,16 @@ export default Alchemy.Stack(
     const selfHostPlan =
       authMode === "cloudflare_access" || authMode === "password";
 
+    // Browser Run on the Workers Free plan allows one render per 10 s. Self-host
+    // deploys default to pacing for that; set BROWSER_RENDER_MIN_INTERVAL_MS=0
+    // on a paid plan. Hosted deploys stay unpaced unless it is set.
+    const configuredRenderInterval =
+      yield* dataEnv.BROWSER_RENDER_MIN_INTERVAL_MS;
+    const browserRenderInterval = defaultRenderInterval(
+      configuredRenderInterval,
+      selfHostPlan,
+    );
+
     // Created once and bound into BOTH workers — they share the same
     // D1/KV/R2 (and prod Hyperdrive). OAUTH_KV stays app-worker-only.
     const resources = makeResources(stage, databaseProvider !== "postgres");
@@ -457,6 +474,7 @@ export default Alchemy.Stack(
         // runs Lighthouse in this worker, and the paid-call guard reads these
         // values from this isolate, not from the app worker.
         BROWSER: Cloudflare.Browser(),
+        BROWSER_RENDER_MIN_INTERVAL_MS: browserRenderInterval,
         CRAWLER_ACCESS_SECRET: dataEnv.CRAWLER_ACCESS_SECRET,
         WEB_BOT_AUTH_JWK: dataEnv.WEB_BOT_AUTH_JWK,
         CONTEXT_API_KEY: dataEnv.CONTEXT_API_KEY,

@@ -172,6 +172,11 @@ export interface CrawledPageResult {
   /** App shell, rendered or not; transient signal for the per-page issue reporter. */
   javascriptShell?: boolean;
   /**
+   * Render JavaScript was on but the renderer failed, so the fetched HTML was
+   * analyzed instead. Transient signal for the per-page issue reporter.
+   */
+  renderFailed?: boolean;
+  /**
    * HTML size read for this page (approximate; capped at MAX_HTML_BYTES).
    * Transient — feeds the crawl window's memory-pressure signal, since
    * response time is measured at headers and says nothing about body size.

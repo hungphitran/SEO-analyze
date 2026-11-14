@@ -2238,6 +2238,10 @@ export const messages = {
   "sam.installSeoSkills": "Cài các skill SEO",
   "audit.somePagesNeedJs":
     "Một số trang có thể cần JavaScript để hiện nội dung.",
+  "audit.renderFellBack":
+    "Không kết xuất được {count} trang, đã kiểm tra từ HTML đã tải về.",
+  "audit.renderFellBackHint":
+    "Gói Workers Free chỉ cho Browser Run một lần kết xuất mỗi 10 giây. Hãy chạy lại bản kiểm tra hoặc đặt BROWSER_RENDER_MIN_INTERVAL_MS cho khớp gói của bạn.",
   "audit.couldNotReadPages": "Không đọc được {count} trang.",
   "audit.openPagesFilterFailed":
     "Để xem chúng, hãy mở mục Trang và lọc Kết quả thu thập theo Thất bại.",

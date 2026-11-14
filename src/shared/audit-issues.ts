@@ -35,6 +35,14 @@ export const AUDIT_ISSUE_TYPES = {
     howToFix:
       'If this audit did not render JavaScript, start a new audit with "Render JavaScript" enabled to check the loaded content. For reliable crawling, serve important content and navigation in the initial HTML using server-side rendering or prerendering. This warning does not prove that search engines cannot index the page.',
   },
+  "render-failed": {
+    severity: "info",
+    title: "JavaScript rendering failed",
+    explanation:
+      "Render JavaScript was on, but the renderer could not load this page (for example because Browser Run rate limits requests on the Workers Free plan). The page was audited from its fetched HTML instead, so content added by JavaScript is not reflected in these results.",
+    howToFix:
+      "Re-run the audit, or audit fewer pages. On the Workers Free plan Browser Run allows one render every 10 seconds; set BROWSER_RENDER_MIN_INTERVAL_MS (default 10000 on self-host, 0 on a paid plan) to match your plan. If the page serves its content in the initial HTML, these results are already accurate.",
+  },
   "rate-limited-page": {
     severity: "warning",
     title: "Rate limited (429)",

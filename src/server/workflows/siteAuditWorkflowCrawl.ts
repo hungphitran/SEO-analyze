@@ -1,9 +1,16 @@
 import { env, type WorkflowStep } from "cloudflare:workers";
+import { getEnvValueSync } from "@/server/lib/runtime-env";
+import {
+  BROWSER_RENDER_INTERVAL_ENV,
+  parseRenderIntervalMs,
+  type RenderPacer,
+} from "@/server/lib/audit/render-pacing";
 import { NonRetryableError } from "cloudflare:workflows";
 import type { RobotsResult } from "@/server/lib/audit/discovery";
 import type { AuditConfig, CrawledPageResult } from "@/server/lib/audit/types";
 import {
   getAuditScratchpad,
+  RENDER_PACER_NAME,
   type ClaimedUrl,
 } from "@/server/features/audit/AuditScratchpad";
 import { persistCrawledPages } from "@/server/workflows/siteAuditWorkflowPersist";
@@ -37,6 +44,20 @@ import { getContextFetch } from "@/server/lib/provider-access";
  * workflow heap stays O(one batch).
  */
 const CHUNK_TARGET_PAGES = 200;
+
+/** Render clock shared by every crawl worker and audit on the account. */
+function createRenderPacer(intervalMs: number): RenderPacer {
+  const clock = () => getAuditScratchpad(RENDER_PACER_NAME);
+  return {
+    intervalMs,
+    reserve: () => clock().reserveRenderSlot(intervalMs),
+    defer: (delayMs) => clock().deferRenderSlots(delayMs),
+    sleep: (ms) =>
+      ms > 0
+        ? new Promise((resolve) => setTimeout(resolve, ms))
+        : Promise.resolve(),
+  };
+}
 /** Stop launching new fetches after this long; leftover leases are released. */
 const CHUNK_SOFT_DEADLINE_MS = 90_000;
 /** Crawled pages are persisted in sub-batches of this size. */
@@ -244,7 +265,17 @@ async function runCrawlChunk(
   // A retry means the previous attempt died mid-crawl (in production almost
   // always exceededMemory), and it is the chunk's last attempt — so it runs
   // under drastically reduced limits instead of the profile that just failed.
-  const limits = isRetry ? RETRY_CRAWL_WINDOW : CRAWL_WINDOW;
+  // Browser Run on the Workers Free plan answers 429 to a second render
+  // within the interval, so a paced audit renders one page at a time.
+  const renderIntervalMs =
+    input.renderJavaScript && env.BROWSER
+      ? parseRenderIntervalMs(getEnvValueSync(env, BROWSER_RENDER_INTERVAL_ENV))
+      : 0;
+  const baseLimits = isRetry ? RETRY_CRAWL_WINDOW : CRAWL_WINDOW;
+  const limits =
+    renderIntervalMs > 0
+      ? { ...baseLimits, initial: 1, min: 1, max: 1 }
+      : baseLimits;
   let windowSize = isRetry
     ? limits.initial
     : clampCrawlWindow(input.startWindow, limits);
@@ -300,6 +331,8 @@ async function runCrawlChunk(
     }) +
       estimateRenderingCredits(pending + 1).high <=
       input.renderHold.credits;
+  const pacer =
+    renderIntervalMs > 0 ? createRenderPacer(renderIntervalMs) : undefined;
   const render = input.renderJavaScript
     ? async (url: string) => {
         const { RenderedPageService } =
@@ -312,6 +345,7 @@ async function runCrawlChunk(
           contextFetch: await getContextFetch(),
           auditId,
           usage: renderUsage,
+          pacer,
         });
       }
     : undefined;

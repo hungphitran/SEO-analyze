@@ -178,6 +178,8 @@ export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
     return issues;
   }
 
+  if (page.renderFailed) report("render-failed");
+
   reportTechnicalSignals(page, report);
 
   // Indexability + canonical signals
