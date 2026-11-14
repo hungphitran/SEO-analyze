@@ -45,6 +45,7 @@ const dimensionHelper = createColumnHelper<DimensionRow>();
 
 export function buildDimensionColumns(
   keyLabel: string,
+  formatKey: (key: string) => string = (key) => key,
 ): ColumnDef<DimensionRow>[] {
   return [
     dimensionHelper.accessor("key", {
@@ -52,7 +53,7 @@ export function buildDimensionColumns(
       header: () => keyLabel,
       cell: ({ getValue }) => (
         <span className="block max-w-xl truncate" title={getValue()}>
-          {getValue()}
+          {formatKey(getValue())}
         </span>
       ),
     }),

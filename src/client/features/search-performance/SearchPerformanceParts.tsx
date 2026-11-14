@@ -30,6 +30,11 @@ import {
   type Report,
   type SearchPerformanceTableRow,
 } from "@/client/features/search-performance/SearchPerformanceColumns";
+import {
+  dimensionExportSlug,
+  dimensionKeyLabel,
+  formatDimensionKey,
+} from "@/client/features/search-performance/searchPerformanceTabs";
 import { normalizeExportValue, type CsvValue } from "@/client/lib/csv";
 import { exportRows } from "@/client/lib/exportRows";
 import { captureClientEvent } from "@/client/lib/posthog";
@@ -71,11 +76,10 @@ function dimensionExportTable(
   rows: SearchPerformanceTableRow[],
   stamp: string,
 ): ExportTable {
-  const isPage = dimension === "page";
   return {
-    filename: `search-performance-${isPage ? "pages" : "queries"}-${stamp}`,
+    filename: `search-performance-${dimensionExportSlug(dimension)}-${stamp}`,
     headers: [
-      isPage ? t("ui.page") : t("ui.query"),
+      dimensionKeyLabel(dimension),
       t("ui.clicks"),
       t("ui.impressions"),
       "CTR",
@@ -200,25 +204,34 @@ export function TotalsTable({ report }: { report: Report }) {
 
 export function DimensionTable({
   rows,
-  keyLabel,
+  dimension,
   isFiltered,
   isPastEnd,
   onClearFilters,
   onFirstPage,
 }: {
   rows: SearchPerformanceTableRow[];
-  keyLabel: string;
+  dimension: SearchPerformanceTableDimension;
   isFiltered: boolean;
   isPastEnd: boolean;
   onClearFilters: () => void;
   onFirstPage: () => void;
 }) {
-  const columns = useMemo(() => buildDimensionColumns(keyLabel), [keyLabel]);
+  const columns = useMemo(
+    () =>
+      buildDimensionColumns(dimensionKeyLabel(dimension), (key) =>
+        formatDimensionKey(dimension, key),
+      ),
+    [dimension],
+  );
   const table = useDataTable({
     data: rows,
     columns,
     withSorting: true,
-    initialState: { sorting: [{ id: "clicks", desc: true }] },
+    // A daily table reads in date order; the others rank by clicks.
+    initialState: {
+      sorting: dimension === "date" ? [] : [{ id: "clicks", desc: true }],
+    },
   });
   return (
     <DataTable
@@ -238,7 +251,10 @@ export function DimensionTable({
             }
           : {
               title: t("ui.noSearchConsoleDataYet"),
-              description: t("ui.searchConsoleDataCanTakeA"),
+              description:
+                dimension === "searchAppearance"
+                  ? t("gscDetail.appearanceEmpty")
+                  : t("ui.searchConsoleDataCanTakeA"),
             }
       }
     />

@@ -13,9 +13,15 @@ import { Badge } from "@/client/components/ui/badge";
 import { Button } from "@/client/components/ui/button";
 import { Spinner } from "@/client/components/ui/spinner";
 import { DataTableTabs } from "@/client/components/table/DataTableToolbar";
-import { TabsTrigger } from "@/client/components/ui/tabs";
 import { GoogleConnectionCard } from "@/client/features/integrations/GoogleConnectionCard";
 import { DimensionSection } from "@/client/features/search-performance/SearchPerformanceDimensionSection";
+import { SearchInspectionTab } from "@/client/features/search-performance/SearchInspectionTab";
+import { SearchSitemapsTab } from "@/client/features/search-performance/SearchSitemapsTab";
+import { SearchPerformanceTabTriggers } from "@/client/features/search-performance/SearchPerformanceTabTriggers";
+import {
+  isPropertyTab,
+  tableDimensionForTab,
+} from "@/client/features/search-performance/searchPerformanceTabs";
 import { SearchPerformanceSelects } from "@/client/features/search-performance/SearchPerformanceSelects";
 import { SearchPerformanceLoadingState } from "@/client/features/search-performance/SearchPerformanceLoadingState";
 import {
@@ -48,7 +54,6 @@ import {
   SEARCH_PERFORMANCE_TABS,
   type SearchPerformanceSearch,
   type SearchPerformanceTab,
-  type SearchPerformanceTableDimension,
 } from "@/types/schemas/search-performance";
 import { t } from "@/shared/i18n";
 
@@ -56,12 +61,6 @@ function isInsightsTab(
   tab: SearchPerformanceTab,
 ): tab is "cannibalization" | "declining" {
   return tab === "cannibalization" || tab === "declining";
-}
-
-function tabDimension(
-  tab: SearchPerformanceTab,
-): SearchPerformanceTableDimension {
-  return tab === "pages" ? "page" : "query";
 }
 
 function buildFilterInput({
@@ -129,11 +128,12 @@ export function SearchPerformancePage({
   });
   const report = reportQuery.data;
 
-  const isTableTab = tab === "queries" || tab === "pages";
-  const dimension = tabDimension(tab);
+  const tabDimension = tableDimensionForTab(tab);
+  // The query table is the fallback only so the hook below always has a key.
+  const dimension = tabDimension ?? "query";
   const tableQuery = useQuery({
     ...tableQueryOptions(projectId, dimension, page, pageSize, filterInput),
-    enabled: report?.connected === true && isTableTab,
+    enabled: report?.connected === true && tabDimension !== null,
     // Hold the current rows while paging or filtering, but not across a tab
     // or project change: Query rows must not render under the Pages header.
     placeholderData: (previous, previousQuery) =>
@@ -179,7 +179,8 @@ export function SearchPerformancePage({
       !report?.connected ||
       reportQuery.isPlaceholderData ||
       isExporting ||
-      isInsightsTab(tab)
+      isInsightsTab(tab) ||
+      isPropertyTab(tab)
     )
       return;
     setIsExporting(true);
@@ -299,28 +300,20 @@ export function SearchPerformancePage({
                     onExport={(target) => void handleExport(target)}
                     busy={isExporting}
                     disabled={
-                      reportQuery.isPlaceholderData || isInsightsTab(tab)
+                      reportQuery.isPlaceholderData ||
+                      isInsightsTab(tab) ||
+                      isPropertyTab(tab)
                     }
                   />
                 }
               >
-                <TabsTrigger value="striking">
-                  {reportQuery.isPlaceholderData
-                    ? t("gscInsights.strikingDistance")
-                    : `${t("gscInsights.strikingDistance")} (${report.strikingDistance.length})`}
-                </TabsTrigger>
-                <TabsTrigger value="queries">
-                  {t("gscInsights.queries")}
-                </TabsTrigger>
-                <TabsTrigger value="pages">
-                  {t("gscInsights.pages")}
-                </TabsTrigger>
-                <TabsTrigger value="cannibalization">
-                  {t("gscInsights.cannibalization")}
-                </TabsTrigger>
-                <TabsTrigger value="declining">
-                  {t("gscInsights.declining")}
-                </TabsTrigger>
+                <SearchPerformanceTabTriggers
+                  strikingLabel={
+                    reportQuery.isPlaceholderData
+                      ? t("gscInsights.strikingDistance")
+                      : `${t("gscInsights.strikingDistance")} (${report.strikingDistance.length})`
+                  }
+                />
               </DataTableTabs>
               <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
                 <Button
@@ -349,7 +342,11 @@ export function SearchPerformancePage({
               </div>
 
               {showFilters ? filtersPanel : null}
-              {reportQuery.isPlaceholderData ? (
+              {tab === "sitemaps" ? (
+                <SearchSitemapsTab projectId={projectId} />
+              ) : tab === "inspection" ? (
+                <SearchInspectionTab projectId={projectId} />
+              ) : reportQuery.isPlaceholderData ? (
                 <div className="p-8 text-sm" role="status">
                   {t("ui.loadingMatchingResults")}
                 </div>
@@ -391,7 +388,7 @@ export function SearchPerformancePage({
                 <DimensionSection
                   projectId={projectId}
                   tableQuery={tableQuery}
-                  keyLabel={tab === "queries" ? t("ui.query") : t("ui.page")}
+                  dimension={dimension}
                   page={page}
                   pageSize={pageSize}
                   onPageChange={(nextPage) =>

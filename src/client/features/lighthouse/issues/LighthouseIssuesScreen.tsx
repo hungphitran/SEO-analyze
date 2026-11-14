@@ -97,6 +97,8 @@ export function LighthouseIssuesScreen({
           finalUrl={issuesQuery.data?.finalUrl}
           scores={issuesQuery.data?.scores}
           metrics={issuesQuery.data?.metrics}
+          strategy={issuesQuery.data?.strategy}
+          fieldData={issuesQuery.data?.fieldData}
           severityCounts={severityCounts}
         />
 

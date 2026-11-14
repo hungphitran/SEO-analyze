@@ -5,14 +5,17 @@ import { SkeletonTableRows } from "@/client/components/SkeletonPresets";
 import { GoogleConnectionCard } from "@/client/features/integrations/GoogleConnectionCard";
 import { DimensionTable } from "@/client/features/search-performance/SearchPerformanceParts";
 import type { getSearchPerformanceTable } from "@/serverFunctions/searchPerformance";
-import { SEARCH_PERFORMANCE_PAGE_SIZES } from "@/types/schemas/search-performance";
+import {
+  SEARCH_PERFORMANCE_PAGE_SIZES,
+  type SearchPerformanceTableDimension,
+} from "@/types/schemas/search-performance";
 import { t } from "@/shared/i18n";
 
 /** The Queries or Pages tab body: loading, error with retry, reconnect, or the paged table. */
 export function DimensionSection({
   projectId,
   tableQuery,
-  keyLabel,
+  dimension,
   page,
   pageSize,
   onPageChange,
@@ -24,7 +27,7 @@ export function DimensionSection({
   tableQuery: UseQueryResult<
     Awaited<ReturnType<typeof getSearchPerformanceTable>>
   >;
-  keyLabel: string;
+  dimension: SearchPerformanceTableDimension;
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
@@ -67,8 +70,9 @@ export function DimensionSection({
       {error}
       <div className="p-4">
         <DimensionTable
+          key={dimension}
           rows={tableData.rows}
-          keyLabel={keyLabel}
+          dimension={dimension}
           isFiltered={isFiltered}
           isPastEnd={isPastEnd}
           onClearFilters={onClearFilters}

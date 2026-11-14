@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { LIGHTHOUSE_CATEGORIES } from "@/shared/lighthouse";
+import {
+  fieldDataSchema,
+  lighthouseIssueSchema,
+  lighthouseMetricsSchema,
+  lighthouseScoresSchema,
+} from "@/shared/pagespeed-detail";
 
 export type RawLighthouseAudit = {
   title?: string;
@@ -8,6 +14,7 @@ export type RawLighthouseAudit = {
   scoreDisplayMode?: string;
   displayValue?: string;
   numericValue?: number;
+  numericUnit?: string;
   details?: {
     overallSavingsMs?: number;
     overallSavingsBytes?: number;
@@ -23,40 +30,12 @@ export type RawLighthouseCategory = {
   }>;
 };
 
-const storedLighthouseMetricSchema = z.object({
-  score: z.number().nullable(),
-  displayValue: z.string().nullable(),
-  numericValue: z.number().nullable(),
-});
-
-const storedLighthouseMetricsSchema = z.object({
-  firstContentfulPaint: storedLighthouseMetricSchema,
-  largestContentfulPaint: storedLighthouseMetricSchema,
-  totalBlockingTime: storedLighthouseMetricSchema,
-  cumulativeLayoutShift: storedLighthouseMetricSchema,
-  speedIndex: storedLighthouseMetricSchema,
-  timeToInteractive: storedLighthouseMetricSchema,
-  interactionToNextPaint: storedLighthouseMetricSchema,
-  serverResponseTime: storedLighthouseMetricSchema,
-});
-
-const storedLighthouseIssueSchema = z.object({
-  category: z.enum(LIGHTHOUSE_CATEGORIES),
-  auditKey: z.string(),
-  title: z.string(),
-  description: z.string(),
-  score: z.number().nullable(),
-  scoreDisplayMode: z.string().nullable(),
-  displayValue: z.string().nullable(),
-  impactMs: z.number().nullable(),
-  impactBytes: z.number().nullable(),
-  severity: z.enum(["critical", "warning", "info"]),
-  items: z.array(z.string()),
-});
+const storedLighthouseIssueSchema = lighthouseIssueSchema;
+const storedLighthouseMetricsSchema = lighthouseMetricsSchema;
 
 export const storedLighthousePayloadSchema = z.object({
   version: z.literal(2),
-  source: z.literal("dataforseo-lighthouse"),
+  source: z.enum(["dataforseo-lighthouse", "pagespeed-insights"]),
   hasIssueDetails: z.boolean(),
   metadata: z.object({
     requestedUrl: z.string(),
@@ -67,17 +46,13 @@ export const storedLighthousePayloadSchema = z.object({
     taskId: z.string().nullable(),
     cost: z.number().nullable(),
   }),
-  scores: z.object({
-    performance: z.number().nullable(),
-    accessibility: z.number().nullable(),
-    "best-practices": z.number().nullable(),
-    seo: z.number().nullable(),
-  }),
+  scores: lighthouseScoresSchema,
   metrics: storedLighthouseMetricsSchema,
+  /** Real-user data for the URL and origin; only PageSpeed Insights returns it. */
+  fieldData: fieldDataSchema.optional(),
   issues: z.array(storedLighthouseIssueSchema),
 });
 
-type StoredLighthouseMetric = z.infer<typeof storedLighthouseMetricSchema>;
 type StoredLighthouseMetrics = z.infer<typeof storedLighthouseMetricsSchema>;
 export type StoredLighthouseIssue = z.infer<typeof storedLighthouseIssueSchema>;
 export type StoredLighthousePayload = z.infer<
@@ -97,7 +72,7 @@ export function scoreToPercent(
 
 function buildStoredMetric(
   audit: RawLighthouseAudit | undefined,
-): StoredLighthouseMetric {
+): StoredLighthouseMetrics["firstContentfulPaint"] {
   return {
     score: scoreToPercent(audit?.score),
     displayValue: audit?.displayValue ?? null,
@@ -134,10 +109,14 @@ function compactItem(item: Record<string, unknown>): string {
     "value",
   ];
 
+  // Insight audits nest the element under `node`; lift its label and snippet.
+  const node = isRecord(item.node) ? item.node : null;
+  const flat: Record<string, unknown> = node ? { ...node, ...item } : item;
+
   const output: Record<string, unknown> = {};
   for (const key of preferredKeys) {
-    if (item[key] != null) {
-      output[key] = item[key];
+    if (flat[key] != null && typeof flat[key] !== "object") {
+      output[key] = flat[key];
     }
   }
 
@@ -172,6 +151,37 @@ function getSeverity(input: {
   }
 
   return "info";
+}
+
+/**
+ * Estimated savings. Classic "opportunity" audits report them in `details`;
+ * Lighthouse 12+ "insight" audits keep them in `numericValue` with a unit.
+ * Only `*-insight` audits use that fallback: other audits (total-byte-weight,
+ * bootup-time) put a plain total there, which would read as a fake saving.
+ */
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function readImpact(
+  auditKey: string,
+  audit: RawLighthouseAudit,
+): { impactMs: number | null; impactBytes: number | null } {
+  let impactMs = finiteNumber(audit.details?.overallSavingsMs);
+  let impactBytes = finiteNumber(audit.details?.overallSavingsBytes);
+  if (
+    impactMs == null &&
+    impactBytes == null &&
+    auditKey.endsWith("-insight") &&
+    audit.scoreDisplayMode === "metricSavings"
+  ) {
+    const value = finiteNumber(audit.numericValue);
+    if (value != null && value > 0) {
+      if (audit.numericUnit === "millisecond") impactMs = value;
+      else if (audit.numericUnit === "byte") impactBytes = value;
+    }
+  }
+  return { impactMs, impactBytes };
 }
 
 export function buildStoredLighthouseIssues(input: {
@@ -210,14 +220,7 @@ export function buildStoredLighthouseIssues(input: {
 
       if (isPass) continue;
 
-      const impactMs =
-        typeof audit.details?.overallSavingsMs === "number"
-          ? audit.details.overallSavingsMs
-          : null;
-      const impactBytes =
-        typeof audit.details?.overallSavingsBytes === "number"
-          ? audit.details.overallSavingsBytes
-          : null;
+      const { impactMs, impactBytes } = readImpact(auditKey, audit);
       const rawItems = audit.details?.items;
       const itemList = Array.isArray(rawItems)
         ? rawItems

@@ -44,6 +44,20 @@ export type GscSearchAnalyticsRequest = {
   aggregationType?: string;
 };
 
+/** A Search Console sitemap as `sitemaps.list` returns it. Counts arrive as
+ *  strings (int64 on the wire). */
+export type GscSitemap = {
+  path?: string;
+  lastSubmitted?: string;
+  isPending?: boolean;
+  isSitemapsIndex?: boolean;
+  type?: string;
+  lastDownloaded?: string;
+  warnings?: string;
+  errors?: string;
+  contents?: Array<{ type?: string; submitted?: string; indexed?: string }>;
+};
+
 /** Subset of the URL Inspection API `inspectionResult` we surface. The wire
  *  shape is richer; extra fields are ignored. */
 export type UrlInspectionResult = {
@@ -60,8 +74,27 @@ export type UrlInspectionResult = {
     sitemap?: string[];
     referringUrls?: string[];
   };
-  mobileUsabilityResult?: { verdict?: string };
-  richResultsResult?: { verdict?: string };
+  ampResult?: {
+    verdict?: string;
+    ampUrl?: string;
+    ampIndexStatusVerdict?: string;
+    indexingState?: string;
+    issues?: Array<{ issueMessage?: string; severity?: string }>;
+  };
+  mobileUsabilityResult?: {
+    verdict?: string;
+    issues?: Array<{ issueType?: string; severity?: string; message?: string }>;
+  };
+  richResultsResult?: {
+    verdict?: string;
+    detectedItems?: Array<{
+      richResultType?: string;
+      items?: Array<{
+        name?: string;
+        issues?: Array<{ issueMessage?: string; severity?: string }>;
+      }>;
+    }>;
+  };
   inspectionResultLink?: string;
 };
 
@@ -165,6 +198,15 @@ export function createGscClient(opts: {
         `${GSC_API_BASE}/sites`,
       );
       return data.siteEntry ?? [];
+    },
+
+    /** Webmasters API `sitemaps.list` — every sitemap submitted for a property
+     *  (same `webmasters.readonly` scope). */
+    async listSitemaps(siteUrl: string): Promise<GscSitemap[]> {
+      const data = await request<{ sitemap?: GscSitemap[] }>(
+        `${GSC_API_BASE}/sites/${encodeURIComponent(siteUrl)}/sitemaps`,
+      );
+      return data.sitemap ?? [];
     },
 
     /** Webmasters API `searchAnalytics.query`. siteUrl is used verbatim. */
