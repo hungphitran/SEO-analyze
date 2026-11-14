@@ -5,6 +5,7 @@ import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { devtools } from "@tanstack/devtools-vite";
+import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { leanWorkerBundle } from "./vite-plugin-lean-worker-bundle.ts";
@@ -22,6 +23,25 @@ const portablePassword = join(
   ),
   "password.mjs",
 );
+
+// Short commit of the code being built, exposed on /api/health so a deploy can
+// be verified. BUILD_COMMIT/GITHUB_SHA win (CI), then git; a dirty tree is
+// marked so a deploy of uncommitted work is never mistaken for a commit.
+function resolveBuildCommit(): string {
+  const fromEnv = process.env.BUILD_COMMIT ?? process.env.GITHUB_SHA;
+  if (fromEnv) return fromEnv.slice(0, 12);
+  try {
+    const run = (cmd: string) =>
+      execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] })
+        .toString()
+        .trim();
+    const sha = run("git rev-parse --short=12 HEAD");
+    const dirty = run("git status --porcelain --untracked-files=no") !== "";
+    return dirty ? `${sha}-dirty` : sha;
+  } catch {
+    return "unknown";
+  }
+}
 
 export default defineConfig(
   async ({ mode, command }): Promise<ViteUserConfig> => {
@@ -75,6 +95,7 @@ export default defineConfig(
       // Static files (favicons, manifest) live beside the app code instead of at
       // the repo root.
       publicDir: "src/public",
+      define: { __BUILD_COMMIT__: JSON.stringify(resolveBuildCommit()) },
       resolve: {
         tsconfigPaths: true,
         alias: standalone

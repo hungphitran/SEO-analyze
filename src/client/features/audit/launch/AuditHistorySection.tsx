@@ -33,10 +33,7 @@ export function AuditHistorySection({
   onDelete: (auditId: string) => void;
 }) {
   return (
-    <QueryState
-      query={historyQuery}
-      errorFallback={t("audit.failedHistory")}
-    >
+    <QueryState query={historyQuery} errorFallback={t("audit.failedHistory")}>
       {(history) => (
         <AuditHistoryTable
           projectId={projectId}

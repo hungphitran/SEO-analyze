@@ -88,7 +88,9 @@ export function TrackerPromptFields({
         )}
       <Field aria-label={t("ai.promptsToTrack")}>
         <div className="flex items-center justify-between gap-3">
-          <FieldLabel htmlFor={`${promptsId}-0`}>{t("ai.promptsToTrack")}</FieldLabel>
+          <FieldLabel htmlFor={`${promptsId}-0`}>
+            {t("ai.promptsToTrack")}
+          </FieldLabel>
           <Button
             type="button"
             variant="outline"

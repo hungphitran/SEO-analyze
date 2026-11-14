@@ -22,7 +22,9 @@ export function MetricsTable({
         <TableRow>
           <TableHead>{t("ui.metric")}</TableHead>
           <TableHead className="text-right">{t("ui.value")}</TableHead>
-          {showChange && <TableHead className="text-right">{t("ui.change")}</TableHead>}
+          {showChange && (
+            <TableHead className="text-right">{t("ui.change")}</TableHead>
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>

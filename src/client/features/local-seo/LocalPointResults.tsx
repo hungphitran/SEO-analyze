@@ -29,7 +29,9 @@ export function LocalPointResults({
   return (
     <Card className="h-full min-h-0 min-w-0 gap-0 overflow-hidden py-0 shadow-none">
       <CardHeader className="shrink-0 px-4 py-3">
-        <CardTitle className="text-sm">{t("ui.rowColumn", { v0: point.row + 1, v1: point.col + 1 })}</CardTitle>
+        <CardTitle className="text-sm">
+          {t("ui.rowColumn", { v0: point.row + 1, v1: point.col + 1 })}
+        </CardTitle>
       </CardHeader>
       <div className="min-h-0 flex-1 overflow-y-auto border-t border-border">
         {point.status !== LocalPointStatus.Completed ? (

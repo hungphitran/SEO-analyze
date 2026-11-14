@@ -21,8 +21,7 @@ type Source = (typeof SOURCES)[number];
 const DESCRIPTIONS: Record<Source, string> = {
   new: t("ui.searchesWhereYourWebsiteAppearedIn"),
   top: t("ui.searchesBringingTheMostClicksTo"),
-  striking:
-    t("ui.keywordsAtPositions520Over"),
+  striking: t("ui.keywordsAtPositions520Over"),
 };
 
 export function DashboardKeywords({

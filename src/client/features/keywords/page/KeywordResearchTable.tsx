@@ -86,7 +86,10 @@ export function KeywordResearchTable({
               className={`block whitespace-normal break-words capitalize md:truncate ${row.original.parentKeyword ? "font-normal" : "font-medium"}`}
               title={
                 row.original.parentKeyword
-                  ? t("ui.matchingReportedVolumeWithSharedVolumes", { v0: row.original.keyword, v1: row.original.parentKeyword })
+                  ? t("ui.matchingReportedVolumeWithSharedVolumes", {
+                      v0: row.original.keyword,
+                      v1: row.original.parentKeyword,
+                    })
                   : row.original.keyword
               }
             >

@@ -65,12 +65,13 @@ export function SearchTargetingField({
       <FieldDescription>
         {mode === "local" ? (
           <>
-            <span className="font-medium text-success">{t("rank.bestFor")}</span> {t("ui.nearMeQueriesCityCountyKeywords")}
+            <span className="font-medium text-success">
+              {t("rank.bestFor")}
+            </span>{" "}
+            {t("ui.nearMeQueriesCityCountyKeywords")}
           </>
         ) : (
-          <>
-            {t("ui.localTargetingCanUnderstateRankingsFor")}
-          </>
+          <>{t("ui.localTargetingCanUnderstateRankingsFor")}</>
         )}
       </FieldDescription>
       {mode === "local" && (

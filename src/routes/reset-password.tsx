@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAppForm } from "@/client/components/form/useAppForm";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
@@ -31,6 +32,7 @@ const resetPasswordSearchSchema = authRedirectSearchSchema.extend({
 });
 
 export const Route = createFileRoute("/reset-password")({
+  head: pageHead("auth.resetPassword"),
   validateSearch: resetPasswordSearchSchema,
   component: ResetPasswordPage,
 });
@@ -42,9 +44,7 @@ function getResetPasswordErrorMessage(error: string | undefined) {
     case "token_expired":
       return t("auth.resetLinkExpiredHint");
     default:
-      return error
-        ? t("auth.resetLinkInvalid")
-        : null;
+      return error ? t("auth.resetLinkInvalid") : null;
   }
 }
 
@@ -69,17 +69,14 @@ function getResetPasswordPageCopy({
   if (isComplete) {
     return {
       title: t("auth.passwordUpdated"),
-      helperText:
-        t("auth.passwordUpdatedHint"),
+      helperText: t("auth.passwordUpdatedHint"),
     };
   }
 
   if (routeError || !hasToken) {
     return {
       title: t("auth.resetLinkExpired"),
-      helperText:
-        routeError ||
-        t("auth.resetLinkInvalid"),
+      helperText: routeError || t("auth.resetLinkInvalid"),
     };
   }
 

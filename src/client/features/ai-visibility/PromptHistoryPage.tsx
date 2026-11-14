@@ -60,7 +60,9 @@ export function PromptHistoryPage({
           </span>
         }
         description={
-          prompt ? t("ui.promptAnalysis", { v0: prompt.topic }) : t("ai.promptAnalysis")
+          prompt
+            ? t("ui.promptAnalysis", { v0: prompt.topic })
+            : t("ai.promptAnalysis")
         }
         actions={
           state?.tracker &&

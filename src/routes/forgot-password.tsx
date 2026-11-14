@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAppForm } from "@/client/components/form/useAppForm";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
@@ -19,6 +20,7 @@ const forgotPasswordSchema = z.object({
 });
 
 export const Route = createFileRoute("/forgot-password")({
+  head: pageHead("auth.forgotPassword"),
   validateSearch: authRedirectSearchSchema,
   component: ForgotPasswordPage,
 });
@@ -83,7 +85,9 @@ function ForgotPasswordPage() {
 
           return (
             <AuthPageCard
-              title={isSuccess ? t("auth.checkYourEmail") : t("auth.forgotPassword")}
+              title={
+                isSuccess ? t("auth.checkYourEmail") : t("auth.forgotPassword")
+              }
               helperText={
                 isSuccess
                   ? undefined
@@ -107,7 +111,9 @@ function ForgotPasswordPage() {
             >
               {isSuccess ? (
                 <Alert variant="success">
-                  <AlertDescription>{t("ui.ifAnAccountExistsForYou", { v0: submittedEmail })}</AlertDescription>
+                  <AlertDescription>
+                    {t("ui.ifAnAccountExistsForYou", { v0: submittedEmail })}
+                  </AlertDescription>
                 </Alert>
               ) : (
                 <form.AppForm>

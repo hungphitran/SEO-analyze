@@ -248,7 +248,9 @@ function InvitationCard({
           disabled={pendingAction !== null}
           onClick={() => void handleAccept()}
         >
-          {pendingAction === "accept" ? t("auth.joining") : t("auth.acceptInvitation")}
+          {pendingAction === "accept"
+            ? t("auth.joining")
+            : t("auth.acceptInvitation")}
         </Button>
         <Button
           type="button"
@@ -258,7 +260,9 @@ function InvitationCard({
           disabled={pendingAction !== null}
           onClick={() => void handleDecline()}
         >
-          {pendingAction === "decline" ? t("auth.declining") : t("auth.decline")}
+          {pendingAction === "decline"
+            ? t("auth.declining")
+            : t("auth.decline")}
         </Button>
       </div>
     </AuthPageCard>

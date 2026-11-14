@@ -4,7 +4,15 @@ import type {
 } from "@/types/schemas/rank-tracking";
 import { formatUiDateTime, t } from "@/shared/i18n";
 
-const WEEKDAY_SHORT_EN = [t("ui.sun"), t("ui.mon"), t("ui.tue"), t("ui.wed"), t("ui.thu"), t("ui.fri"), t("ui.sat")];
+const WEEKDAY_SHORT_EN = [
+  t("ui.sun"),
+  t("ui.mon"),
+  t("ui.tue"),
+  t("ui.wed"),
+  t("ui.thu"),
+  t("ui.fri"),
+  t("ui.sat"),
+];
 
 export function getWeekdays(): string[] {
   return [

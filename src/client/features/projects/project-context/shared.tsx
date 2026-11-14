@@ -55,7 +55,10 @@ export function Provenance({ by, at }: { by: ContextAuthor; at?: string }) {
   return (
     <span className="text-xs text-muted-foreground">
       {at
-        ? t("ui.updatedBy", { v0: AUTHOR_LABELS[by], v1: formatRelativeTime(at) })
+        ? t("ui.updatedBy", {
+            v0: AUTHOR_LABELS[by],
+            v1: formatRelativeTime(at),
+          })
         : t("ui.addedBy", { v0: AUTHOR_LABELS[by] })}
     </span>
   );

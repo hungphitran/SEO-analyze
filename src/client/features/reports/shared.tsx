@@ -183,7 +183,9 @@ export function ShareReportModal({
         <div className="rounded-lg border border-border">
           <Field orientation="horizontal" className="p-4">
             <FieldContent>
-              <FieldLabel htmlFor={switchId}>{t("reports.publicLink")}</FieldLabel>
+              <FieldLabel htmlFor={switchId}>
+                {t("reports.publicLink")}
+              </FieldLabel>
               <FieldDescription id={`${switchId}-description`}>
                 {shared
                   ? t("reports.publicLinkHelp")
@@ -228,9 +230,15 @@ export function ShareReportModal({
                   </Button>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">{t("ui.showsTheLatestSavedVersionHidden", { v0: report.sharedAt
-                  ? t("ui.linkCreatedSuffix", { when: formatRelativeTime(report.sharedAt) })
-                  : "" })}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("ui.showsTheLatestSavedVersionHidden", {
+                  v0: report.sharedAt
+                    ? t("ui.linkCreatedSuffix", {
+                        when: formatRelativeTime(report.sharedAt),
+                      })
+                    : "",
+                })}
+              </p>
             </div>
           ) : null}
         </div>

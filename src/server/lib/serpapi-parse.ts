@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const organicResultSchema = z
+const organicResultSchema = z
   .object({
     position: z.number().int().positive().optional(),
     title: z.string().nullish(),
@@ -42,7 +42,6 @@ export function isNonEmpty(value: unknown) {
     ? Object.keys(value).length > 0
     : Boolean(value);
 }
-
 
 export function normalizeHostname(hostname: string) {
   const normalized = hostname.toLowerCase().replace(/^www\./, "");

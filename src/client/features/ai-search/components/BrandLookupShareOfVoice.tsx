@@ -66,7 +66,9 @@ export function BrandLookupShareOfVoice({
           cross_aggregated call failed, the leaderboard must not claim both. */}
       <p className="border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
         {t("ui.shareOfMentionsOn")}{" "}
-        {shareOfVoice.platforms.map(formatPlatformLabel).join(` ${t("common.and")} `)}
+        {shareOfVoice.platforms
+          .map(formatPlatformLabel)
+          .join(` ${t("common.and")} `)}
       </p>
     </div>
   );

@@ -136,7 +136,9 @@ function OAuthConsentPage() {
             <User className="size-4" />
           </div>
           <div className="flex-1">
-            <div className="text-xs text-muted-foreground">{t("ui.signedInAs")}</div>
+            <div className="text-xs text-muted-foreground">
+              {t("ui.signedInAs")}
+            </div>
             <div className="font-medium">{session?.user.email}</div>
           </div>
         </div>
@@ -149,7 +151,9 @@ function OAuthConsentPage() {
               <Building2 className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs text-muted-foreground">{t("ui.workspace")}</div>
+              <div className="text-xs text-muted-foreground">
+                {t("ui.workspace")}
+              </div>
               <Select
                 items={organizations.map((organization) => ({
                   value: organization.organizationId,
@@ -245,7 +249,9 @@ function OAuthConsentPage() {
               disabled={pendingAction !== null || switchWorkspace.isPending}
               onClick={() => void respond(true)}
             >
-              {pendingAction === "authorize" ? "Authorizing..." : t("ui.authorize")}
+              {pendingAction === "authorize"
+                ? "Authorizing..."
+                : t("ui.authorize")}
             </Button>
           </div>
         )}

@@ -63,10 +63,9 @@ export function SearchConsoleConnection({
           variant="outline"
           disabled={busy}
           onClick={() =>
-            host.ask(
-              t("ui.helpMeResearchGoogleSearchResults"),
-              { projectId: input.projectId },
-            )
+            host.ask(t("ui.helpMeResearchGoogleSearchResults"), {
+              projectId: input.projectId,
+            })
           }
         >
           <MessageSquare />

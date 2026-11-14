@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- prompt table and its row editor stay together */
 import { useState } from "react";
 import { cn } from "cn";
 import { Link } from "@tanstack/react-router";
@@ -209,7 +210,10 @@ export function PromptInventory({
                             : prompt.paused
                               ? t("ai.paused")
                               : t("ai.active")}{" "}
-                          · {prompt.branded ? t("ai.branded") : t("ai.nonBranded")}
+                          ·{" "}
+                          {prompt.branded
+                            ? t("ai.branded")
+                            : t("ai.nonBranded")}
                         </p>
                       </TableCell>
                       <TableCell className={dim}>
@@ -300,7 +304,9 @@ export function PromptInventory({
       {archiving && (
         <ConfirmDialog
           title={t(
-            archiving.kind === "topic" ? "ui.archiveTopicConfirm" : "ui.archivePromptConfirm",
+            archiving.kind === "topic"
+              ? "ui.archiveTopicConfirm"
+              : "ui.archivePromptConfirm",
           )}
           confirmLabel={t("common.archive")}
           destructive

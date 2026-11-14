@@ -68,18 +68,20 @@ export function MoreMenu({
             />
           </DropdownMenuItem>
           {freeSourcesOnly ? null : (
-          <DropdownMenuItem
-            onClick={() => setConfirmingRefresh(true)}
-            disabled={metricsRefreshing || !hasData}
-          >
-            <RefreshCw className={metricsRefreshing ? "animate-spin" : ""} />
-            <ItemText
-              label={
-                metricsRefreshing ? t("common.refreshingDots") : t("saved.updateKeywordStats")
-              }
-              description={t("rank.statsNotRankings")}
-            />
-          </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setConfirmingRefresh(true)}
+              disabled={metricsRefreshing || !hasData}
+            >
+              <RefreshCw className={metricsRefreshing ? "animate-spin" : ""} />
+              <ItemText
+                label={
+                  metricsRefreshing
+                    ? t("common.refreshingDots")
+                    : t("saved.updateKeywordStats")
+                }
+                description={t("rank.statsNotRankings")}
+              />
+            </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

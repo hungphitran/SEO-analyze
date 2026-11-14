@@ -1,8 +1,4 @@
-import {
-  AUDIT_ISSUE_TYPES,
-  getIssueDescriptor,
-  type AuditIssueType,
-} from "@/shared/audit-issues";
+import { getIssueDescriptor, type AuditIssueType } from "@/shared/audit-issues";
 
 type IssueCopy = { title: string; explanation: string; howToFix: string };
 
@@ -235,6 +231,27 @@ const ISSUE_COPY = {
     howToFix:
       "Thêm liên kết từ các trang cấp cao hơn (trang trung tâm, danh mục, điều hướng) để rút ngắn đường tới trang này.",
   },
+  "missing-open-graph": {
+    title: "Thẻ Open Graph chưa đầy đủ",
+    explanation:
+      "Trang thiếu một hoặc nhiều thẻ og:title, og:description, og:image. Mạng xã hội và ứng dụng chat dùng các thẻ này để dựng bản xem trước liên kết, nên liên kết được chia sẻ có thể trông trống trơn hoặc lấy ảnh ngẫu nhiên.",
+    howToFix:
+      "Thêm og:title, og:description và og:image (tối thiểu 1200x630 px) vào phần head, thường lấy từ cùng nguồn với tiêu đề và mô tả meta. Kiểm tra bằng công cụ xem trước liên kết trước khi chia sẻ.",
+  },
+  "hreflang-invalid": {
+    title: "Giá trị hreflang không hợp lệ hoặc bị lặp",
+    explanation:
+      "Trang khai báo hreflang nhưng có ít nhất một giá trị không phải mã ngôn ngữ hoặc ngôn ngữ-vùng hợp lệ (ví dụ 'en-uk' thay vì 'en-gb'), hoặc cùng một giá trị được khai báo hai lần. Công cụ tìm kiếm bỏ qua hreflang không hợp lệ.",
+    howToFix:
+      "Dùng mã ngôn ngữ ISO 639-1 kèm vùng ISO 3166-1 tùy chọn (en, en-gb, vi-vn) hoặc x-default, và mỗi giá trị chỉ khai báo một lần trên mỗi trang.",
+  },
+  "hreflang-missing-x-default": {
+    title: "Hreflang thiếu x-default",
+    explanation:
+      "Trang liệt kê các bản hreflang nhưng không có mục x-default, nên người tìm kiếm có ngôn ngữ không nằm trong danh sách sẽ không có phiên bản dự phòng được khai báo.",
+    howToFix:
+      'Thêm <link rel="alternate" hreflang="x-default" href="..."> trỏ tới phiên bản dành cho mọi người còn lại (thường là trang chọn ngôn ngữ hoặc ngôn ngữ chính).',
+  },
 } as const satisfies Record<AuditIssueType, IssueCopy>;
 
 export function getAuditIssueCopy(issueType: string): IssueCopy {
@@ -253,5 +270,3 @@ export function getAuditIssueCopy(issueType: string): IssueCopy {
 export function getAuditIssueTitle(issueType: string): string {
   return getAuditIssueCopy(issueType).title;
 }
-
-export const AUDIT_ISSUE_TYPE_IDS = Object.keys(AUDIT_ISSUE_TYPES);

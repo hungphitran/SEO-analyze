@@ -63,7 +63,9 @@ export function SavedKeywordsTagFilter({
         multiple
         items={availableTags}
         value={selectedTags}
-        onValueChange={(tags) => onSelectedTagIdsChange(tags.map((tag) => tag.id))}
+        onValueChange={(tags) =>
+          onSelectedTagIdsChange(tags.map((tag) => tag.id))
+        }
         itemToStringLabel={(tag) => tag.name}
         isItemEqualToValue={(a, b) => a.id === b.id}
       >
@@ -84,7 +86,9 @@ export function SavedKeywordsTagFilter({
           </ComboboxValue>
           <ComboboxChipsInput
             aria-label={t("saved.filterByTag")}
-            placeholder={selectedTags.length > 0 ? "" : t("saved.filterByTagEllipsis")}
+            placeholder={
+              selectedTags.length > 0 ? "" : t("saved.filterByTagEllipsis")
+            }
           />
         </ComboboxChips>
         <ComboboxContent anchor={anchor}>

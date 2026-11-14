@@ -22,7 +22,10 @@ import { t } from "@/shared/i18n";
 
 const trendChartConfig = {
   backlinks: { label: t("backlinks.title"), color: "#2563eb" },
-  referringDomains: { label: t("backlinks.referringDomainsLower"), color: "#14b8a6" },
+  referringDomains: {
+    label: t("backlinks.referringDomainsLower"),
+    color: "#14b8a6",
+  },
 } satisfies ChartConfig;
 
 const newLostChartConfig = {

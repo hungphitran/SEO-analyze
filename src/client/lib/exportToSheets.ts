@@ -65,6 +65,8 @@ export async function exportTableToSheets(args: {
     });
     setState({ isOpen: true, rowCount: rows.length });
   } catch (error) {
-    toast.error(getStandardErrorMessage(error, t("ui.couldNotCopyToClipboard")));
+    toast.error(
+      getStandardErrorMessage(error, t("ui.couldNotCopyToClipboard")),
+    );
   }
 }

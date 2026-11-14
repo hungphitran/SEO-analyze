@@ -2,8 +2,6 @@ import { sortBy } from "remeda";
 import type { MonthlySearch } from "@/types/keywords";
 import { t } from "@/shared/i18n";
 
-export { LOCATIONS } from "./locations";
-
 export const MONTH_SHORT_LABELS = [
   t("ui.jan"),
   t("ui.feb"),

@@ -72,7 +72,9 @@ export function WebsiteCompetitorRow({
             variant="ghost"
             size="icon-sm"
             aria-label={
-              editing ? t("ui.doneEditingCompetitor") : t("ui.edit", { v0: competitor.name })
+              editing
+                ? t("ui.doneEditingCompetitor")
+                : t("ui.edit", { v0: competitor.name })
             }
             disabled={
               editing && (!competitor.name.trim() || !competitor.domain.trim())
@@ -89,7 +91,9 @@ export function WebsiteCompetitorRow({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={t("ui.remove", { v0: competitor.name || t("ui.competitorNumber", { n: index + 1 }) })}
+            aria-label={t("ui.remove", {
+              v0: competitor.name || t("ui.competitorNumber", { n: index + 1 }),
+            })}
             onClick={onRemove}
           >
             <Trash2 className="size-4" />

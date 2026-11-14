@@ -103,7 +103,8 @@ export function getDomainListFilterOptions(configs: DomainFilterableConfig[]): {
   for (const config of configs) {
     locationMap.set(
       config.locationCode,
-      getLocationDisplayName(config.locationCode) ?? String(config.locationCode),
+      getLocationDisplayName(config.locationCode) ??
+        String(config.locationCode),
     );
   }
 

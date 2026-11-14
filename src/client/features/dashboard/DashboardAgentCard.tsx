@@ -42,11 +42,9 @@ export function DashboardAgentCard({ projectId }: { projectId: string }) {
           </span>
         </div>
         <div className="min-w-0 space-y-1">
-          <h2 className="text-sm font-semibold">
-            {t("dashboard.mcpTitle")}
-          </h2>
+          <h2 className="text-sm font-semibold">{t("dashboard.mcpTitle")}</h2>
           <p className="truncate text-sm text-muted-foreground">
-{t("dashboard.mcpDesc")}
+            {t("dashboard.mcpDesc")}
           </p>
         </div>
       </div>

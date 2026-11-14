@@ -16,10 +16,10 @@ import { safeErrorMessage } from "@/server/lib/free-sources/redact";
 
 export const OPEN_PAGERANK_ENDPOINT =
   "https://openpagerank.keywordseverywhere.com/v1/domains/bulk";
-export const OPEN_PAGERANK_MAX_DOMAINS_PER_REQUEST = 100;
+const OPEN_PAGERANK_MAX_DOMAINS_PER_REQUEST = 100;
 export const OPEN_PAGERANK_REQUESTS_PER_MINUTE = 60;
 
-export type OpenPageRankErrorKind =
+type OpenPageRankErrorKind =
   | "rate_limited"
   | "quota"
   | "address"
@@ -80,7 +80,7 @@ const defaultLimiter = new SlidingWindowRateLimiter(
   60_000,
 );
 
-export type OpenPageRankEntry = {
+type OpenPageRankEntry = {
   /** Registered domain the score belongs to. */
   domain: string;
   /** 0 to 10 with up to 2 decimals; null when the domain is not found. */
@@ -91,7 +91,7 @@ export type OpenPageRankEntry = {
   host: { name: string; score: number | null; rank: number | null } | null;
 };
 
-export type OpenPageRankLookup = {
+type OpenPageRankLookup = {
   entries: Map<string, OpenPageRankEntry | null>;
   asOf: string | null;
 };

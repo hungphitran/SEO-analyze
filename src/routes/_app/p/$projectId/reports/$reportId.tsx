@@ -172,7 +172,9 @@ function ReportDetailPage() {
         description={
           <dl className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-foreground">
             <div className="flex items-baseline gap-1.5">
-              <dt className="text-muted-foreground">{t("reports.createdBy")}</dt>
+              <dt className="text-muted-foreground">
+                {t("reports.createdBy")}
+              </dt>
               <dd>{formatCreatedBy(report)}</dd>
             </div>
             <div className="flex items-baseline gap-1.5">

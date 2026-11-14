@@ -7,7 +7,8 @@ import { runOpenSerpRankCheck } from "./openSerpRankCheck";
 const mocks = vi.hoisted(() => ({
   reserveOpenSerpRequest: vi.fn(),
   insertOpenSerpSnapshot: vi.fn(),
-  insertSnapshots: vi.fn(),
+  insertSnapshots:
+    vi.fn<(rows: { position: number | null; url: string | null }[]) => void>(),
   insertOpenSerpFailure: vi.fn(),
   setRunErrorIfEmpty: vi.fn(),
   updateRun: vi.fn(),
@@ -21,7 +22,9 @@ vi.mock(
 );
 const serpApi = vi.hoisted(() => ({ searchSerpApi: vi.fn() }));
 vi.mock("@/server/lib/serpapi", async () => {
-  const actual = await vi.importActual<typeof SerpApiModule>("@/server/lib/serpapi");
+  const actual = await vi.importActual<typeof SerpApiModule>(
+    "@/server/lib/serpapi",
+  );
   return { ...actual, searchSerpApi: serpApi.searchSerpApi };
 });
 vi.mock("@/server/lib/r2-cache", () => ({

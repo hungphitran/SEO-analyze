@@ -44,11 +44,15 @@ export function TrackerSetupReview({
   const paused = !enabled && !creating;
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{t("ui.reviewYourChangesBeforeSaving", { v0: enabled
-          ? t("ai.settingsApplySchedule")
-          : creating
-            ? t("ai.weeklyFirstWeek")
-            : t("ai.trackWeeklyHelp") })}</p>
+      <p className="text-sm text-muted-foreground">
+        {t("ui.reviewYourChangesBeforeSaving", {
+          v0: enabled
+            ? t("ai.settingsApplySchedule")
+            : creating
+              ? t("ai.weeklyFirstWeek")
+              : t("ai.trackWeeklyHelp"),
+        })}
+      </p>
       <dl className="grid grid-cols-2 gap-4 rounded-lg border p-4 text-sm border-border">
         {review.patch.engines && (
           <div>
@@ -102,12 +106,13 @@ export function TrackerSetupReview({
       )}
       <div className="space-y-1 rounded-lg bg-muted/60 p-4 text-sm">
         <p>
-          {t("ui.eachRunCollects")} <strong>{review.estimate.observations}</strong>{" "}
-          {t("ui.answersFor")}{" "}
+          {t("ui.eachRunCollects")}{" "}
+          <strong>{review.estimate.observations}</strong> {t("ui.answersFor")}{" "}
           <strong>{aiMoney(review.estimate.costUsd)}</strong>
         </p>
         <p>
-          <strong>{aiMoney(review.estimate.monthlyCostUsd)}</strong> {t("ui.estimatedPerMonthIfItRuns")}{" "}
+          <strong>{aiMoney(review.estimate.monthlyCostUsd)}</strong>{" "}
+          {t("ui.estimatedPerMonthIfItRuns")}{" "}
           {scheduleLabel(review.estimate.scheduleInterval).toLowerCase()}.
         </p>
       </div>

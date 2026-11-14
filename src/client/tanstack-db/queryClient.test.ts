@@ -21,9 +21,7 @@ function runFailingMutation(
 describe("default mutation error toast", () => {
   it("shows the standard message for a mutation without its own handling", async () => {
     await runFailingMutation();
-    expect(toast.error).toHaveBeenCalledWith(
-      t("errors.RATE_LIMITED"),
-    );
+    expect(toast.error).toHaveBeenCalledWith(t("errors.RATE_LIMITED"));
   });
 
   it("stays quiet when the mutation has its own onError or opts out", async () => {

@@ -231,7 +231,9 @@ function GscConnect({
               ) : (
                 <GoogleGlyph className="size-[18px]" />
               )}
-              {linking ? t("onboarding.openingGoogle") : t("onboarding.connectWithGoogle")}
+              {linking
+                ? t("onboarding.openingGoogle")
+                : t("onboarding.connectWithGoogle")}
             </Button>
           )}
         </div>

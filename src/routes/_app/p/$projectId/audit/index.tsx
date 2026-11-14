@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { auditSearchSchema } from "@/types/schemas/audit";
@@ -5,6 +6,7 @@ import { LaunchView } from "@/client/features/audit/launch/LaunchView";
 import { AuditDetail } from "@/client/features/audit/AuditDetail";
 
 export const Route = createFileRoute("/_app/p/$projectId/audit/")({
+  head: pageHead("nav.siteAudit"),
   validateSearch: auditSearchSchema,
   component: SiteAuditPage,
 });

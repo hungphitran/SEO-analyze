@@ -18,9 +18,7 @@ describe("localizeFreeSourceMessage", () => {
       localizeFreeSourceMessage(
         "Search Console could not be refreshed. Token expired",
       ),
-    ).toBe(
-      t("freeSources.gscRefreshFailed", { error: "Token expired" }),
-    );
+    ).toBe(t("freeSources.gscRefreshFailed", { error: "Token expired" }));
   });
 
   it("localizes known PageSpeed and Bing templates", () => {

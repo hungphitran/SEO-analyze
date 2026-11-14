@@ -18,7 +18,8 @@ export function RunStatusLine({
       <div className="space-y-1.5">
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
           <Spinner className="size-3.5" />
-          {t("ui.collecting")} {run.completed + run.failed} {t("ui.of")} {run.expected} {t("ui.answers")}
+          {t("ui.collecting")} {run.completed + run.failed} {t("ui.of")}{" "}
+          {run.expected} {t("ui.answers")}
         </p>
         <Progress value={run.completed + run.failed} max={run.expected || 1} />
       </div>

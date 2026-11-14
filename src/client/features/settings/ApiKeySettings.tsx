@@ -71,7 +71,9 @@ export function ApiKeySettings() {
     queryFn: async () => {
       const result = await authClient.apiKey.list();
       if (result.error) {
-        throw new Error(result.error.message ?? t("settings.failedLoadApiKeys"));
+        throw new Error(
+          result.error.message ?? t("settings.failedLoadApiKeys"),
+        );
       }
       return result.data.apiKeys.map((key) => ({
         id: key.id,
@@ -136,9 +138,7 @@ export function ApiKeySettings() {
       <SectionHeader title={t("settings.apiKeys")} />
       <div className="flex items-start justify-between gap-6">
         <div>
-          <p className="text-sm">
-            {t("settings.apiKeysLead")}
-          </p>
+          <p className="text-sm">{t("settings.apiKeysLead")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("settings.apiKeysHermes")}
           </p>
@@ -164,7 +164,9 @@ export function ApiKeySettings() {
       >
         {(apiKeys) =>
           apiKeys.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("settings.noApiKeysYet")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("settings.noApiKeysYet")}
+            </p>
           ) : (
             <TableCard>
               <Table>
@@ -207,7 +209,9 @@ export function ApiKeySettings() {
                       </TableCell>
                       <TableCell>
                         <RowActionsMenu
-                          label={t("settings.actionsFor", { name: key.name || t("settings.apiKeys") })}
+                          label={t("settings.actionsFor", {
+                            name: key.name || t("settings.apiKeys"),
+                          })}
                         >
                           <DropdownMenuItem
                             variant="destructive"
@@ -310,7 +314,9 @@ export function ApiKeySettings() {
                 </form.AppField>
                 {showOrganization ? (
                   <p className="text-sm text-muted-foreground">
-                    {t("settings.keyWorksIn", { name: activeOrganizationName ?? "" })}
+                    {t("settings.keyWorksIn", {
+                      name: activeOrganizationName ?? "",
+                    })}
                   </p>
                 ) : null}
                 <DialogFooter>

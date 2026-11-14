@@ -99,9 +99,7 @@ export function SecretHelpPage({
                     workers: "Workers & Pages",
                   })}
                 </li>
-                <li>
-                  {t("help.openSettings", { settings: "Settings" })}
-                </li>
+                <li>{t("help.openSettings", { settings: "Settings" })}</li>
                 <li>
                   {t("help.addSecretNamed", {
                     vars: "Variables & Secrets",

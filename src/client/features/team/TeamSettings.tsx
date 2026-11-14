@@ -109,9 +109,7 @@ export function TeamSettings() {
         invitationId,
       });
       if (result.error) {
-        throw new Error(
-          result.error.message || t("team.failedCancel"),
-        );
+        throw new Error(result.error.message || t("team.failedCancel"));
       }
     },
     onSuccess: () => {
@@ -162,9 +160,7 @@ export function TeamSettings() {
           ) : null
         }
       />
-      <p className="text-sm text-muted-foreground">
-        {t("team.adminsDesc")}
-      </p>
+      <p className="text-sm text-muted-foreground">{t("team.adminsDesc")}</p>
       {orgContextQuery.isSuccess && !canManageTeam ? (
         <PermissionHint action={t("team.inviteOrRemove")} />
       ) : null}

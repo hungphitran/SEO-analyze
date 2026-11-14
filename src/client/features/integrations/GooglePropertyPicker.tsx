@@ -167,12 +167,19 @@ export function GooglePropertyPicker({
       {!emptyGsc || readOnly ? (
         <div className="space-y-4">
           {readOnly ? (
-            <p className="text-sm font-medium">{t("integrations.manageGoogleAccounts")}</p>
+            <p className="text-sm font-medium">
+              {t("integrations.manageGoogleAccounts")}
+            </p>
           ) : (
             <div>
-              <p className="mb-2 text-sm font-medium">{t("integrations.chooseProperty")}</p>
+              <p className="mb-2 text-sm font-medium">
+                {t("integrations.chooseProperty")}
+              </p>
               {loading ? (
-                <Spinner size="sm" label={t("integrations.loadingProperties")} />
+                <Spinner
+                  size="sm"
+                  label={t("integrations.loadingProperties")}
+                />
               ) : error ? (
                 <QueryError
                   fallback={t("integrations.couldNotLoadProperties")}

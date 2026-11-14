@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { getDomain as tldtsGetDomain } from "tldts";
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
-import {
-  type OpenSerpHit,
-  type OpenSerpSnapshot,
-} from "@/server/lib/openserp";
+import { type OpenSerpHit, type OpenSerpSnapshot } from "@/server/lib/openserp";
 import { buildCacheKey, getCached, setCached } from "@/server/lib/r2-cache";
 import {
   SerpApiError,
@@ -29,13 +26,7 @@ import {
   responseSchema,
 } from "@/server/lib/serpapi-parse";
 
-export {
-  SerpApiError,
-  assertSerpApiReady,
-  getSerpApiDailyRequestLimit,
-  getSerpApiLimits,
-  normalizeSerpKeyword,
-};
+export { SerpApiError, getSerpApiDailyRequestLimit, normalizeSerpKeyword };
 
 /**
  * SerpApi (https://serpapi.com) adapter for rank tracking and SERP features.
@@ -427,4 +418,3 @@ async function fetchPage(input: {
   ];
   return { hits, features, requestId };
 }
-

@@ -26,7 +26,9 @@ export function WorkspaceMergeBanner() {
     mutationFn: () => mergeLegacyWorkspaces(),
     onSuccess: ({ mergedWorkspaces }) => {
       toast.success(
-        t("ui.migratedOrganizationIntoTheSharedOrganization", { v0: mergedWorkspaces }),
+        t("ui.migratedOrganizationIntoTheSharedOrganization", {
+          v0: mergedWorkspaces,
+        }),
       );
       // The merge changes projects, connections, and the banner's own status —
       // refetch everything rather than enumerating keys.
@@ -49,7 +51,9 @@ export function WorkspaceMergeBanner() {
         pending={mergeMutation.isPending}
         onClick={() => mergeMutation.mutate()}
       >
-        {mergeMutation.isPending ? t("ui.migrating") : t("ui.migrateOrganizations")}
+        {mergeMutation.isPending
+          ? t("ui.migrating")
+          : t("ui.migrateOrganizations")}
       </Button>
     </Alert>
   );

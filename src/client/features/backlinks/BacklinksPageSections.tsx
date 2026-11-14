@@ -216,7 +216,11 @@ export function BacklinksResultsCard({
                     icon: <Rows3 />,
                     label: t("backlinks.onePerDomain"),
                   },
-                  { value: "all", icon: <List />, label: t("backlinks.allLinks") },
+                  {
+                    value: "all",
+                    icon: <List />,
+                    label: t("backlinks.allLinks"),
+                  },
                 ]}
               />
             </>

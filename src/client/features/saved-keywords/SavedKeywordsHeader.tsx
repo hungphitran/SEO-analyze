@@ -42,7 +42,9 @@ export function SavedKeywordsHeader({
                 data-icon="inline-start"
                 className={metricsRefreshing ? "animate-spin" : ""}
               />
-              {metricsRefreshing ? t("saved.updating") : t("saved.updateKeywordStats")}
+              {metricsRefreshing
+                ? t("saved.updating")
+                : t("saved.updateKeywordStats")}
             </Button>
 
             <ExportMenu

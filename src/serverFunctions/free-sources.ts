@@ -46,6 +46,8 @@ export const saveBingWebmasterConnectionFn = createServerFn({ method: "POST" })
       userId: context.userId,
       apiKey: data.apiKey,
       siteUrl: data.siteUrl,
+      manual: data.manual,
+      skipVerification: data.skipVerification,
     });
   });
 

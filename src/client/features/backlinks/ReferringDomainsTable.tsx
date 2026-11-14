@@ -117,8 +117,14 @@ const baseColumns = [
     ),
     cell: ({ row }) => (
       <div className="text-sm">
-        <div>{t("ui.brokenLinks", { v0: formatNumber(row.original.brokenBacklinks) })}</div>
-        <div className="text-muted-foreground">{t("ui.brokenPages", { v0: formatNumber(row.original.brokenPages) })}</div>
+        <div>
+          {t("ui.brokenLinks", {
+            v0: formatNumber(row.original.brokenBacklinks),
+          })}
+        </div>
+        <div className="text-muted-foreground">
+          {t("ui.brokenPages", { v0: formatNumber(row.original.brokenPages) })}
+        </div>
       </div>
     ),
     sortDescFirst: true,

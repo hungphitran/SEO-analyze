@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ProjectGeneralSettings } from "@/client/features/projects/ProjectGeneralSettings";
 
@@ -7,6 +8,7 @@ import { ProjectGeneralSettings } from "@/client/features/projects/ProjectGenera
 const MOVED_TO_INTEGRATIONS = ["search-console", "google-analytics"];
 
 export const Route = createFileRoute("/_app/p/$projectId/settings/")({
+  head: pageHead("settings.title"),
   beforeLoad: ({ params, location }) => {
     const hash = location.hash.replace(/^#/, "");
     if (!MOVED_TO_INTEGRATIONS.includes(hash)) return;

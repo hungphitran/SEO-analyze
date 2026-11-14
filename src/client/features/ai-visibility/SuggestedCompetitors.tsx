@@ -75,7 +75,9 @@ export function SuggestedCompetitors({
             <span className="flex items-center gap-2 text-sm">
               <DomainFavicon domain={row.domain} />
               {row.domain}
-              <span className="ml-2 text-xs text-muted-foreground">{t("ui.citedIn", { v0: row.answerCount })}</span>
+              <span className="ml-2 text-xs text-muted-foreground">
+                {t("ui.citedIn", { v0: row.answerCount })}
+              </span>
             </span>
             <Button
               variant="ghost"

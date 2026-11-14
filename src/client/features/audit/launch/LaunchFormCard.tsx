@@ -51,7 +51,7 @@ export function LaunchFormCard({
     <Card>
       <CardHeader>
         <CardTitle>
-<h2>{t("audit.startNew")}</h2>
+          <h2>{t("audit.startNew")}</h2>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -196,9 +196,7 @@ function LighthouseOptions({ launchForm }: Pick<Props, "launchForm">) {
       >
         {(runLighthouse) =>
           runLighthouse ? (
-            <FieldDescription>
-              {t("audit.lighthouseSample")}
-            </FieldDescription>
+            <FieldDescription>{t("audit.lighthouseSample")}</FieldDescription>
           ) : null
         }
       </launchForm.Subscribe>

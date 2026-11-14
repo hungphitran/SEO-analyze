@@ -110,15 +110,13 @@ function buildPagesColumns({
       meta: { cellClassName: "max-w-[240px] truncate" },
     }),
     pageColumnHelper.accessor("statusCode", {
-      header: ({ column }) => <SortableHeader column={column} label={t("audit.status")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("audit.status")} />
+      ),
       // A failed fetch or render has no HTTP status to show.
       cell: ({ getValue, row }) =>
         row.original.fetchClass === "error" ? (
-          <Badge
-            variant="destructive"
-            size="sm"
-            title={t("audit.fetchFailed")}
-          >
+          <Badge variant="destructive" size="sm" title={t("audit.fetchFailed")}>
             {t("ui.failed_0dc2")}
           </Badge>
         ) : (
@@ -127,7 +125,9 @@ function buildPagesColumns({
       sortingFn: nullableNumberSort,
     }),
     pageColumnHelper.accessor("title", {
-      header: ({ column }) => <SortableHeader column={column} label={t("common.title")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("common.title")} />
+      ),
       cell: ({ getValue, row }) => {
         if (isRedirect(row.original)) {
           const target = row.original.redirectUrl;
@@ -158,13 +158,17 @@ function buildPagesColumns({
         hasAnalyzedContent(row.original) ? getValue() : <EmptyCell />,
     }),
     pageColumnHelper.accessor("wordCount", {
-      header: ({ column }) => <SortableHeader column={column} label={t("audit.words")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("audit.words")} />
+      ),
       cell: ({ getValue, row }) =>
         hasAnalyzedContent(row.original) ? getValue() : <EmptyCell />,
     }),
     pageColumnHelper.display({
       id: "images",
-      header: ({ column }) => <SortableHeader column={column} label={t("audit.images")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("audit.images")} />
+      ),
       cell: ({ row }) => {
         if (!hasAnalyzedContent(row.original)) return <EmptyCell />;
         return row.original.imagesMissingAlt > 0 ? (
@@ -181,7 +185,9 @@ function buildPagesColumns({
         left.original.imagesTotal - right.original.imagesTotal,
     }),
     pageColumnHelper.accessor("responseTimeMs", {
-      header: ({ column }) => <SortableHeader column={column} label={t("audit.speed")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("audit.speed")} />
+      ),
       cell: ({ getValue }) => {
         const value = getValue();
         return value ? (

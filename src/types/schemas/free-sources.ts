@@ -13,6 +13,8 @@ export const saveBingConnectionSchema = z.object({
   projectId: z.string().min(1),
   apiKey: z.string().min(1).max(512),
   siteUrl: z.string().min(1).max(2048),
+  manual: z.boolean().optional(),
+  skipVerification: z.boolean().optional(),
 });
 
 export const cruxVitalsSchema = z.object({

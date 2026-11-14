@@ -97,7 +97,12 @@ export function LocalRankGrid({
                         size="sm"
                         variant="link"
                         onClick={() => onSelect(point.id)}
-                      >{t("ui.rowCol", { v0: point.row + 1, v1: point.col + 1 })}</Button>
+                      >
+                        {t("ui.rowCol", {
+                          v0: point.row + 1,
+                          v1: point.col + 1,
+                        })}
+                      </Button>
                     </TableCell>
                     <TableCell className="font-mono text-xs">
                       {point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}

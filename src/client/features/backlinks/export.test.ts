@@ -74,7 +74,9 @@ describe("buildBacklinksTabExport", () => {
       },
     });
 
-    expect(content).toContain(`"${t("common.domain")}","${t("backlinks.sourceUrl")}","${t("backlinks.targetUrl")}"`);
+    expect(content).toContain(
+      `"${t("common.domain")}","${t("backlinks.sourceUrl")}","${t("backlinks.targetUrl")}"`,
+    );
     expect(content).not.toContain('"Ahrefs DR"');
     expect(content).toContain('"example.org"');
     expect(content).toContain('"noopener, noreferrer"');
@@ -91,7 +93,9 @@ describe("buildBacklinksTabExport", () => {
       },
     });
 
-    expect(content).toContain(`"${t("metrics.rank")}","${t("backlinks.ahrefsDr")}","${t("backlinks.spamScore")}"`);
+    expect(content).toContain(
+      `"${t("metrics.rank")}","${t("backlinks.ahrefsDr")}","${t("backlinks.spamScore")}"`,
+    );
     expect(content).toContain('"71.5"');
   });
 
@@ -106,7 +110,9 @@ describe("buildBacklinksTabExport", () => {
       },
     });
 
-    expect(content).toContain(`"${t("backlinks.domainRank")}","${t("backlinks.ahrefsDr")}","${t("backlinks.sourcePageRank")}"`);
+    expect(content).toContain(
+      `"${t("backlinks.domainRank")}","${t("backlinks.ahrefsDr")}","${t("backlinks.sourcePageRank")}"`,
+    );
     expect(content).toContain('"33"');
   });
 
@@ -120,7 +126,9 @@ describe("buildBacklinksTabExport", () => {
       },
     });
 
-    expect(content).toContain(`"${t("common.domain")}","${t("backlinks.title")}","${t("backlinks.referringPages")}"`);
+    expect(content).toContain(
+      `"${t("common.domain")}","${t("backlinks.title")}","${t("backlinks.referringPages")}"`,
+    );
     expect(content).toContain('"source.com"');
   });
 

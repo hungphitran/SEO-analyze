@@ -114,7 +114,9 @@ export function TablePagination<TSize extends number>({
                   current: formatUiNumber(currentPage),
                   total: formatUiNumber(totalPages),
                 })
-              : t("common.pageNumber", { current: formatUiNumber(currentPage) })}
+              : t("common.pageNumber", {
+                  current: formatUiNumber(currentPage),
+                })}
           </span>
           <div className="flex items-center gap-1">
             {renderPageButton({

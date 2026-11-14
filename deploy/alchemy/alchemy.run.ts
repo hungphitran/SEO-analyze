@@ -9,6 +9,7 @@ import * as Effect from "effect/Effect";
 import { Redacted } from "effect";
 import { unstable_readConfig } from "wrangler";
 import { z } from "zod";
+import { existsSync, readFileSync } from "node:fs";
 import {
   emailAccessGate,
   HOSTED_PROD_STAGE,
@@ -500,6 +501,13 @@ export default Alchemy.Stack(
       bundle: false,
       assets: {
         directory: "./dist/client",
+        // Alchemy reads dist/client/_headers but never sends it to Cloudflare,
+        // so the immutable cache and security headers for static files were
+        // silently dropped (live assets answered max-age=0). Pass the file's
+        // contents explicitly.
+        headers: existsSync("./dist/client/_headers")
+          ? readFileSync("./dist/client/_headers", "utf8")
+          : undefined,
       },
       compatibility: {
         date: wrangler.compatibility_date,

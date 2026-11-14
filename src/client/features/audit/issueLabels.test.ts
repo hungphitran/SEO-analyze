@@ -5,7 +5,7 @@ import { getAuditIssueCopy, getAuditIssueTitle } from "./issueLabels";
 describe("getAuditIssueCopy", () => {
   it("covers every registry issue type with Vietnamese titles", () => {
     const ids = Object.keys(AUDIT_ISSUE_TYPES);
-    expect(ids.length).toBe(32);
+    expect(ids.length).toBe(35);
     for (const id of ids) {
       const copy = getAuditIssueCopy(id);
       expect(copy.title, id).toMatch(
@@ -13,9 +13,7 @@ describe("getAuditIssueCopy", () => {
       );
       // Schema identifiers stay English in the registry and as the lookup key.
       const registry: Record<string, { title: string }> = AUDIT_ISSUE_TYPES;
-      expect(registry[id]?.title).not.toBe(
-        copy.title,
-      );
+      expect(registry[id]?.title).not.toBe(copy.title);
       expect(copy.explanation.length).toBeGreaterThan(20);
       expect(copy.howToFix.length).toBeGreaterThan(10);
     }

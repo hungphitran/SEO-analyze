@@ -36,7 +36,10 @@ const DEVICE_OPTIONS = GSC_DEVICES.map((value) => ({
 
 // Sentinel for "no filter" in the selects; never written to the URL.
 const ALL = "ALL";
-const DEVICE_ITEMS = [{ value: ALL, label: t("ui.allDevices") }, ...DEVICE_OPTIONS];
+const DEVICE_ITEMS = [
+  { value: ALL, label: t("ui.allDevices") },
+  ...DEVICE_OPTIONS,
+];
 
 function isDateRange(value: string): value is SearchPerformanceDateRange {
   return SEARCH_PERFORMANCE_RANGES.some((option) => option === value);
@@ -82,7 +85,11 @@ export function SearchPerformanceSelects({
           });
         }}
       >
-        <SelectTrigger size="sm" className="w-36" aria-label={t("gscInsights.deviceFilter")}>
+        <SelectTrigger
+          size="sm"
+          className="w-36"
+          aria-label={t("gscInsights.deviceFilter")}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -104,7 +111,11 @@ export function SearchPerformanceSelects({
           });
         }}
       >
-        <SelectTrigger size="sm" className="w-36" aria-label={t("gscInsights.countryFilter")}>
+        <SelectTrigger
+          size="sm"
+          className="w-36"
+          aria-label={t("gscInsights.countryFilter")}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -127,7 +138,11 @@ export function SearchPerformanceSelects({
           }
         }}
       >
-        <SelectTrigger size="sm" className="w-36" aria-label={t("gscInsights.dateRange")}>
+        <SelectTrigger
+          size="sm"
+          className="w-36"
+          aria-label={t("gscInsights.dateRange")}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

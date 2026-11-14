@@ -68,9 +68,7 @@ function Widget() {
       ) : serp?.success ? (
         <SerpWidget host={host} data={serp.data} />
       ) : snapshot ? (
-        <p role="alert">
-          {t("ui.couldNotReadTheseResultsAsk")}
-        </p>
+        <p role="alert">{t("ui.couldNotReadTheseResultsAsk")}</p>
       ) : null}
       {host.notice && (
         <p role="status" className="text-sm">

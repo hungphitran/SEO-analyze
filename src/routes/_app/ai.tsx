@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { everyAppAccountQueryOptions } from "@/client/features/every-app/everyAppAccountQueries";
@@ -38,29 +39,14 @@ const MUTED_LINK_CLASS =
   "inline-flex items-center gap-1 text-sm text-muted-foreground underline decoration-foreground/25 underline-offset-4 hover:text-foreground";
 const SKILLS = [
   ["seo-coach", t("sam.skillOverview")],
-  [
-    "seo-project-setup",
-    t("sam.skillContext"),
-  ],
-  [
-    "seo-audit",
-    t("sam.skillAudit"),
-  ],
-  [
-    "ai-visibility-audit",
-    t("sam.skillCited"),
-  ],
-  [
-    "ai-prompt-research",
-    t("sam.skillResearch"),
-  ],
+  ["seo-project-setup", t("sam.skillContext")],
+  ["seo-audit", t("sam.skillAudit")],
+  ["ai-visibility-audit", t("sam.skillCited")],
+  ["ai-prompt-research", t("sam.skillResearch")],
   ["keyword-research", t("sam.skillKeywords")],
   ["keyword-clustering", t("sam.skillIntent")],
   ["competitive-landscape", t("sam.skillMarket")],
-  [
-    "competitor-analysis",
-    t("sam.skillCompetitor"),
-  ],
+  ["competitor-analysis", t("sam.skillCompetitor")],
   ["link-prospecting", t("sam.skillLinks")],
   ["local-seo", t("sam.skillGbp")],
   ["seo-report", t("sam.skillReport")],
@@ -72,6 +58,7 @@ const aiSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/ai")({
+  head: pageHead("nav.agentSetup"),
   validateSearch: aiSearchSchema,
   component: AiPage,
 });
@@ -230,9 +217,13 @@ function AiPage() {
           </TabsContent>
           <TabsContent value="skills">
             <section className="mt-6">
-              <p className="text-sm text-muted-foreground">{t("ui.runOneByNameWhenYou", { v0: everyApp
-                  ? t("sam.installSkills")
-                  : t("sam.setupInstalls") })}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("ui.runOneByNameWhenYou", {
+                  v0: everyApp
+                    ? t("sam.installSkills")
+                    : t("sam.setupInstalls"),
+                })}
+              </p>
               <ul className="mt-5 space-y-3 text-sm sm:space-y-2">
                 {SKILLS.map(([name, blurb]) => (
                   <li
@@ -275,9 +266,7 @@ function EveryAppAgentSetup() {
           <CardTitle>
             <h2>{t("sam.connectEveryApp")}</h2>
           </CardTitle>
-          <CardDescription>
-            {t("ui.everyAppHasOneAddressFor")}
-          </CardDescription>
+          <CardDescription>{t("ui.everyAppHasOneAddressFor")}</CardDescription>
         </CardHeader>
         {gatewayUrl ? (
           <CardContent className="flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -295,9 +284,7 @@ function EveryAppAgentSetup() {
           <CardTitle>
             <h2>{t("sam.installSeoSkills")}</h2>
           </CardTitle>
-          <CardDescription>
-            {t("ui.runThisInATerminalTo")}
-          </CardDescription>
+          <CardDescription>{t("ui.runThisInATerminalTo")}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <code className="font-mono text-sm">{EVERY_APP_SKILLS_COMMAND}</code>

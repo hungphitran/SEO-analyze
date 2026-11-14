@@ -84,9 +84,7 @@ export function CompetitorsTab({
         <AiQueryError error={query.error} />
       ) : runId && !rows.length ? (
         <p className="p-10 text-center text-sm text-muted-foreground">
-          {collecting
-            ? t("ai.collectingBrands")
-            : t("ai.noAnswersMatch")}
+          {collecting ? t("ai.collectingBrands") : t("ai.noAnswersMatch")}
         </p>
       ) : (
         <Table>

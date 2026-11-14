@@ -3,10 +3,9 @@ import { db } from "@/db";
 import { ownedSiteSourceSnapshots } from "@/db/schema";
 import type { FreeOwnedSiteSource } from "@/shared/free-sources-mode";
 
-export type OwnedSiteSourceSnapshot =
-  typeof ownedSiteSourceSnapshots.$inferSelect;
+type OwnedSiteSourceSnapshot = typeof ownedSiteSourceSnapshots.$inferSelect;
 
-export type OwnedSiteSnapshotStatus = "ok" | "skipped" | "error";
+type OwnedSiteSnapshotStatus = "ok" | "skipped" | "error";
 
 async function listByProjectId(
   projectId: string,

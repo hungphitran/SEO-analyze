@@ -41,28 +41,23 @@ const DESCRIPTIONS: Record<
 > = {
   informational: {
     label: INTENT_LABELS.informational,
-    description:
-      t("kw.intentInformationalHelp"),
+    description: t("kw.intentInformationalHelp"),
   },
   commercial: {
     label: INTENT_LABELS.commercial,
-    description:
-      t("kw.intentCommercialHelp"),
+    description: t("kw.intentCommercialHelp"),
   },
   transactional: {
     label: INTENT_LABELS.transactional,
-    description:
-      t("kw.intentTransactionalHelp"),
+    description: t("kw.intentTransactionalHelp"),
   },
   navigational: {
     label: INTENT_LABELS.navigational,
-    description:
-      t("kw.intentNavigationalHelp"),
+    description: t("kw.intentNavigationalHelp"),
   },
   unknown: {
     label: INTENT_LABELS.unknown,
-    description:
-      t("kw.intentUnknownHelp"),
+    description: t("kw.intentUnknownHelp"),
   },
 };
 

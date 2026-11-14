@@ -59,7 +59,9 @@ export function WebsiteResearchProgress({
           </li>
         ))}
       </ol>
-      <p className="max-w-sm text-xs text-muted-foreground">{t("ui.thisCanTakeUpToA", { v0: note ? ` ${note}` : "" })}</p>
+      <p className="max-w-sm text-xs text-muted-foreground">
+        {t("ui.thisCanTakeUpToA", { v0: note ? ` ${note}` : "" })}
+      </p>
     </div>
   );
 }

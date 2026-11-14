@@ -82,8 +82,8 @@ describe("toSerpAppError", () => {
     ["blocked", "SERP_UNAVAILABLE"],
   ] as const)("maps %s to a client-facing %s code", (code, appCode) => {
     const mapped = toSerpAppError(new SerpApiError(code, "msg"));
-    expect(mapped).toBeInstanceOf(AppError);
-    expect((mapped as AppError).code).toBe(appCode);
+    if (!(mapped instanceof AppError)) throw new Error("expected AppError");
+    expect(mapped.code).toBe(appCode);
   });
 
   it("passes other errors through untouched", () => {

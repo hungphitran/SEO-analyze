@@ -14,14 +14,14 @@ import type { LighthouseResult } from "@/server/lib/audit/types";
 export const PAGESPEED_ENDPOINT =
   "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 
-export const PAGESPEED_CATEGORIES = [
+const PAGESPEED_CATEGORIES = [
   "performance",
   "accessibility",
   "best-practices",
   "seo",
 ] as const;
 
-export type PagespeedStrategy = "mobile" | "desktop";
+type PagespeedStrategy = "mobile" | "desktop";
 
 export class PagespeedError extends Error {
   readonly status: number;

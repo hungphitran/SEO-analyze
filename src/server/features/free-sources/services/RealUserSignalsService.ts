@@ -36,11 +36,11 @@ import type {
 } from "@/shared/real-user-signals";
 
 /** CrUX publishes once a day: half a day keeps data fresh without waste. */
-export const CRUX_CACHE_TTL_SECONDS = 12 * 60 * 60;
+const CRUX_CACHE_TTL_SECONDS = 12 * 60 * 60;
 /** "Not enough data" can flip when traffic grows, so re-check sooner. */
-export const CRUX_NO_DATA_TTL_SECONDS = 6 * 60 * 60;
+const CRUX_NO_DATA_TTL_SECONDS = 6 * 60 * 60;
 /** Open PageRank is rebuilt from monthly graph releases. */
-export const OPEN_PAGERANK_CACHE_TTL_SECONDS = 24 * 60 * 60;
+const OPEN_PAGERANK_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
 /** CRUX_API_KEY, falling back to the PageSpeed key (same Google API key). */
 export async function getCruxApiKey(): Promise<string | null> {

@@ -46,7 +46,8 @@ describe("i18n catalog coverage", () => {
     for (const call of calls) {
       if (!Object.hasOwn(catalog, call.key)) continue;
       if (call.vars === undefined) {
-        if (/\{v\d+\}/.test(catalog[call.key])) unfilled.push(`${call.where}: ${call.key} (no vars)`);
+        if (/\{v\d+\}/.test(catalog[call.key]))
+          unfilled.push(`${call.where}: ${call.key} (no vars)`);
         continue;
       }
       // Only plain `{ a: ..., b }` objects are checkable; skip spreads.
@@ -58,7 +59,8 @@ describe("i18n catalog coverage", () => {
           .filter(Boolean),
       );
       for (const [, name] of catalog[call.key].matchAll(PLACEHOLDER)) {
-        if (!passed.has(name)) unfilled.push(`${call.where}: ${call.key} {${name}}`);
+        if (!passed.has(name))
+          unfilled.push(`${call.where}: ${call.key} {${name}}`);
       }
     }
     expect(unfilled).toEqual([]);
@@ -67,7 +69,10 @@ describe("i18n catalog coverage", () => {
   it("leaves no untranslated v-placeholders unused by any caller", () => {
     const used = new Set(calls.map((call) => call.key));
     const orphanedVarKeys = Object.keys(catalog).filter(
-      (key) => key.startsWith("ui.") && !used.has(key) && /\{v\d+\}/.test(catalog[key]),
+      (key) =>
+        key.startsWith("ui.") &&
+        !used.has(key) &&
+        /\{v\d+\}/.test(catalog[key]),
     );
     // Generated ui.* keys with {vN} placeholders exist only for a call site.
     expect(orphanedVarKeys).toEqual([]);

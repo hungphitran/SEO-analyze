@@ -144,7 +144,9 @@ export function DashboardDataTable<T>({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">{t("ui.allLinks")}</SelectItem>
+                            <SelectItem value="all">
+                              {t("ui.allLinks")}
+                            </SelectItem>
                             <SelectItem value="Follow">Follow</SelectItem>
                             <SelectItem value="Nofollow">Nofollow</SelectItem>
                           </SelectContent>

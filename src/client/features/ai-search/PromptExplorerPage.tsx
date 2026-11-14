@@ -186,8 +186,7 @@ export function PromptExplorerPage({
       description={t("search.explorerDesc")}
       gate={{
         feature: t("search.promptExplorer"),
-        description:
-          t("search.explorerIntro"),
+        description: t("search.explorerIntro"),
         features: PROMPT_EXPLORER_BULLETS,
         alternative: (
           <PromptTrackingWithoutUpgradeButton projectId={projectId} />

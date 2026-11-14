@@ -15,7 +15,7 @@ export const CRUX_FORM_FACTORS: readonly CruxFormFactor[] = [
 ];
 
 /** Official Core Web Vitals / CrUX thresholds: [good upper bound, poor lower bound]. */
-export const CRUX_THRESHOLDS: Record<CruxMetricKey, [number, number]> = {
+const CRUX_THRESHOLDS: Record<CruxMetricKey, [number, number]> = {
   lcp: [2500, 4000],
   inp: [200, 500],
   cls: [0.1, 0.25],

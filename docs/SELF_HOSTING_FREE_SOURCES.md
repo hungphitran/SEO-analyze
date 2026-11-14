@@ -46,13 +46,13 @@ Rank tracking stores only successful observations. CAPTCHA, blocked, rate-limite
 
 [SerpApi](https://serpapi.com) is the hosted alternative to OpenSERP and works from a Cloudflare Worker with no extra server. Set `SERP_PROVIDER=serpapi` and `SERPAPI_API_KEY` (server-only secret). Without a key it stays off: in free-sources mode SERP features say so instead of calling DataForSEO.
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `SERPAPI_MAX_KEYWORDS_PER_DAY` | 8 | Searches per project per UTC day (1–250) |
-| `SERPAPI_MAX_SEARCHES_PER_MONTH` | 250 | Account-wide per UTC month (free plan) |
-| `SERPAPI_MAX_SEARCHES_PER_HOUR` | 50 | Account-wide per UTC hour (free plan) |
-| `SERPAPI_PAGES_PER_KEYWORD` | 1 | Result pages per keyword (10 results each; every page is one search) |
-| `SERPAPI_TIMEOUT_MS` | 20000 | Request timeout (100–60000) |
+| Variable                         | Default | Meaning                                                              |
+| -------------------------------- | ------- | -------------------------------------------------------------------- |
+| `SERPAPI_MAX_KEYWORDS_PER_DAY`   | 8       | Searches per project per UTC day (1–250)                             |
+| `SERPAPI_MAX_SEARCHES_PER_MONTH` | 250     | Account-wide per UTC month (free plan)                               |
+| `SERPAPI_MAX_SEARCHES_PER_HOUR`  | 50      | Account-wide per UTC hour (free plan)                                |
+| `SERPAPI_PAGES_PER_KEYWORD`      | 1       | Result pages per keyword (10 results each; every page is one search) |
+| `SERPAPI_TIMEOUT_MS`             | 20000   | Request timeout (100–60000)                                          |
 
 Behavior: every search is reserved against the three counters first (the daily counter is an atomic conditional upsert; month/hour are increment-then-verify, so parallel runs can never exceed a cap). Results are cached for 6 hours (a cache hit uses no quota), identical in-flight searches are merged, and a reservation is returned when SerpApi demonstrably did not run the search. Transient failures (network error, 5xx, one retry for a timeout) are retried with short backoff; quota, auth and throughput errors are never retried. Failures are recorded as an error state on the run — HTTP 429, "run out of searches" (also when delivered with HTTP 200), bad key, timeouts, malformed or empty responses — and never write a rank. A domain that is simply absent from the fetched results is stored as "not ranked" (a null position, not 0). Depth is the number of pages fetched times 10, so with the default one page "not ranked" means "not in the top 10". City-level targeting is not supported (country and language only).
 
@@ -131,25 +131,25 @@ a short Vietnamese notice. Backend code is untouched; turning the flag off
 restores everything. The single source of truth is
 `src/shared/free-sources-visibility.ts`.
 
-| Hidden | Why (no free replacement) |
-| --- | --- |
-| Keyword research (`/keywords`) and Saved keywords (`/saved`) | Search volume, difficulty and CPC are DataForSEO-only |
-| Domain overview (`/domain`) | Traffic and ranked-keyword estimates |
-| Backlinks (`/backlinks`) and the dashboard Backlinks tab / link-activity card | Backlink graph |
-| AI visibility: Prompt tracking, Prompt research, Prompt explorer, Brand lookup | LLM answer collection through DataForSEO |
-| Local SEO (`/local-seo`) | Local pack / Maps collection |
-| Onboarding steps "Explore a competitor" and "Keyword ideas" | They open the pages above |
+| Hidden                                                                                                                                                        | Why (no free replacement)                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Keyword research (`/keywords`) and Saved keywords (`/saved`)                                                                                                  | Search volume, difficulty and CPC are DataForSEO-only                                |
+| Domain overview (`/domain`)                                                                                                                                   | Traffic and ranked-keyword estimates                                                 |
+| Backlinks (`/backlinks`) and the dashboard Backlinks tab / link-activity card                                                                                 | Backlink graph                                                                       |
+| AI visibility: Prompt tracking, Prompt research, Prompt explorer, Brand lookup                                                                                | LLM answer collection through DataForSEO                                             |
+| Local SEO (`/local-seo`)                                                                                                                                      | Local pack / Maps collection                                                         |
+| Onboarding steps "Explore a competitor" and "Keyword ideas"                                                                                                   | They open the pages above                                                            |
 | Rank tracking: volume / KD / CPC columns and filters, "Update keyword stats", keyword suggestions after adding a domain, city-level targeting for new domains | Metrics and city lists come from DataForSEO (SerpApi/OpenSERP target countries only) |
-| Search performance: "Save as keywords" | Its destination (Saved keywords) is hidden |
+| Search performance: "Save as keywords"                                                                                                                        | Its destination (Saved keywords) is hidden                                           |
 
-| Kept | Served by |
-| --- | --- |
-| Dashboard (overview, Keywords tab, new queries, Search Console and audit cards) | Google Search Console, site audit |
+| Kept                                                                                 | Served by                                     |
+| ------------------------------------------------------------------------------------ | --------------------------------------------- |
+| Dashboard (overview, Keywords tab, new queries, Search Console and audit cards)      | Google Search Console, site audit             |
 | Rank tracking (positions, history, SERP explorer, SERP features, competitor overlap) | SerpApi (`SERP_PROVIDER=serpapi`) or OpenSERP |
-| Search performance | Google Search Console (+ Bing Webmaster) |
-| Site audit and Lighthouse | Own crawler, PageSpeed Insights |
-| Real-user Core Web Vitals | Chrome UX Report (CrUX) |
-| Reports, Context, Agent setup, Settings, Integrations | No paid data needed |
+| Search performance                                                                   | Google Search Console (+ Bing Webmaster)      |
+| Site audit and Lighthouse                                                            | Own crawler, PageSpeed Insights               |
+| Real-user Core Web Vitals                                                            | Chrome UX Report (CrUX)                       |
+| Reports, Context, Agent setup, Settings, Integrations                                | No paid data needed                           |
 
 ## Bing Webmaster
 

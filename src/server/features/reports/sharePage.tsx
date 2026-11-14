@@ -153,10 +153,7 @@ function unavailable(heading: string, detail: string): Response {
 }
 
 const missing = () =>
-  unavailable(
-    t("ui.thisReportIsnTShared"),
-    t("share.linkTurnedOff"),
-  );
+  unavailable(t("ui.thisReportIsnTShared"), t("share.linkTurnedOff"));
 
 /**
  * The public page. Reads the same row the raw endpoint reads and puts the frame

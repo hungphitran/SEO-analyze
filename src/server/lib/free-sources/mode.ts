@@ -5,7 +5,7 @@ export async function isFreeSourcesOnly(): Promise<boolean> {
   return isFreeSourcesOnlyValue(await getOptionalEnvValue("FREE_SOURCES_ONLY"));
 }
 
-export type LighthouseProvider = "dataforseo" | "pagespeed";
+type LighthouseProvider = "dataforseo" | "pagespeed";
 
 /**
  * Free-sources mode always uses PageSpeed Insights for Lighthouse. Otherwise

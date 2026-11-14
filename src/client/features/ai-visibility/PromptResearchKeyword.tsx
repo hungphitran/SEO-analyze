@@ -98,7 +98,9 @@ export function PromptResearchKeyword({
         }}
         toolbar={
           <div className="border-b px-4 py-3 border-border">
-            <h2 className="font-medium">{t("ui.promptsAbout", { v0: keyword })}</h2>
+            <h2 className="font-medium">
+              {t("ui.promptsAbout", { v0: keyword })}
+            </h2>
           </div>
         }
       />

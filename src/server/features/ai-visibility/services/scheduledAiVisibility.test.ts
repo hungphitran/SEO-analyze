@@ -11,7 +11,9 @@ const { testDb, workflow, hosted, getOptionalEnvValue } = await vi.hoisted(
       testDb: await createAiVisibilityTestDb(),
       workflow: { create: vi.fn(), get: vi.fn() },
       hosted: vi.fn(),
-      getOptionalEnvValue: vi.fn(async (_name: string): Promise<string | undefined> => "dataforseo-key"),
+      getOptionalEnvValue: vi.fn(
+        async (_name: string): Promise<string | undefined> => "dataforseo-key",
+      ),
     };
   },
 );

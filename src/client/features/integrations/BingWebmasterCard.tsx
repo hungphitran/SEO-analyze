@@ -7,7 +7,10 @@ import { SafeExternalLink } from "@/client/components/SafeExternalLink";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { localizeFreeSourceMessage } from "@/client/features/integrations/freeSourceMessages";
-import { getStandardErrorMessage } from "@/client/lib/error-messages";
+import {
+  getErrorCode,
+  getStandardErrorMessage,
+} from "@/client/lib/error-messages";
 import {
   disconnectBingWebmasterFn,
   getFreeSourcesStatusFn,
@@ -36,6 +39,10 @@ export function BingWebmasterCard({ projectId }: { projectId: string }) {
   const [apiKey, setApiKey] = useState("");
   const [sites, setSites] = useState<{ url: string }[] | null>(null);
   const [selectedSite, setSelectedSite] = useState("");
+  const [manualSite, setManualSite] = useState("");
+  // Bing limits the server's shared egress IP (ThrottleIP): verification is
+  // blocked, so offer saving without the check.
+  const [ipBlocked, setIpBlocked] = useState(false);
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const listSites = useMutation({
@@ -46,7 +53,10 @@ export function BingWebmasterCard({ projectId }: { projectId: string }) {
       setSelectedSite(result[0]?.url ?? "");
       if (result.length === 0) toast.error(t("freeSources.noVerifiedSites"));
     },
-    onError: (error: Error) => toast.error(getStandardErrorMessage(error)),
+    onError: (error: Error) => {
+      setIpBlocked(getErrorCode(error) === "BING_IP_THROTTLED");
+      toast.error(getStandardErrorMessage(error));
+    },
   });
 
   const saveBing = useMutation({
@@ -64,6 +74,39 @@ export function BingWebmasterCard({ projectId }: { projectId: string }) {
       void invalidate();
     },
     onError: (error: Error) => toast.error(getStandardErrorMessage(error)),
+  });
+
+  const saveManual = useMutation({
+    mutationFn: (skipVerification: boolean) =>
+      saveBingWebmasterConnectionFn({
+        data: {
+          projectId,
+          apiKey: apiKey.trim(),
+          siteUrl: manualSite.trim(),
+          manual: true,
+          skipVerification,
+        },
+      }),
+    onSuccess: (result: { siteUrl: string; verified: boolean }) => {
+      setApiKey("");
+      setSites(null);
+      setSelectedSite("");
+      setManualSite("");
+      setIpBlocked(false);
+      toast.success(
+        t(
+          result.verified
+            ? "freeSources.bingConnectedToast"
+            : "freeSources.bingConnectedUnverifiedToast",
+          { url: result.siteUrl },
+        ),
+      );
+      void invalidate();
+    },
+    onError: (error: Error) => {
+      setIpBlocked(getErrorCode(error) === "BING_IP_THROTTLED");
+      toast.error(getStandardErrorMessage(error));
+    },
   });
 
   const disconnectBing = useMutation({
@@ -180,6 +223,55 @@ export function BingWebmasterCard({ projectId }: { projectId: string }) {
                   ? t("onboarding.checking")
                   : t("freeSources.listVerifiedSites")}
               </Button>
+              <div className="space-y-1.5 border-t pt-3">
+                <h3 className="font-medium">
+                  {t("freeSources.bingManualTitle")}
+                </h3>
+                <p className="text-muted-foreground">
+                  {t("freeSources.bingManualHint")}
+                </p>
+                <Input
+                  id="bing-manual-site"
+                  autoComplete="off"
+                  value={manualSite}
+                  onChange={(event) => setManualSite(event.target.value)}
+                  placeholder={t("freeSources.bingManualPlaceholder")}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => saveManual.mutate(false)}
+                    disabled={
+                      !apiKey.trim() ||
+                      !manualSite.trim() ||
+                      saveManual.isPending ||
+                      !status.bing.canStoreKey
+                    }
+                  >
+                    {saveManual.isPending
+                      ? t("onboarding.checking")
+                      : t("freeSources.bingManualSave")}
+                  </Button>
+                  {ipBlocked ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => saveManual.mutate(true)}
+                      disabled={
+                        !apiKey.trim() ||
+                        !manualSite.trim() ||
+                        saveManual.isPending
+                      }
+                    >
+                      {t("freeSources.bingSaveUnverified")}
+                    </Button>
+                  ) : null}
+                </div>
+                {ipBlocked ? (
+                  <p className="text-muted-foreground">
+                    {t("freeSources.bingSaveUnverifiedHint")}
+                  </p>
+                ) : null}
+              </div>
               {sites && sites.length > 0 ? (
                 <div className="space-y-1.5">
                   <label htmlFor="bing-site" className="font-medium">

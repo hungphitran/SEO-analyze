@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "cloudflare:workers";
 import { isHostedAuthMode } from "@/lib/auth-mode";
+import { getBuildCommit } from "@/server/lib/build-info";
 
 // Unauthenticated setup/health endpoint for self-hosters: reports per-feature
 // configuration status (statuses and guidance only — never secret values) so
@@ -17,7 +18,11 @@ async function handleHealthRequest(): Promise<Response> {
     (check) => check.status === "error",
   );
 
-  return Response.json({ status: hasError ? "issues" : "ok", ...setup });
+  return Response.json({
+    status: hasError ? "issues" : "ok",
+    commit: getBuildCommit(),
+    ...setup,
+  });
 }
 
 export const Route = createFileRoute("/api/health")({

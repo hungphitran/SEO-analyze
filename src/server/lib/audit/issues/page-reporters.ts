@@ -47,6 +47,68 @@ function hasHeadingLevelSkip(headingOrder: number[]): boolean {
   return false;
 }
 
+// hreflang = language, optional script and region, or the x-default marker.
+const HREFLANG_VALUE =
+  /^(x-default|[a-z]{2,3}(-[a-z]{4})?(-([a-z]{2}|[0-9]{3}))?)$/i;
+
+/** Invalid or repeated hreflang values on one page, in document order. */
+export function findHreflangProblems(tags: string[]): {
+  invalid: string[];
+  duplicated: string[];
+} {
+  const seen = new Set<string>();
+  const invalid: string[] = [];
+  const duplicated: string[] = [];
+  for (const raw of tags) {
+    const tag = raw.trim();
+    if (!HREFLANG_VALUE.test(tag)) {
+      if (!invalid.includes(tag)) invalid.push(tag);
+      continue;
+    }
+    const key = tag.toLowerCase();
+    if (seen.has(key)) {
+      if (!duplicated.includes(key)) duplicated.push(key);
+    }
+    seen.add(key);
+  }
+  return { invalid, duplicated };
+}
+
+type Reporter = (
+  issueType: AuditIssueType,
+  details?: Record<string, unknown>,
+) => void;
+
+/** Open Graph and hreflang checks, from data the crawler already extracted. */
+function reportSocialAndInternational(
+  page: CrawledPageResult,
+  report: Reporter,
+) {
+  if (page.isIndexable) {
+    const missingOg = [
+      page.ogTitle ? null : "og:title",
+      page.ogDescription ? null : "og:description",
+      page.ogImage ? null : "og:image",
+    ].filter((tag): tag is string => tag !== null);
+    if (missingOg.length > 0)
+      report("missing-open-graph", { missing: missingOg });
+  }
+
+  if (page.hreflangTags.length > 0) {
+    const { invalid, duplicated } = findHreflangProblems(page.hreflangTags);
+    if (invalid.length > 0 || duplicated.length > 0) {
+      report("hreflang-invalid", { invalid, duplicated });
+    }
+    if (
+      !page.hreflangTags.some((tag) => tag.trim().toLowerCase() === "x-default")
+    ) {
+      report("hreflang-missing-x-default", {
+        tags: page.hreflangTags.slice(0, 10),
+      });
+    }
+  }
+}
+
 export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
   const issues: DetectedIssue[] = [];
   const report = (
@@ -165,6 +227,8 @@ export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
   if (hasHeadingLevelSkip(page.headingOrder)) {
     report("heading-order-skip");
   }
+
+  reportSocialAndInternational(page, report);
 
   // Content quality
   if (page.isIndexable && page.wordCount < THIN_CONTENT_WORDS) {

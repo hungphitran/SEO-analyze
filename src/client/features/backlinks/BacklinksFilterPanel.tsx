@@ -159,7 +159,11 @@ export function BacklinksFilterPanel({
         },
       ]}
       rangeFields={[
-        { title: t("backlinks.title"), minKey: "minBacklinks", maxKey: "maxBacklinks" },
+        {
+          title: t("backlinks.title"),
+          minKey: "minBacklinks",
+          maxKey: "maxBacklinks",
+        },
         {
           title: t("backlinks.referringDomains"),
           minKey: "minReferringDomains",

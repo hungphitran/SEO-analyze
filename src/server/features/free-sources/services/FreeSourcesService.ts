@@ -4,13 +4,9 @@ import { BingWebmasterConnectionRepository } from "@/server/features/free-source
 import { OwnedSiteSnapshotRepository } from "@/server/features/free-sources/repositories/OwnedSiteSnapshotRepository";
 import { AppError } from "@/server/lib/errors";
 import {
-  assertVerifiedBingSite,
   bingRefreshMessage,
-  toBingAppError,
   getBingQueryStats,
-  listVerifiedBingSites,
   type BingQuerySummary,
-  type BingVerifiedSite,
 } from "@/server/lib/free-sources/bing";
 import { isFreeSourcesOnly } from "@/server/lib/free-sources/mode";
 import {
@@ -22,7 +18,6 @@ import { safeErrorMessage } from "@/server/lib/free-sources/redact";
 import {
   hasFreeSourcesEncryptionKey,
   openSecret,
-  sealSecret,
 } from "@/server/lib/free-sources/secret-box";
 import { getOptionalEnvValue } from "@/server/lib/runtime-env";
 import {
@@ -43,8 +38,6 @@ import {
 
 const QUERY_LIMIT = 25;
 const TWENTY_EIGHT_DAYS_MS = 28 * 24 * 60 * 60 * 1000;
-
-export type { FreeSourceSnapshotView, FreeSourcesStatus };
 
 function isJsonValue(value: unknown): value is JsonValue {
   if (
@@ -181,50 +174,6 @@ export async function getFreeSourcesStatus(input: {
       )
       .filter((row): row is FreeSourceSnapshotView => row != null),
   };
-}
-
-export async function listBingSitesForKey(apiKey: string) {
-  try {
-    return await listVerifiedBingSites({ apiKey });
-  } catch (error) {
-    throw toBingAppError(error);
-  }
-}
-
-export async function saveBingConnection(input: {
-  projectId: string;
-  organizationId: string;
-  userId: string;
-  apiKey: string;
-  siteUrl: string;
-}): Promise<{ siteUrl: string }> {
-  const apiKey = input.apiKey.trim();
-  const siteUrl = input.siteUrl.trim();
-  if (!apiKey || !siteUrl) {
-    throw new AppError(
-      "VALIDATION_ERROR",
-      "Enter a Bing Webmaster API key and choose a verified site.",
-    );
-  }
-  let site: BingVerifiedSite;
-  try {
-    site = await assertVerifiedBingSite({ apiKey, siteUrl });
-  } catch (error) {
-    throw toBingAppError(error);
-  }
-  const encryptedApiKey = await sealSecret(apiKey);
-  await BingWebmasterConnectionRepository.upsert({
-    projectId: input.projectId,
-    organizationId: input.organizationId,
-    siteUrl: site.url,
-    encryptedApiKey,
-    connectedByUserId: input.userId,
-  });
-  return { siteUrl: site.url };
-}
-
-export async function disconnectBing(projectId: string): Promise<void> {
-  await BingWebmasterConnectionRepository.deleteByProjectId(projectId);
 }
 
 async function refreshGsc(input: {
@@ -408,4 +357,8 @@ export async function refreshOwnedSiteSources(input: {
   return { snapshots };
 }
 
-export type { BingVerifiedSite };
+export {
+  disconnectBing,
+  listBingSitesForKey,
+  saveBingConnection,
+} from "./BingConnectionService";

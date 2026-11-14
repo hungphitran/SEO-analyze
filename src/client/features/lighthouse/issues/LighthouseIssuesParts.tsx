@@ -57,16 +57,24 @@ export function LighthouseIssuesHeader({
       <Card>
         <CardContent className="space-y-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold">{t("audit.lighthouseIssues")}</h1>
+            <h1 className="text-2xl font-semibold">
+              {t("audit.lighthouseIssues")}
+            </h1>
             <p className="text-sm text-muted-foreground break-all">
               {finalUrl ?? (isLoading ? t("audit.loadingUrl") : null)}
             </p>
           </div>
           <LighthouseIssuesSummary scores={scores} metrics={metrics} />
           <div className="flex flex-wrap gap-2">
-            <SeverityBadge severity="critical">{t("ui.critical", { v0: severityCounts.critical })}</SeverityBadge>
-            <SeverityBadge severity="warning">{t("ui.warning", { v0: severityCounts.warning })}</SeverityBadge>
-            <SeverityBadge severity="info">{t("ui.info", { v0: severityCounts.info })}</SeverityBadge>
+            <SeverityBadge severity="critical">
+              {t("ui.critical", { v0: severityCounts.critical })}
+            </SeverityBadge>
+            <SeverityBadge severity="warning">
+              {t("ui.warning", { v0: severityCounts.warning })}
+            </SeverityBadge>
+            <SeverityBadge severity="info">
+              {t("ui.info", { v0: severityCounts.info })}
+            </SeverityBadge>
           </div>
         </CardContent>
       </Card>
@@ -224,7 +232,9 @@ export function LighthouseIssueList({
           <TableHead className="w-8" />
           <TableHead className="w-24">{t("common.severity")}</TableHead>
           <TableHead>{t("common.issue")}</TableHead>
-          <TableHead className="hidden w-28 sm:table-cell">{t("audit.category")}</TableHead>
+          <TableHead className="hidden w-28 sm:table-cell">
+            {t("audit.category")}
+          </TableHead>
           <TableHead className="hidden w-28 md:table-cell text-right">
             {t("ui.impact")}
           </TableHead>

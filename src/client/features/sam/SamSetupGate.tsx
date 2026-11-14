@@ -25,12 +25,13 @@ export function SamSetupGate({
           {isEveryAppClientAuthMode() ? (
             <p>
               {t("ui.samOpenseoSInAppAi")}{" "}
-              <code>pnpm everyapp secret set OPENROUTER_API_KEY</code>{t("ui.thenConfirmHere")}
+              <code>pnpm everyapp secret set OPENROUTER_API_KEY</code>
+              {t("ui.thenConfirmHere")}
             </p>
           ) : (
             <p>
-              {t("ui.samOpenseoSInAppAi_ebf2")}{" "}
-              <code>OPENROUTER_API_KEY</code> {t("ui.environmentVariableRestartOpenseoThenConfirm")}
+              {t("ui.samOpenseoSInAppAi_ebf2")} <code>OPENROUTER_API_KEY</code>{" "}
+              {t("ui.environmentVariableRestartOpenseoThenConfirm")}
             </p>
           )}
           <p className="text-xs">

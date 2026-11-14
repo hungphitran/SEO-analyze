@@ -158,15 +158,14 @@ async function estimateCost(
   ].slice(0, Math.max(existingKeywordCount, MAX_KEYWORDS_PER_CONFIG));
   const keywordCount = keywords.length;
   const sourceProvider = await resolveSerpProvider();
-  const { costUsd, costCredits } =
-    isFreeRankSource(sourceProvider)
-      ? { costUsd: 0, costCredits: 0 }
-      : estimateRankCheckCredits(
-          keywords,
-          config.devices,
-          config.serpDepth,
-          "live",
-        );
+  const { costUsd, costCredits } = isFreeRankSource(sourceProvider)
+    ? { costUsd: 0, costCredits: 0 }
+    : estimateRankCheckCredits(
+        keywords,
+        config.devices,
+        config.serpDepth,
+        "live",
+      );
   const scheduleInterval = isScheduledRankTrackingInterval(
     config.scheduleInterval,
   )
@@ -177,8 +176,9 @@ async function estimateCost(
     costCredits,
     sourceProvider,
     keywordCount,
-    devicesCount:
-      isFreeRankSource(sourceProvider) ? 1 : devicesCount(config.devices),
+    devicesCount: isFreeRankSource(sourceProvider)
+      ? 1
+      : devicesCount(config.devices),
     totalChecks:
       keywordCount *
       (isFreeRankSource(sourceProvider) ? 1 : devicesCount(config.devices)),

@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -51,6 +52,7 @@ const signUpSchema = z
   });
 
 export const Route = createFileRoute("/_auth/sign-up")({
+  head: pageHead("auth.signUp"),
   validateSearch: authRedirectSearchSchema.extend({
     // A site checked with the marketing site's free tool; onboarding
     // prefills it, and the website step validates it on save.
@@ -173,9 +175,7 @@ function SignUpPage() {
           if (signedIn.error) {
             formApi.setErrorMap({
               onSubmit: {
-                form:
-                  signedIn.error.message ||
-                  t("auth.accountCreatedSignIn"),
+                form: signedIn.error.message || t("auth.accountCreatedSignIn"),
                 fields: {},
               },
             });
@@ -224,7 +224,11 @@ function SignUpPage() {
 
   return (
     <AuthPageCard
-      title={firstAccount ? t("auth.createAdminAccount") : t("auth.createYourAccount")}
+      title={
+        firstAccount
+          ? t("auth.createAdminAccount")
+          : t("auth.createYourAccount")
+      }
       helperText={
         firstAccount
           ? t("auth.firstAccountHint")
@@ -366,10 +370,14 @@ function SignUpPage() {
                       pending={isSubmitting}
                       disabled={isTurnstileEnabled && !captcha.hasToken}
                     >
-                      {isSubmitting ? t("auth.creatingAccount") : t("auth.createAccount")}
+                      {isSubmitting
+                        ? t("auth.creatingAccount")
+                        : t("auth.createAccount")}
                     </Button>
                     {isHostedMode ? (
-                      <TermsAgreementNotice action={t("auth.byCreatingAnAccount")} />
+                      <TermsAgreementNotice
+                        action={t("auth.byCreatingAnAccount")}
+                      />
                     ) : null}
                   </>
                 );

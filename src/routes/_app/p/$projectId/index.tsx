@@ -1,8 +1,10 @@
+import { pageHead } from "@/shared/page-title";
 import { dashboardSearchSchema } from "@/types/schemas/dashboard";
 import { createFileRoute } from "@tanstack/react-router";
 import { DashboardPage } from "@/client/features/dashboard/DashboardPage";
 
 export const Route = createFileRoute("/_app/p/$projectId/")({
+  head: pageHead("nav.dashboard"),
   validateSearch: dashboardSearchSchema,
   component: DashboardRoute,
 });

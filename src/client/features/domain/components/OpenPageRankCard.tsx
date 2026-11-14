@@ -15,9 +15,16 @@ import { formatOpenPageRankScore } from "@/shared/real-user-signals";
 export function OpenPageRankCard({
   projectId,
   domain,
+  quiet = false,
 }: {
   projectId: string;
   domain: string;
+  /**
+   * Dashboard mode: show the card only for a usable score. A rejected key, a
+   * blocked address, a rate limit or an upstream error render nothing instead
+   * of a warning (the Integrations page still explains setup problems).
+   */
+  quiet?: boolean;
 }) {
   const trimmed = domain.trim();
   const query = useQuery({
@@ -29,6 +36,7 @@ export function OpenPageRankCard({
   });
 
   if (query.isError) {
+    if (quiet) return null;
     return (
       <QueryError
         error={query.error}
@@ -45,6 +53,8 @@ export function OpenPageRankCard({
   if (!data || data.state === "disabled" || data.state === "invalid_domain") {
     return null;
   }
+
+  if (quiet && data.state !== "ok" && data.state !== "no_data") return null;
 
   let body: ReactNode;
   switch (data.state) {

@@ -54,7 +54,9 @@ export function SearchConsoleTable({
               <TableCell>
                 <Checkbox
                   checked={selected.has(row.index)}
-                  aria-label={t("ui.select", { v0: row.keys?.[queryIndex] ?? "" })}
+                  aria-label={t("ui.select", {
+                    v0: row.keys?.[queryIndex] ?? "",
+                  })}
                   onCheckedChange={(checked) =>
                     setSelected((current) => {
                       const next = new Set(current);

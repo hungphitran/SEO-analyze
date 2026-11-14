@@ -199,7 +199,9 @@ function PromptTrackingContent({
                     <h2 className="text-lg font-semibold">{ownBrand?.name}</h2>
                     <Badge variant={tracker?.enabled ? "success" : "secondary"}>
                       {tracker?.enabled
-                        ? t("ui.tracking", { v0: scheduleLabel(tracker.scheduleInterval) })
+                        ? t("ui.tracking", {
+                            v0: scheduleLabel(tracker.scheduleInterval),
+                          })
                         : t("ai.paused")}
                     </Badge>
                   </div>
@@ -234,7 +236,11 @@ function PromptTrackingContent({
                 <InsufficientCreditsError variant="inline" />
               ) : (
                 tracker?.lastSkipReason && (
-                  <p className="text-xs text-warning">{t("ui.mostRecentSchedulingNotice", { v0: tracker.lastSkipReason })}</p>
+                  <p className="text-xs text-warning">
+                    {t("ui.mostRecentSchedulingNotice", {
+                      v0: tracker.lastSkipReason,
+                    })}
+                  </p>
                 )
               )}
             </div>

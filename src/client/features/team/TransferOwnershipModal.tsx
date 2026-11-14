@@ -43,9 +43,7 @@ export function TransferOwnershipModal({
     onError: (error: Error) => {
       const teamChanged = isTeamChangedError(error);
       toast.error(
-        teamChanged
-          ? t("team.transferStale")
-          : t("team.transferFailed"),
+        teamChanged ? t("team.transferStale") : t("team.transferFailed"),
       );
       // Refresh either way so the list and the caller's role are current.
       onTransferred();
@@ -72,9 +70,7 @@ export function TransferOwnershipModal({
             </span>{" "}
             {t("team.transferBody1")}
           </DialogDescription>
-          <DialogDescription>
-            {t("team.transferBody2")}
-          </DialogDescription>
+          <DialogDescription>{t("team.transferBody2")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button

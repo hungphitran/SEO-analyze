@@ -22,13 +22,9 @@ export function RenderingWarnings({ data }: { data: AuditResultsData }) {
       {hasShells && (
         <Alert variant="warning">
           <ShieldAlert />
-          <AlertTitle>
-            {t("audit.somePagesNeedJs")}
-          </AlertTitle>
+          <AlertTitle>{t("audit.somePagesNeedJs")}</AlertTitle>
           <AlertDescription>
-            {rendered
-              ? t("audit.stillLoading")
-              : t("audit.turnOnRender")}
+            {rendered ? t("audit.stillLoading") : t("audit.turnOnRender")}
           </AlertDescription>
         </Alert>
       )}

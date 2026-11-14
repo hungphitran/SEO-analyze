@@ -23,7 +23,9 @@ export function BacklinksBestLinksMenu({
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
         <Link2 data-icon="inline-start" />
-        {t("backlinks.bestLinksState", { state: hideSpam ? t("common.on") : t("common.off") })}
+        {t("backlinks.bestLinksState", {
+          state: hideSpam ? t("common.on") : t("common.off"),
+        })}
         <ChevronDown data-icon="inline-end" className="opacity-60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
@@ -34,13 +36,21 @@ export function BacklinksBestLinksMenu({
           <DropdownMenuRadioItem value="best">
             <span>
               <span className="block">{t("backlinks.bestOnly")}</span>
-              <span className="block text-xs text-muted-foreground">{t("ui.scoresBelowOrUnknown", { v0: DEFAULT_BACKLINKS_SPAM_THRESHOLD })}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t("ui.scoresBelowOrUnknown", {
+                  v0: DEFAULT_BACKLINKS_SPAM_THRESHOLD,
+                })}
+              </span>
             </span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="all">
             <span>
               <span className="block">{t("backlinks.allLinksSpammy")}</span>
-              <span className="block text-xs text-muted-foreground">{t("ui.includesScoresOrHigher", { v0: DEFAULT_BACKLINKS_SPAM_THRESHOLD })}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t("ui.includesScoresOrHigher", {
+                  v0: DEFAULT_BACKLINKS_SPAM_THRESHOLD,
+                })}
+              </span>
             </span>
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

@@ -41,12 +41,11 @@ export function OpenRouterKeyGate({
         title={t("ai.addOpenRouterKey")}
         description={
           <>
-            <p>
-              {t("ui.aiVisibilityUsesOpenrouterToResearch")}
-            </p>
+            <p>{t("ui.aiVisibilityUsesOpenrouterToResearch")}</p>
             <p>
               {t("ui.createAKeyOnOpenrouterSet")}{" "}
-              <code>OPENROUTER_API_KEY</code>{t("ui.restartOpenseoThenConfirmHereThe")}{" "}
+              <code>OPENROUTER_API_KEY</code>
+              {t("ui.restartOpenseoThenConfirmHereThe")}{" "}
               <Link
                 className="underline underline-offset-2 hover:text-foreground"
                 to="/help/openrouter-api-key"

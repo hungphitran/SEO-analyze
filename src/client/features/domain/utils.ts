@@ -85,7 +85,15 @@ type ExportTable = { headers: string[]; rows: (string | number | null)[][] };
 
 export function keywordsToTable(rows: KeywordRow[]): ExportTable {
   return {
-    headers: [t("common.keyword"), t("metrics.rank"), t("kw.volume"), t("metrics.traffic"), t("kw.cpc"), t("common.url"), t("kw.score")],
+    headers: [
+      t("common.keyword"),
+      t("metrics.rank"),
+      t("kw.volume"),
+      t("metrics.traffic"),
+      t("kw.cpc"),
+      t("common.url"),
+      t("kw.score"),
+    ],
     rows: rows.map((row) => [
       row.keyword,
       row.position,
@@ -100,7 +108,11 @@ export function keywordsToTable(rows: KeywordRow[]): ExportTable {
 
 export function pagesToTable(rows: PageRow[]): ExportTable {
   return {
-    headers: [t("common.pageNoun"), t("domain.organicTraffic"), t("kw.keywords")],
+    headers: [
+      t("common.pageNoun"),
+      t("domain.organicTraffic"),
+      t("kw.keywords"),
+    ],
     rows: rows.map((row) => [row.page, row.organicTraffic, row.keywords]),
   };
 }

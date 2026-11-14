@@ -58,28 +58,44 @@ export function buildDimensionColumns(
     }),
     dimensionHelper.accessor("clicks", {
       header: ({ column }) => (
-        <SortableHeader column={column} label={t("dashboard.clicks")} align="right" />
+        <SortableHeader
+          column={column}
+          label={t("dashboard.clicks")}
+          align="right"
+        />
       ),
       cell: ({ getValue }) => formatCount(getValue()),
       meta: rightAligned,
     }),
     dimensionHelper.accessor("impressions", {
       header: ({ column }) => (
-        <SortableHeader column={column} label={t("dashboard.impressions")} align="right" />
+        <SortableHeader
+          column={column}
+          label={t("dashboard.impressions")}
+          align="right"
+        />
       ),
       cell: ({ getValue }) => formatCount(getValue()),
       meta: rightAligned,
     }),
     dimensionHelper.accessor("ctr", {
       header: ({ column }) => (
-        <SortableHeader column={column} label={t("dashboard.ctr")} align="right" />
+        <SortableHeader
+          column={column}
+          label={t("dashboard.ctr")}
+          align="right"
+        />
       ),
       cell: ({ getValue }) => formatCtr(getValue()),
       meta: rightAligned,
     }),
     dimensionHelper.accessor("position", {
       header: ({ column }) => (
-        <SortableHeader column={column} label={t("dashboard.averagePosition")} align="right" />
+        <SortableHeader
+          column={column}
+          label={t("dashboard.averagePosition")}
+          align="right"
+        />
       ),
       cell: ({ getValue }) => formatPosition(getValue()),
       meta: rightAligned,
@@ -122,21 +138,33 @@ export function buildStrikingColumns(
     }),
     strikingHelper.accessor("impressions", {
       header: ({ column }) => (
-        <SortableHeader column={column} label={t("dashboard.impressions")} align="right" />
+        <SortableHeader
+          column={column}
+          label={t("dashboard.impressions")}
+          align="right"
+        />
       ),
       cell: ({ getValue }) => formatCount(getValue()),
       meta: rightAligned,
     }),
     strikingHelper.accessor("clicks", {
       header: ({ column }) => (
-        <SortableHeader column={column} label={t("dashboard.clicks")} align="right" />
+        <SortableHeader
+          column={column}
+          label={t("dashboard.clicks")}
+          align="right"
+        />
       ),
       cell: ({ getValue }) => formatCount(getValue()),
       meta: rightAligned,
     }),
     strikingHelper.accessor("position", {
       header: ({ column }) => (
-        <SortableHeader column={column} label={t("dashboard.averagePosition")} align="right" />
+        <SortableHeader
+          column={column}
+          label={t("dashboard.averagePosition")}
+          align="right"
+        />
       ),
       cell: ({ getValue }) => formatPosition(getValue()),
       meta: rightAligned,

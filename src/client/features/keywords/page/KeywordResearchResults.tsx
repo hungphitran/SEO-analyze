@@ -78,7 +78,9 @@ function MobileTabs({ controller }: Props) {
       className="mb-4 shrink-0 md:hidden"
     >
       <TabsList variant="line" className="w-full">
-        <TabsTrigger value="keywords">{t("ui.keywords", { v0: controller.filteredRows.length })}</TabsTrigger>
+        <TabsTrigger value="keywords">
+          {t("ui.keywords", { v0: controller.filteredRows.length })}
+        </TabsTrigger>
         <TabsTrigger value="serp">{t("kw.serpAnalysis")}</TabsTrigger>
       </TabsList>
     </Tabs>
@@ -96,7 +98,8 @@ function KeywordPanel({ controller }: Props) {
         <Alert variant="warning" role="status">
           <AlertDescription className="text-foreground">
             {t("ui.noExactMatchFor")}{" "}
-            <span className="font-medium">"{searchedKeyword}"</span>{t("ui.showingClosestRelatedKeywordsInstead")}
+            <span className="font-medium">"{searchedKeyword}"</span>
+            {t("ui.showingClosestRelatedKeywordsInstead")}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -140,7 +143,8 @@ function TableCard({ controller }: Props) {
               icon={<Save className="size-3.5" />}
               onClick={controller.handleSaveKeywords}
             >
-              {t("common.save")}<span className="hidden md:inline"> {t("ui.keywords_78a1")}</span>
+              {t("common.save")}
+              <span className="hidden md:inline"> {t("ui.keywords_78a1")}</span>
             </TableBulkActionButton>
             <TableBulkExportMenu
               actions={[

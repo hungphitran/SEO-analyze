@@ -147,7 +147,9 @@ function DashboardBacklinkTable({
       header: ({ column }) => (
         <SortableHeader
           column={column}
-          label={kind === "lost" ? t("ui.lastChecked") : t("ui.firstDiscovered")}
+          label={
+            kind === "lost" ? t("ui.lastChecked") : t("ui.firstDiscovered")
+          }
         />
       ),
     },

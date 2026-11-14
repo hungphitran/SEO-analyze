@@ -95,7 +95,10 @@ export function CrawlerAccessForm({
             fields: {
               signatureInput:
                 problem.reason === "wrong_domain"
-                  ? t("crawler.wrongDomain", { signedHost: problem.signedHost, host: problem.host })
+                  ? t("crawler.wrongDomain", {
+                      signedHost: problem.signedHost,
+                      host: problem.host,
+                    })
                   : t("crawler.shopifyWontAccept", { host: problem.host }),
             },
           },

@@ -106,7 +106,13 @@ function TrackerContent({
           <div className="min-w-0 space-y-1">
             <h2 className="text-lg font-semibold">{tracker.title}</h2>
             <p className="text-xs text-muted-foreground">{tracker.address}</p>
-            <p className="text-xs text-muted-foreground">{t("ui.gridKmSpacingMobileManualChecks", { v0: tracker.gridSize, v1: tracker.gridSize, v2: tracker.spacingKm })}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("ui.gridKmSpacingMobileManualChecks", {
+                v0: tracker.gridSize,
+                v1: tracker.gridSize,
+                v2: tracker.spacingKm,
+              })}
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -131,12 +137,7 @@ function TrackerContent({
         </div>
         {failed && (
           <div className="px-4 pb-3">
-            <QueryError
-              fallback={
-                failed.error ??
-                t("local.lastNoRankings")
-              }
-            />
+            <QueryError fallback={failed.error ?? t("local.lastNoRankings")} />
           </div>
         )}
         {keyword && (
@@ -177,7 +178,10 @@ function TrackerContent({
           )}
           <span className="text-sm text-muted-foreground">
             {active
-              ? t("ui.checkingKeywordAcrossPoints", { v0: estimate.keywords, v2: estimate.points })
+              ? t("ui.checkingKeywordAcrossPoints", {
+                  v0: estimate.keywords,
+                  v2: estimate.points,
+                })
               : t("ui.keyword_ad42", { v0: keywords.length })}
           </span>
           {history && (

@@ -61,7 +61,9 @@ describe("dashboard tabs and nav paths", () => {
     for (const segment of PAID_ONLY_PROJECT_ROUTE_SEGMENTS) {
       expect(isPaidOnlyNavPath(`/p/$projectId/${segment}`)).toBe(true);
     }
-    expect(isPaidOnlyNavPath("/p/$projectId/ai-visibility/research")).toBe(true);
+    expect(isPaidOnlyNavPath("/p/$projectId/ai-visibility/research")).toBe(
+      true,
+    );
     expect(isPaidOnlyNavPath("/p/$projectId")).toBe(false);
     expect(isPaidOnlyNavPath("/p/$projectId/rank-tracking")).toBe(false);
     expect(isPaidOnlyNavPath("/ai")).toBe(false);

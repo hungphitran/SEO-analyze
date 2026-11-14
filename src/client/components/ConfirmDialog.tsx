@@ -47,7 +47,9 @@ export function ConfirmDialog({
           <AlertDialogDescription>{children}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>
+            {t("common.cancel")}
+          </AlertDialogCancel>
           <Button
             variant={destructive ? "destructive" : "default"}
             pending={pending}

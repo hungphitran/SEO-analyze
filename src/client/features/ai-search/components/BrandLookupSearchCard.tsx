@@ -94,7 +94,11 @@ export function BrandLookupSearchCard({
               ${BRAND_LOOKUP_DISPLAYED_COST_USD.toFixed(2)}
             </span>
             {hasCompetitors ? (
-              <span>{t("ui.plusToCompareCompetitors", { v0: BRAND_LOOKUP_COMPETITOR_DISPLAYED_COST_USD.toFixed(2) })}</span>
+              <span>
+                {t("ui.plusToCompareCompetitors", {
+                  v0: BRAND_LOOKUP_COMPETITOR_DISPLAYED_COST_USD.toFixed(2),
+                })}
+              </span>
             ) : null}
           </p>
         </>

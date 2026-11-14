@@ -105,7 +105,9 @@ export function ResultsView({
       {!shopifyLimited && !siteBlocked && blockedCount > 0 && (
         <Alert variant="warning">
           <ShieldAlert />
-          <AlertTitle>{t("ui.botProtectionBlockedOurCrawlerOn", { v0: blockedCount })}</AlertTitle>
+          <AlertTitle>
+            {t("ui.botProtectionBlockedOurCrawlerOn", { v0: blockedCount })}
+          </AlertTitle>
           <AlertDescription>
             <BotProtectionAdvice
               projectId={projectId}
@@ -124,9 +126,7 @@ export function ResultsView({
               : t("audit.siteRateLimitedPages", { count: rateLimitedCount })}
           </AlertTitle>
           <AlertDescription>
-            {crawlStopped
-              ? t("audit.incompleteRefused")
-              : t("audit.pages429")}
+            {crawlStopped ? t("audit.incompleteRefused") : t("audit.pages429")}
             {t("audit.rerunAfterLimitBefore")}{" "}
             <a
               className="underline underline-offset-4"

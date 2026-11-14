@@ -41,9 +41,7 @@ function getVerificationErrorMessage(error: string | undefined) {
     case "user_not_found":
       return t("auth.couldNotFindAccount");
     default:
-      return error
-        ? t("auth.couldNotConfirmThisEmail")
-        : null;
+      return error ? t("auth.couldNotConfirmThisEmail") : null;
   }
 }
 
@@ -181,9 +179,7 @@ function VerifyEmailPage() {
       captureClientEvent("auth:verification_resend");
       toast.success(t("auth.newEmailOnTheWay"));
     } catch {
-      toast.error(
-        t("auth.couldNotSendAnotherEmailNow"),
-      );
+      toast.error(t("auth.couldNotSendAnotherEmailNow"));
     } finally {
       setIsResending(false);
     }

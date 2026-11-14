@@ -59,11 +59,7 @@ function ListingLookup({
     validationLogic: revalidateLogic(),
     validators: {
       onDynamic: z.object({
-        query: z
-          .string()
-          .trim()
-          .min(2, t("local.enterNameAndCity"))
-          .max(200),
+        query: z.string().trim().min(2, t("local.enterNameAndCity")).max(200),
       }),
     },
     onSubmit: async ({ value }) => {
@@ -103,10 +99,7 @@ function ListingLookup({
         </form.Form>
       </form.AppForm>
       {lookup.isError && (
-        <QueryError
-          error={lookup.error}
-          fallback={t("local.couldNotFind")}
-        />
+        <QueryError error={lookup.error} fallback={t("local.couldNotFind")} />
       )}
       {lookup.isSuccess &&
         (lookup.data ? (

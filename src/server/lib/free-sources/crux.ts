@@ -28,7 +28,7 @@ export const CRUX_HISTORY_ENDPOINT =
   "https://chromeuxreport.googleapis.com/v1/records:queryHistoryRecord";
 
 /** API metric names, in the order the UI shows them. */
-export const CRUX_API_METRICS: Record<CruxMetricKey, string> = {
+const CRUX_API_METRICS: Record<CruxMetricKey, string> = {
   lcp: "largest_contentful_paint",
   inp: "interaction_to_next_paint",
   cls: "cumulative_layout_shift",
@@ -37,9 +37,9 @@ export const CRUX_API_METRICS: Record<CruxMetricKey, string> = {
 };
 
 /** Weekly points requested from the History API (the API allows 1 to 40). */
-export const CRUX_HISTORY_PERIODS = 26;
+const CRUX_HISTORY_PERIODS = 26;
 
-export type CruxErrorKind =
+type CruxErrorKind =
   | "not_configured"
   | "permission"
   | "rate_limited"
@@ -74,7 +74,7 @@ export class CruxError extends Error {
 }
 
 /** Per-attempt budget; the Worker has to answer a page load, not wait on Google. */
-export const CRUX_REQUEST_TIMEOUT_MS = 15_000;
+const CRUX_REQUEST_TIMEOUT_MS = 15_000;
 /** Retries on network errors and 5xx only (never 429 or 4xx: that would burn quota). */
 const CRUX_RETRY_DELAYS_MS = [400, 1200];
 

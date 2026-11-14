@@ -142,9 +142,7 @@ export function RankTrackingTable({
       void queryClient.invalidateQueries({
         queryKey: ["rankTrackingCostEstimate", projectId, configId],
       });
-      toast.success(
-        t("ui.keywordRemoved", { v0: result.removed }),
-      );
+      toast.success(t("ui.keywordRemoved", { v0: result.removed }));
     },
   });
 
@@ -188,7 +186,9 @@ export function RankTrackingTable({
           pending={removeMutation.isPending}
           onConfirm={() => removeMutation.mutate(selectedRows.map((r) => r.id))}
           onClose={() => setShowConfirm(false)}
-        >{t("ui.thisWillStopTrackingKeywordHistorical", { v0: selectedCount })}</ConfirmDialog>
+        >
+          {t("ui.thisWillStopTrackingKeywordHistorical", { v0: selectedCount })}
+        </ConfirmDialog>
       )}
 
       {trendTarget && (
@@ -221,7 +221,9 @@ export function RankTrackingTable({
         }}
         footer={
           rows.length > 0 ? (
-            <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">{t("ui.ofKeywords", { v0: rows.length, v1: totalCount })}</p>
+            <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+              {t("ui.ofKeywords", { v0: rows.length, v1: totalCount })}
+            </p>
           ) : null
         }
       />

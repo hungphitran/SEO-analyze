@@ -1,7 +1,6 @@
 import {
   getIsoCountryCode,
   LOCATION_OPTIONS,
-  SERP_LANGUAGE_OPTIONS,
 } from "@/shared/keyword-locations";
 import { supportsWebSearchCountry } from "@/shared/prompt-search-countries";
 import { t } from "@/shared/i18n";
@@ -345,15 +344,4 @@ export function aiCountryLabel(locationCode: number): string {
     LOCATION_OPTIONS.find((option) => option.code === locationCode)?.label ??
     `Location ${locationCode}`
   );
-}
-
-/** "Bulgaria · Bulgarian" */
-export function aiMarketLabel(market: {
-  locationCode: number;
-  languageCode: string;
-}): string {
-  const language =
-    SERP_LANGUAGE_OPTIONS.find((option) => option.code === market.languageCode)
-      ?.label ?? market.languageCode;
-  return `${aiCountryLabel(market.locationCode)} · ${language}`;
 }

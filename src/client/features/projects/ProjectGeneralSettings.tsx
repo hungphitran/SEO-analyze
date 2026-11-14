@@ -105,7 +105,11 @@ function GeneralSection({ project }: { project: ProjectSummary }) {
         <form.Form className="flex flex-col gap-4">
           <form.AppField name="name">
             {(field) => (
-              <field.TextField label={t("common.name")} maxLength={120} required />
+              <field.TextField
+                label={t("common.name")}
+                maxLength={120}
+                required
+              />
             )}
           </form.AppField>
 

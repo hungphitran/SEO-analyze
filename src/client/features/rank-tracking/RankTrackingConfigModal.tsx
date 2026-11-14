@@ -278,7 +278,9 @@ function RankTrackingConfigModalContent({
               </form.AppField>
 
               <Field>
-                <FieldLabel htmlFor={countryId}>{t("common.country")}</FieldLabel>
+                <FieldLabel htmlFor={countryId}>
+                  {t("common.country")}
+                </FieldLabel>
                 <CountryCombobox
                   id={countryId}
                   value={values.locationCode}
@@ -295,20 +297,22 @@ function RankTrackingConfigModalContent({
               </Field>
 
               {freeSourcesOnly && !existingConfig?.locationName ? null : (
-              <form.Field name="locationName">
-                {(field) => (
-                  <SearchTargetingField
-                    mode={values.targetingMode}
-                    onModeChange={(mode) =>
-                      form.setFieldValue("targetingMode", mode)
-                    }
-                    locationName={field.state.value}
-                    onLocationNameChange={field.handleChange}
-                    countryCode={getIsoCountryCode(values.locationCode)}
-                    error={getFieldError(field.state.meta.errors) ?? undefined}
-                  />
-                )}
-              </form.Field>
+                <form.Field name="locationName">
+                  {(field) => (
+                    <SearchTargetingField
+                      mode={values.targetingMode}
+                      onModeChange={(mode) =>
+                        form.setFieldValue("targetingMode", mode)
+                      }
+                      locationName={field.state.value}
+                      onLocationNameChange={field.handleChange}
+                      countryCode={getIsoCountryCode(values.locationCode)}
+                      error={
+                        getFieldError(field.state.meta.errors) ?? undefined
+                      }
+                    />
+                  )}
+                </form.Field>
               )}
 
               <form.AppField name="languageCode">

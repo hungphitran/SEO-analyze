@@ -132,7 +132,10 @@ export function backlinksFilterBudgetError(
 ): string | null {
   const limit = backlinksFilterConditionLimit(scope, hideSpam);
   if (countFilterConditions(values) <= limit) return null;
-  return t("ui.theseFiltersExceedTheConditionLimit", { v0: limit, v1: hideSpam ? t("ui.orChooseAllLinksSpammy") : "" });
+  return t("ui.theseFiltersExceedTheConditionLimit", {
+    v0: limit,
+    v1: hideSpam ? t("ui.orChooseAllLinksSpammy") : "",
+  });
 }
 
 /**

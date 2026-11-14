@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import * as React from "react";
 import { projectsQueryOptions } from "@/client/features/projects/projectQueries";
 import { Link, createFileRoute } from "@tanstack/react-router";
@@ -17,6 +18,7 @@ import { CreateProjectModal } from "@/client/features/projects/CreateProjectModa
 import { t } from "@/shared/i18n";
 
 export const Route = createFileRoute("/_app/projects")({
+  head: pageHead("title.projects"),
   component: ProjectsPage,
 });
 

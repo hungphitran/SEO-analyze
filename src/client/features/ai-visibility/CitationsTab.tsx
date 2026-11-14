@@ -154,9 +154,7 @@ export function CitationsTab({
         />
       ) : !query.data.rows.length ? (
         <p className="p-10 text-center text-sm text-muted-foreground">
-          {collecting
-            ? t("ai.collectingCitations")
-            : t("ai.noCitationsMatch")}
+          {collecting ? t("ai.collectingCitations") : t("ai.noCitationsMatch")}
         </p>
       ) : (
         <SourcesTable
@@ -312,7 +310,9 @@ function SourceRow({
             variant="ghost"
             size="icon-sm"
             aria-expanded={expanded}
-            aria-label={t("ui.showPromptsThatCited", { v0: row.title || row.url || row.domain })}
+            aria-label={t("ui.showPromptsThatCited", {
+              v0: row.title || row.url || row.domain,
+            })}
           >
             {expanded ? <ChevronDown /> : <ChevronRight />}
           </Button>

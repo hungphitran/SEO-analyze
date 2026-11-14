@@ -137,7 +137,9 @@ export function ScheduleField({
               }}
             />
           </div>
-          <FieldDescription>{t("ui.inYourLocalTimezone", { v0: browserTimeZoneLabel() })}</FieldDescription>
+          <FieldDescription>
+            {t("ui.inYourLocalTimezone", { v0: browserTimeZoneLabel() })}
+          </FieldDescription>
         </>
       )}
       {schedule === "daily" && (

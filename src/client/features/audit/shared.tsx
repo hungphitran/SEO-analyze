@@ -197,8 +197,8 @@ export function BotProtectionAdvice({
   }
   return (
     <>
-        {rendered ? t("audit.renderingBlockedPrefix") : null}
-        {t("ui.tryAFreeDesktopCrawlerLike")} {desktopCrawlers}.
-      </>
+      {rendered ? t("audit.renderingBlockedPrefix") : null}
+      {t("ui.tryAFreeDesktopCrawlerLike")} {desktopCrawlers}.
+    </>
   );
 }

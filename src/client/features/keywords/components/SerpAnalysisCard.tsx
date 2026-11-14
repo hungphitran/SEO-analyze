@@ -130,7 +130,12 @@ export function SerpAnalysisCard({
                     void exportRows({
                       format,
                       feature: "serp_analysis",
-                      headers: [t("metrics.rank"), t("common.title"), t("common.url"), t("common.domain")],
+                      headers: [
+                        t("metrics.rank"),
+                        t("common.title"),
+                        t("common.url"),
+                        t("common.domain"),
+                      ],
                       rows: items.map((item) => [
                         item.rank,
                         item.title ?? "",
@@ -155,7 +160,9 @@ export function SerpAnalysisCard({
                 ) : null}
               </h3>
               {hasItems ? (
-                <span className="text-xs text-muted-foreground">{t("ui.organicResults", { v0: items.length })}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t("ui.organicResults", { v0: items.length })}
+                </span>
               ) : null}
             </div>
           </DataTableToolbar>
@@ -175,9 +182,7 @@ export function SerpAnalysisCard({
           ? { kind: "error", title: error, action: errorAction }
           : {
               title: t("kw.noSerpDetails"),
-              description: keyword
-                ? t("kw.tryOtherKeyword")
-                : undefined,
+              description: keyword ? t("kw.tryOtherKeyword") : undefined,
             }
       }
       footer={

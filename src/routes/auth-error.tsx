@@ -32,7 +32,9 @@ function AuthErrorPage() {
         helperText={copy.description}
         footer={
           error ? (
-            <p className="font-mono text-xs text-muted-foreground">{t("ui.code", { v0: error })}</p>
+            <p className="font-mono text-xs text-muted-foreground">
+              {t("ui.code", { v0: error })}
+            </p>
           ) : undefined
         }
       >

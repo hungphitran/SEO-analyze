@@ -52,7 +52,9 @@ export function SerpWidget({
   return (
     <section className="space-y-3">
       <div>
-        <h1 className="text-2xl font-semibold">{t("ui.googleSearchResults")}</h1>
+        <h1 className="text-2xl font-semibold">
+          {t("ui.googleSearchResults")}
+        </h1>
         <p className="text-sm text-muted-foreground">
           {t("ui.seeWhoRanksAndCompareThe")}
         </p>
@@ -91,7 +93,9 @@ export function SerpWidget({
           role="alert"
           className="space-y-2 rounded-xl border border-border bg-card p-4"
         >
-          <h2 className="font-medium">{t("ui.couldnTRetrieve", { v0: result.keyword })}</h2>
+          <h2 className="font-medium">
+            {t("ui.couldnTRetrieve", { v0: result.keyword })}
+          </h2>
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">
             {result.error}
           </p>
@@ -128,7 +132,9 @@ export function SerpWidget({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-8" />
-                  <TableHead className="w-20 text-center">{t("ui.organic")}</TableHead>
+                  <TableHead className="w-20 text-center">
+                    {t("ui.organic")}
+                  </TableHead>
                   <TableHead>{t("ui.page")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -145,7 +151,9 @@ export function SerpWidget({
                       <TableCell>
                         <Checkbox
                           checked={selected.has(item.index)}
-                          aria-label={t("ui.select", { v0: item.title ?? item.type ?? t("ui.resultLower") })}
+                          aria-label={t("ui.select", {
+                            v0: item.title ?? item.type ?? t("ui.resultLower"),
+                          })}
                           onCheckedChange={(checked) =>
                             setSelected((current) => {
                               const next = new Set(current);
@@ -162,7 +170,8 @@ export function SerpWidget({
                       <TableCell className="min-w-40 space-y-1 whitespace-normal break-words">
                         {item.type !== "organic" && (
                           <Badge variant="secondary">
-                            {item.type?.replaceAll("_", " ") ?? t("ui.serpFeature")}
+                            {item.type?.replaceAll("_", " ") ??
+                              t("ui.serpFeature")}
                           </Badge>
                         )}
                         {url ? (
@@ -205,26 +214,27 @@ export function SerpWidget({
           </div>
           {selected.size > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-auto text-sm">{t("ui.selected", { v0: selected.size })}</span>
+              <span className="mr-auto text-sm">
+                {t("ui.selected", { v0: selected.size })}
+              </span>
               <Button variant="ghost" onClick={() => setSelected(new Set())}>
                 {t("ui.clear")}
               </Button>
               <Button
                 disabled={host.action.isPending}
                 onClick={() =>
-                  host.ask(
-                    t("ui.compareTheseSelectedGoogleResultsExplain"),
-                    {
-                      projectId: host.snapshot?.context.arguments.projectId,
-                      keyword: result.keyword,
-                      request: host.snapshot?.context.arguments,
-                      rows: items.filter((item) => selected.has(item.index)),
-                    },
-                  )
+                  host.ask(t("ui.compareTheseSelectedGoogleResultsExplain"), {
+                    projectId: host.snapshot?.context.arguments.projectId,
+                    keyword: result.keyword,
+                    request: host.snapshot?.context.arguments,
+                    rows: items.filter((item) => selected.has(item.index)),
+                  })
                 }
               >
                 <MessageSquare />
-                {host.clientName ? t("ui.compareIn", { v0: host.clientName }) : t("ui.compare")}
+                {host.clientName
+                  ? t("ui.compareIn", { v0: host.clientName })
+                  : t("ui.compare")}
               </Button>
             </div>
           )}
