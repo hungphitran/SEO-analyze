@@ -2,7 +2,9 @@ import { pageHead } from "@/shared/page-title";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/client/components/PageHeader";
 import { Button } from "@/client/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getStandardErrorMessage } from "@/client/lib/error-messages";
 import { useState } from "react";
 import { ReportsList } from "@/client/features/reports/ReportsList";
 import {
@@ -11,7 +13,11 @@ import {
   useDeleteReport,
 } from "@/client/features/reports/shared";
 import { QueryState } from "@/client/components/QueryState";
-import { listReports, type ReportListItem } from "@/serverFunctions/reports";
+import {
+  createSummaryReportFn,
+  listReports,
+  type ReportListItem,
+} from "@/serverFunctions/reports";
 import { REPORT_APP_LIST_LIMIT } from "@/types/schemas/reports";
 import { t } from "@/shared/i18n";
 
@@ -35,6 +41,19 @@ function ReportsPage() {
     staleTime: 0,
   });
 
+  const queryClient = useQueryClient();
+  const summaryMutation = useMutation({
+    mutationFn: () => createSummaryReportFn({ data: { projectId } }),
+    onSuccess: () => {
+      toast.success(t("summaryReport.created"));
+      void queryClient.invalidateQueries({
+        queryKey: reportsQueryKey(projectId),
+      });
+    },
+    onError: (error) =>
+      toast.error(getStandardErrorMessage(error, t("summaryReport.failed"))),
+  });
+
   const deleteMutation = useDeleteReport(projectId, () =>
     setPendingDelete(null),
   );
@@ -46,18 +65,30 @@ function ReportsPage() {
           title={t("reports.title")}
           description={t("reports.listHint")}
           actions={
-            <Button
-              variant="ghost"
-              nativeButton={false}
-              render={
-                <Link
-                  to="/p/$projectId/reports/templates"
-                  params={{ projectId }}
-                />
-              }
-            >
-              {t("ui.templates")}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                title={t("summaryReport.hint")}
+                disabled={summaryMutation.isPending}
+                onClick={() => summaryMutation.mutate()}
+              >
+                {summaryMutation.isPending
+                  ? t("summaryReport.creating")
+                  : t("summaryReport.button")}
+              </Button>
+              <Button
+                variant="ghost"
+                nativeButton={false}
+                render={
+                  <Link
+                    to="/p/$projectId/reports/templates"
+                    params={{ projectId }}
+                  />
+                }
+              >
+                {t("ui.templates")}
+              </Button>
+            </div>
           }
         />
 

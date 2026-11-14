@@ -3,6 +3,9 @@ import { omit } from "remeda";
 import { z } from "zod";
 import { AuthRepository } from "@/server/auth/repositories/AuthRepository";
 import { ReportService } from "@/server/features/reports/services/ReportService";
+import { createSummaryReport } from "@/server/features/reports/services/summaryReportService";
+import { ProjectRepository } from "@/server/features/projects/repositories/ProjectRepository";
+import { AppError } from "@/server/lib/errors";
 import { ReportTemplateService } from "@/server/features/reports/services/ReportTemplateService";
 import { requireProjectContext } from "@/serverFunctions/middleware";
 import {
@@ -133,4 +136,27 @@ export const deleteReport = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await ReportService.deleteReport(context.projectId, data.reportId);
     return { reportId: data.reportId };
+  });
+
+/**
+ * One-click report built from first-party data (Search Console + the latest
+ * site audit) with no AI and no agent, so Reports works without
+ * OPENROUTER_API_KEY. Re-running on the same day updates that day's report.
+ */
+export const createSummaryReportFn = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(z.object({ projectId: z.string().min(1) }))
+  .handler(async ({ context }) => {
+    const project = await ProjectRepository.getProjectForOrganization(
+      context.projectId,
+      context.organizationId,
+    );
+    if (!project) throw new AppError("NOT_FOUND", "Project not found");
+    return createSummaryReport({
+      projectId: project.id,
+      organizationId: context.organizationId,
+      userId: context.userId,
+      projectName: project.name,
+      domain: project.domain,
+    });
   });

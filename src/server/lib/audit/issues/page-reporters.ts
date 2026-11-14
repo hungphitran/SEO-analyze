@@ -74,6 +74,41 @@ export function findHreflangProblems(tags: string[]): {
   return { invalid, duplicated };
 }
 
+type Reporter = (
+  issueType: AuditIssueType,
+  details?: Record<string, unknown>,
+) => void;
+
+/** Open Graph and hreflang checks, from data the crawler already extracted. */
+function reportSocialAndInternational(
+  page: CrawledPageResult,
+  report: Reporter,
+) {
+  if (page.isIndexable) {
+    const missingOg = [
+      page.ogTitle ? null : "og:title",
+      page.ogDescription ? null : "og:description",
+      page.ogImage ? null : "og:image",
+    ].filter((tag): tag is string => tag !== null);
+    if (missingOg.length > 0)
+      report("missing-open-graph", { missing: missingOg });
+  }
+
+  if (page.hreflangTags.length > 0) {
+    const { invalid, duplicated } = findHreflangProblems(page.hreflangTags);
+    if (invalid.length > 0 || duplicated.length > 0) {
+      report("hreflang-invalid", { invalid, duplicated });
+    }
+    if (
+      !page.hreflangTags.some((tag) => tag.trim().toLowerCase() === "x-default")
+    ) {
+      report("hreflang-missing-x-default", {
+        tags: page.hreflangTags.slice(0, 10),
+      });
+    }
+  }
+}
+
 export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
   const issues: DetectedIssue[] = [];
   const report = (
@@ -193,31 +228,7 @@ export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
     report("heading-order-skip");
   }
 
-  // Social preview: the crawler already reads the og:* tags.
-  if (page.isIndexable) {
-    const missingOg = [
-      page.ogTitle ? null : "og:title",
-      page.ogDescription ? null : "og:description",
-      page.ogImage ? null : "og:image",
-    ].filter((tag): tag is string => tag !== null);
-    if (missingOg.length > 0)
-      report("missing-open-graph", { missing: missingOg });
-  }
-
-  // International targeting: the crawler already reads hreflang values.
-  if (page.hreflangTags.length > 0) {
-    const { invalid, duplicated } = findHreflangProblems(page.hreflangTags);
-    if (invalid.length > 0 || duplicated.length > 0) {
-      report("hreflang-invalid", { invalid, duplicated });
-    }
-    if (
-      !page.hreflangTags.some((tag) => tag.trim().toLowerCase() === "x-default")
-    ) {
-      report("hreflang-missing-x-default", {
-        tags: page.hreflangTags.slice(0, 10),
-      });
-    }
-  }
+  reportSocialAndInternational(page, report);
 
   // Content quality
   if (page.isIndexable && page.wordCount < THIN_CONTENT_WORDS) {

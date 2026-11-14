@@ -24,6 +24,7 @@ import {
   AuditHealthCard,
   GscCard,
 } from "@/client/features/dashboard/DashboardCards";
+import { OpenPageRankCard } from "@/client/features/domain/components/OpenPageRankCard";
 import { Ga4Card } from "@/client/features/dashboard/Ga4Card";
 import { WorkspaceMergeBanner } from "@/client/features/dashboard/WorkspaceMergeBanner";
 import { QueryError } from "@/client/components/QueryState";
@@ -145,6 +146,23 @@ export function DashboardPage({
                 projectId={projectId}
                 audit={overview.audit}
                 domain={activation.domain}
+              />
+            ),
+          },
+        ]
+      : []),
+    // Open PageRank authority for the project's own domain. Renders nothing
+    // (and stays quiet on key/IP errors) unless OPEN_PAGERANK_API_KEY works.
+    ...(activation.domain
+      ? [
+          {
+            key: "authority",
+            hasData: false,
+            node: (
+              <OpenPageRankCard
+                projectId={projectId}
+                domain={activation.domain}
+                quiet
               />
             ),
           },
