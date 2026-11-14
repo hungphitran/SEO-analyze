@@ -1,6 +1,7 @@
 import type { AuditResultsData } from "@/client/features/audit/results/types";
 import { getAuditIssueCopy } from "@/client/features/audit/issueLabels";
 import { t } from "@/shared/i18n";
+import { buildPagesExport } from "@/client/features/audit/results/pagesExport";
 import type { CsvValue } from "@/client/lib/csv";
 import { exportRows } from "@/client/lib/exportRows";
 
@@ -56,30 +57,6 @@ export function exportIssues(
   });
 }
 
-const PAGES_HEADERS = [
-  t("audit.exportUrl"),
-  t("audit.exportStatus"),
-  t("audit.exportTitle"),
-  "H1",
-  t("audit.exportWords"),
-  t("audit.exportImages"),
-  t("audit.exportMissingAlt"),
-  t("audit.exportResponseMs"),
-];
-
-function pagesRows(pages: AuditResultsData["pages"]): CsvValue[][] {
-  return pages.map((page) => [
-    page.url,
-    page.statusCode,
-    page.title ?? "",
-    page.h1Count,
-    page.wordCount,
-    page.imagesTotal,
-    page.imagesMissingAlt,
-    page.responseTimeMs,
-  ]);
-}
-
 const PERFORMANCE_HEADERS = [
   t("audit.exportUrl"),
   t("audit.exportDevice"),
@@ -114,24 +91,17 @@ function performanceRows(
 
 export function exportPages(
   pages: AuditResultsData["pages"],
+  issues: AuditResultsData["issues"],
   format: AuditExportFormat,
 ) {
+  const table = buildPagesExport(pages, issues);
   void exportRows({
     format,
     feature: "audit_pages",
-    headers: PAGES_HEADERS,
-    rows: pagesRows(pages),
+    headers: table.headers,
+    rows: table.rows,
     filename: "audit-pages",
-    records: pages.map((page) => ({
-      url: page.url,
-      statusCode: page.statusCode,
-      title: page.title ?? "",
-      h1Count: page.h1Count,
-      wordCount: page.wordCount,
-      imagesTotal: page.imagesTotal,
-      imagesMissingAlt: page.imagesMissingAlt,
-      responseTimeMs: page.responseTimeMs,
-    })),
+    records: table.records,
   });
 }
 

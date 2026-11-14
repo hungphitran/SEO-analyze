@@ -67,19 +67,29 @@ function page(links: PageLink[]): CrawledPageResult {
   };
 }
 
+interface RecordedBatch {
+  links: Array<{ pageId: string; url: string; targets: string[] }>;
+  externalLinks: Array<{ pageId: string; url: string; targets: string[] }>;
+}
+
+const strip = (rows: RecordedBatch["links"]) =>
+  rows.map(({ url, targets }) => ({ url, targets }));
+
 describe("persistCrawledPages external links", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("records safe external targets separately from internal links", async () => {
     const recordBatch = vi
-      .fn()
+      .fn<(batch: RecordedBatch) => Promise<unknown>>()
       .mockResolvedValue({ attempted: 1, pending: 0, seen: 1 });
     await persistCrawledPages({
       auditId: "a1",
       workflowInstanceId: "w1",
       origin: "https://site.test",
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- partial robots stub
       robots: { isAllowed: () => true } as never,
       sitePlatform: undefined,
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- only recordBatch is used
       scratchpad: { recordBatch } as never,
       pages: [
         page([
@@ -92,16 +102,14 @@ describe("persistCrawledPages external links", () => {
       maxPages: 50,
     });
     const batch = recordBatch.mock.calls[0][0];
-    expect(batch.links).toEqual([
+    expect(strip(batch.links)).toEqual([
       {
-        pageId: expect.any(String),
         url: "https://site.test/",
         targets: ["https://site.test/about"],
       },
     ]);
-    expect(batch.externalLinks).toEqual([
+    expect(strip(batch.externalLinks)).toEqual([
       {
-        pageId: expect.any(String),
         url: "https://site.test/",
         targets: ["https://other.test/a"],
       },
@@ -110,7 +118,7 @@ describe("persistCrawledPages external links", () => {
 
   it("caps external targets per page", async () => {
     const recordBatch = vi
-      .fn()
+      .fn<(batch: RecordedBatch) => Promise<unknown>>()
       .mockResolvedValue({ attempted: 1, pending: 0, seen: 1 });
     const many = Array.from({ length: 60 }, (_, i) =>
       link(`https://other.test/${i}`, false),
@@ -119,8 +127,10 @@ describe("persistCrawledPages external links", () => {
       auditId: "a1",
       workflowInstanceId: "w1",
       origin: "https://site.test",
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- partial robots stub
       robots: { isAllowed: () => true } as never,
       sitePlatform: undefined,
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- only recordBatch is used
       scratchpad: { recordBatch } as never,
       pages: [page(many)],
       depthByUrl: new Map(),

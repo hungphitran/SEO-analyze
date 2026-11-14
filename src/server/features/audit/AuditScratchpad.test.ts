@@ -272,8 +272,8 @@ describe("inbound link counts", () => {
     ]);
 
     const rows = db.prepare(INLINK_COUNTS_SQL).all();
-    const counts = Object.fromEntries(
-      rows.map((row) => [row.page_id, row.inlinks]),
+    const counts: Record<string, unknown> = Object.fromEntries(
+      rows.map((row) => [String(row["page_id"]), row["inlinks"]]),
     );
     // p1 is linked only by itself, so it is absent (the caller stores 0).
     expect(counts).toEqual({ p2: 1, p3: 2 });

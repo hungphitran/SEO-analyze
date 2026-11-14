@@ -17,12 +17,7 @@ import { isCrawlableUrl } from "@/server/lib/audit/url-policy";
 import { AuditRepository } from "@/server/features/audit/repositories/AuditRepository";
 import { getAuditScratchpad } from "@/server/features/audit/AuditScratchpad";
 import { AuditProgressKV } from "@/server/lib/audit/progress-kv";
-import {
-  findBrokenExternalLinks,
-  MAX_EXTERNAL_EDGE_ROWS,
-} from "@/server/lib/audit/external-links";
 import { runMultipageChecks } from "@/server/lib/audit/issues/multipage";
-import type { DetectedIssue } from "@/server/lib/audit/issues/page-reporters";
 import type { AuditConfig } from "@/server/lib/audit/types";
 import type { CrawlerAccess } from "@/shared/crawler-access";
 import type { RenderUsage } from "@/shared/audit-rendering";
@@ -31,6 +26,11 @@ import {
   runCrawlPhase,
   type CrawlPhaseResult,
 } from "@/server/workflows/siteAuditWorkflowCrawl";
+import {
+  brokenExternalLinkIssues,
+  checkExternalLinks,
+  runScratchpadLinkChecks,
+} from "@/server/workflows/siteAuditWorkflowLinkChecks";
 import { pgStep } from "@/server/workflows/pgStep";
 import {
   DB_STEP,
@@ -356,17 +356,7 @@ async function finalizeAudit(args: {
     step,
     "external-link-checks",
     EXTERNAL_LINK_STEP,
-    async () => {
-      try {
-        const rows = await getAuditScratchpad(auditId).getExternalLinks(
-          MAX_EXTERNAL_EDGE_ROWS,
-        );
-        return await findBrokenExternalLinks(rows);
-      } catch (error) {
-        console.warn("External link check skipped", { auditId, error });
-        return [];
-      }
-    },
+    () => checkExternalLinks(auditId),
   );
 
   await pgStep(step, "multipage-checks", MULTIPAGE_CHECKS_STEP, async () => {
@@ -406,13 +396,7 @@ async function finalizeAudit(args: {
     });
     issues.push(
       ...linkIssues,
-      ...brokenExternalLinks.map((row) => ({
-        issueType: "broken-external-link" as const,
-        pageId: row.pageId,
-        pageUrl: row.pageUrl,
-        dedupeKey: row.targetUrl,
-        details: { targetUrl: row.targetUrl, targetStatus: row.targetStatus },
-      })),
+      ...brokenExternalLinkIssues(brokenExternalLinks),
     );
     if (crawl.stoppedBy) {
       issues.push({
@@ -463,42 +447,4 @@ async function finalizeAudit(args: {
     // Crawl scratch state (frontier, links, mirror) is no longer needed.
     await getAuditScratchpad(auditId).destroy();
   });
-}
-
-/**
- * The two finalize checks that need link edges run as SQL inside the
- * audit's scratchpad DO; map their rows onto DetectedIssue.
- */
-async function runScratchpadLinkChecks(
-  auditId: string,
-  startUrl: string,
-  crawl: CrawlPhaseResult,
-): Promise<DetectedIssue[]> {
-  const scratchpad = getAuditScratchpad(auditId);
-  const inlinkCounts = await scratchpad.getInlinkCounts();
-  if (inlinkCounts) {
-    await AuditRepository.updatePageInlinkCounts(auditId, inlinkCounts);
-  }
-  const { brokenLinks, orphanPages } = await scratchpad.runFinalizeChecks({
-    // Page rows store normalized URLs; normalize the start URL the same way
-    // so the orphan exclusion matches.
-    startUrl: normalizeUrl(startUrl) ?? startUrl,
-    // Orphan detection only makes sense when the crawl wasn't truncated.
-    crawlCompleted: crawl.completed,
-  });
-
-  return [
-    ...brokenLinks.map((row) => ({
-      issueType: "broken-internal-link" as const,
-      pageId: row.sourcePageId,
-      pageUrl: row.sourceUrl,
-      dedupeKey: row.targetUrl,
-      details: { targetUrl: row.targetUrl, targetStatus: row.targetStatus },
-    })),
-    ...orphanPages.map((row) => ({
-      issueType: "orphan-page" as const,
-      pageId: row.pageId,
-      pageUrl: row.url,
-    })),
-  ];
 }

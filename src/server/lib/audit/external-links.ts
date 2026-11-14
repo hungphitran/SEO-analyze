@@ -24,7 +24,7 @@ const TOTAL_BUDGET_MS = 40_000;
 const BROKEN_STATUSES = new Set([404, 410]);
 
 /** A source page and the external target that answered 404/410. */
-export interface BrokenExternalLink {
+interface BrokenExternalLink {
   pageId: string;
   pageUrl: string;
   targetUrl: string;

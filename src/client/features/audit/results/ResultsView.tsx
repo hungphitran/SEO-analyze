@@ -1,5 +1,5 @@
 import { MetricsTable } from "@/client/components/MetricsTable";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ShieldAlert } from "lucide-react";
 import {
   exportIssues,
@@ -8,10 +8,13 @@ import {
 } from "@/client/features/audit/results/export";
 import type { AuditResultsData } from "@/client/features/audit/results/types";
 import { isLighthouseFailure } from "@/client/features/audit/results/AuditResultsTableFilterLogic";
+import { IssuesSummary } from "@/client/features/audit/results/IssuesSummary";
+import { IssuesView } from "@/client/features/audit/results/IssuesView";
 import {
-  IssuesView,
+  EMPTY_ISSUE_FILTER,
   resolveIssueSeverity,
-} from "@/client/features/audit/results/IssuesView";
+  type IssueViewFilter,
+} from "@/client/features/audit/results/pageInsights";
 import { PagesTable } from "@/client/features/audit/results/PagesTable";
 import { ShopifyCrawlWarning } from "@/client/features/audit/results/ShopifyCrawlWarning";
 import { RenderingWarnings } from "@/client/features/audit/results/RenderingWarnings";
@@ -56,6 +59,8 @@ export function ResultsView({
   const activeTab =
     tab === "performance" && !hasPerformanceTab ? "issues" : tab;
   const stats = useResultStats(pages, lighthouse);
+  const [issueFilter, setIssueFilter] =
+    useState<IssueViewFilter>(EMPTY_ISSUE_FILTER);
   const blockedCount = useMemo(
     () => pages.filter((page) => page.fetchClass === "blocked").length,
     [pages],
@@ -87,7 +92,7 @@ export function ResultsView({
           exportIssues(issues, format);
           return;
         }
-        exportPages(pages, format);
+        exportPages(pages, issues, format);
       }}
     />
   );
@@ -151,12 +156,30 @@ export function ResultsView({
         lighthouseSummary={stats.lighthouseSummary}
       />
 
-      {activeTab === "issues" && <IssuesView issues={issues} tabs={tabs} />}
+      <IssuesSummary
+        issues={issues}
+        onSelect={(filter) => {
+          setIssueFilter(filter);
+          onTabChange("issues");
+        }}
+      />
+
+      {activeTab === "issues" && (
+        <IssuesView
+          issues={issues}
+          tabs={tabs}
+          filter={issueFilter}
+          onFilterChange={setIssueFilter}
+        />
+      )}
       {activeTab === "pages" && (
         <PagesTable
           pages={pages}
           startUrl={audit.startUrl}
           issues={issues}
+          lighthouse={lighthouse}
+          projectId={projectId}
+          auditId={audit.id}
           tabs={tabs}
         />
       )}

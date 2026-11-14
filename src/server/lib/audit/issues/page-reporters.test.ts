@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- one describe per reporter */
 import { describe, expect, it } from "vitest";
 import {
   findHreflangProblems,

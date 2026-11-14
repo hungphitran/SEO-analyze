@@ -259,6 +259,24 @@ export function analyzeHtml(
     });
   };
 
+  const handleScriptTag = (attribs: Record<string, string>) => {
+    const type = attribs["type"]?.toLowerCase();
+    hasExecutableScript ||= [
+      "",
+      "module",
+      "text/javascript",
+      "application/javascript",
+    ].includes(type ?? "");
+    noteSubresource(attribs, "src");
+    if (type === "application/ld+json") {
+      hasStructuredData = true;
+      if (jsonLdCount < MAX_JSON_LD_BLOCKS && jsonLdBuffer === null) {
+        jsonLdBuffer = [];
+        jsonLdChars = 0;
+      }
+    }
+  };
+
   const parser = new Parser(
     {
       onopentag(name, attribs) {
@@ -313,20 +331,7 @@ export function analyzeHtml(
             }
             break;
           case "script":
-            hasExecutableScript ||= [
-              "",
-              "module",
-              "text/javascript",
-              "application/javascript",
-            ].includes(attribs["type"]?.toLowerCase() ?? "");
-            noteSubresource(attribs, "src");
-            if (attribs["type"]?.toLowerCase() === "application/ld+json") {
-              hasStructuredData = true;
-              if (jsonLdCount < MAX_JSON_LD_BLOCKS && jsonLdBuffer === null) {
-                jsonLdBuffer = [];
-                jsonLdChars = 0;
-              }
-            }
+            handleScriptTag(attribs);
             break;
           case "a": {
             // HTML forbids nested <a>; browsers implicitly close the open

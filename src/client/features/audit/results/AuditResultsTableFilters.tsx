@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   DataTableFilterGroup,
   DataTableFilterPanel,
@@ -71,6 +72,56 @@ export function PagesFilterBar({
             ["all", t("common.all")],
             ["yes", t("audit.missingAlt")],
             ["no", t("audit.noMissingAlt")],
+          ]}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
+        <SelectFilter
+          label={t("auditDetail.filterHasIssues")}
+          value={filters.hasIssues}
+          onChange={(hasIssues) => onChange({ ...filters, hasIssues })}
+          options={[
+            ["all", t("common.all")],
+            ["yes", t("auditDetail.filterWithIssues")],
+            ["no", t("auditDetail.filterNoIssues")],
+          ]}
+        />
+        <SelectFilter
+          label={t("auditDetail.filterNoindex")}
+          value={filters.noindex}
+          onChange={(noindex) => onChange({ ...filters, noindex })}
+          options={[
+            ["all", t("common.all")],
+            ["yes", t("auditDetail.filterOnlyNoindex")],
+          ]}
+        />
+        <SelectFilter
+          label={t("auditDetail.filterCanonical")}
+          value={filters.canonicalDiffers}
+          onChange={(canonicalDiffers) =>
+            onChange({ ...filters, canonicalDiffers })
+          }
+          options={[
+            ["all", t("common.all")],
+            ["yes", t("auditDetail.filterCanonicalDiffers")],
+          ]}
+        />
+        <SelectFilter
+          label={t("auditDetail.filterMetaDescription")}
+          value={filters.missingMeta}
+          onChange={(missingMeta) => onChange({ ...filters, missingMeta })}
+          options={[
+            ["all", t("common.all")],
+            ["yes", t("auditDetail.filterMetaMissing")],
+          ]}
+        />
+        <SelectFilter
+          label={t("auditDetail.filterOg")}
+          value={filters.missingOg}
+          onChange={(missingOg) => onChange({ ...filters, missingOg })}
+          options={[
+            ["all", t("common.all")],
+            ["yes", t("auditDetail.filterOgMissing")],
           ]}
         />
       </div>
@@ -173,20 +224,26 @@ export function ResultsTableToolbar({
   activeFilterCount,
   resultCount,
   totalCount,
+  actions,
 }: {
   showFilters: boolean;
   onToggle: () => void;
   activeFilterCount: number;
   resultCount: number;
   totalCount: number;
+  /** Extra controls (for example the column picker) beside the row count. */
+  actions?: ReactNode;
 }) {
   return (
     <DataTableToolbar
       actions={
-        <span className="text-sm tabular-nums text-muted-foreground">
-          {resultCount.toLocaleString()} {t("ui.of")}{" "}
-          {totalCount.toLocaleString()}
-        </span>
+        <div className="flex items-center gap-3">
+          {actions}
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {resultCount.toLocaleString()} {t("ui.of")}{" "}
+            {totalCount.toLocaleString()}
+          </span>
+        </div>
       }
     >
       <DataTableFilterToggle
