@@ -58,6 +58,23 @@ export interface PageLink {
   isNofollow: boolean;
 }
 
+/** Technical head/markup signals read from one analyzed HTML document. */
+export interface PageSignals {
+  /** `lang` attribute of the <html> element, null when absent or empty. */
+  htmlLang: string | null;
+  /** True when a `<meta name="viewport">` tag is present. */
+  hasViewport: boolean;
+  /** Value of `<meta name="twitter:card">`, null when absent. */
+  twitterCard: string | null;
+  /** Number of http:// sub-resources referenced by an https:// page. */
+  mixedContentCount: number;
+  /** A few of those http:// URLs, for the issue detail. */
+  mixedContentSamples: string[];
+  /** application/ld+json blocks found, and how many failed JSON.parse. */
+  jsonLdCount: number;
+  jsonLdInvalidCount: number;
+}
+
 /** Data extracted from a single page's HTML. */
 export interface PageAnalysis {
   url: string;
@@ -95,6 +112,8 @@ export interface PageAnalysis {
 
   // Hreflang
   hreflangTags: string[];
+
+  signals: PageSignals;
 }
 
 /** Lighthouse result for a single URL+strategy. */
@@ -170,6 +189,8 @@ export interface CrawledPageResult {
   links: PageLink[];
   hasStructuredData: boolean;
   hreflangTags: string[];
+  /** Null/absent for pages that were not analyzed as HTML. */
+  signals?: PageSignals | null;
   isIndexable: boolean;
   responseTimeMs: number;
   /** null = not reached via links (e.g. sitemap-seeded). */

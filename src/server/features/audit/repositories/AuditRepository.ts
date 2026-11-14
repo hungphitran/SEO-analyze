@@ -200,6 +200,14 @@ async function insertCrawledBatch(
       crawlDepth: page.crawlDepth,
       inSitemap: page.inSitemap,
       responseTimeMs: page.responseTimeMs,
+      hreflangJson: page.signals ? JSON.stringify(page.hreflangTags) : null,
+      htmlLang: page.signals?.htmlLang ?? null,
+      hasViewport: page.signals ? page.signals.hasViewport : null,
+      twitterCard: page.signals?.twitterCard ?? null,
+      mixedContentCount: page.signals ? page.signals.mixedContentCount : null,
+      jsonLdCount: page.signals ? page.signals.jsonLdCount : null,
+      jsonLdInvalidCount: page.signals ? page.signals.jsonLdInvalidCount : null,
+      htmlBytes: page.htmlBytes > 0 ? page.htmlBytes : null,
     };
     return tx
       .insert(auditPages)
@@ -208,6 +216,29 @@ async function insertCrawledBatch(
   });
 
   await insertIssues(auditId, issues);
+}
+
+/**
+ * Store how many crawled pages link to each page. Only called when the link
+ * graph is complete, so every page without an inbound edge really has zero;
+ * pages are reset to 0 first, then the ones that do have links are set.
+ */
+async function updatePageInlinkCounts(
+  auditId: string,
+  counts: Array<{ pageId: string; count: number }>,
+) {
+  await db
+    .update(auditPages)
+    .set({ inlinkCount: 0 })
+    .where(eq(auditPages.auditId, auditId));
+  await executeInBatches(counts, (tx, row) =>
+    tx
+      .update(auditPages)
+      .set({ inlinkCount: row.count })
+      .where(
+        and(eq(auditPages.auditId, auditId), eq(auditPages.id, row.pageId)),
+      ),
+  );
 }
 
 async function insertLighthouseResults(
@@ -418,6 +449,7 @@ async function deleteAuditForProject(auditId: string, projectId: string) {
 }
 
 export const AuditRepository = {
+  updatePageInlinkCounts,
   createAudit,
   updateAuditStart,
   updateAuditProgress,

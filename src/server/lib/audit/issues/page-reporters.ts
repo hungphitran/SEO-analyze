@@ -109,6 +109,33 @@ function reportSocialAndInternational(
   }
 }
 
+/** HTML larger than this is flagged as heavy (the crawler caps reads at 1 MB). */
+const LARGE_HTML_BYTES = 500 * 1024;
+
+/** Viewport, language, mixed content, JSON-LD and Twitter Card checks. */
+function reportTechnicalSignals(page: CrawledPageResult, report: Reporter) {
+  const signals = page.signals;
+  if (!signals) return;
+  if (!signals.hasViewport && page.isIndexable) report("missing-viewport");
+  if (!signals.htmlLang) report("missing-html-lang");
+  if (signals.mixedContentCount > 0) {
+    report("mixed-content", {
+      count: signals.mixedContentCount,
+      examples: signals.mixedContentSamples,
+    });
+  }
+  if (signals.jsonLdInvalidCount > 0) {
+    report("invalid-json-ld", {
+      invalid: signals.jsonLdInvalidCount,
+      total: signals.jsonLdCount,
+    });
+  }
+  if (!signals.twitterCard && page.isIndexable) report("missing-twitter-card");
+  if (page.htmlBytes > LARGE_HTML_BYTES) {
+    report("large-html", { htmlBytes: page.htmlBytes });
+  }
+}
+
 export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
   const issues: DetectedIssue[] = [];
   const report = (
@@ -150,6 +177,8 @@ export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
   if (!page.isHtml) {
     return issues;
   }
+
+  reportTechnicalSignals(page, report);
 
   // Indexability + canonical signals
   if (!page.isIndexable) {

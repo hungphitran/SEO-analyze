@@ -33,6 +33,11 @@ export const SCRATCHPAD_SCHEMA_SQL = `
     url TEXT NOT NULL,
     targets_json TEXT NOT NULL
   ) WITHOUT ROWID;
+  CREATE TABLE IF NOT EXISTS page_external_links (
+    page_id TEXT PRIMARY KEY,
+    url TEXT NOT NULL,
+    targets_json TEXT NOT NULL
+  ) WITHOUT ROWID;
   CREATE TABLE IF NOT EXISTS links (
     source_page_id TEXT NOT NULL,
     source_url TEXT NOT NULL,
@@ -115,4 +120,29 @@ export const ORPHAN_PAGES_SQL = `
     AND NOT EXISTS (
       SELECT 1 FROM page_mirror r WHERE r.redirect_url = m.url
     )
+`;
+
+/**
+ * How many other crawled pages link to each page. Self-links don't count and
+ * a source is counted once per target (targets are already deduped per page).
+ * Pages nobody links to are absent from the result: the caller stores 0 for
+ * them when the link graph is complete.
+ */
+export const INLINK_COUNTS_SQL = `
+  SELECT m.page_id AS page_id, COUNT(DISTINCT p.page_id) AS inlinks
+  FROM page_links p, json_each(p.targets_json) AS j
+  CROSS JOIN page_mirror m ON m.url = j.value
+  WHERE j.value != p.url
+  GROUP BY m.page_id
+`;
+
+/**
+ * One row per (source page, external target), in crawl-stable order. Takes the
+ * row cap as its only parameter; the caller keeps the first N distinct targets.
+ */
+export const EXTERNAL_LINKS_SQL = `
+  SELECT p.page_id AS page_id, p.url AS page_url, j.value AS target_url
+  FROM page_external_links p, json_each(p.targets_json) AS j
+  ORDER BY p.url, j.key
+  LIMIT ?
 `;

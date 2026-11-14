@@ -18,6 +18,8 @@ import { AuditProgressKV } from "@/server/lib/audit/progress-kv";
  * to scan at finalize.
  */
 const MAX_STORED_LINKS_PER_PAGE = 500;
+/** External targets kept per page for the finalize broken-link check. */
+const MAX_STORED_EXTERNAL_LINKS_PER_PAGE = 25;
 /**
  * Cap newly discovered URLs sent to the scratchpad per persist sub-batch.
  * Serialized RPC messages are limited to 32 MiB; a crawler-trap page family
@@ -75,14 +77,24 @@ export async function persistCrawledPages(input: {
   await AuditRepository.insertCrawledBatch(auditId, pages, issues);
 
   const links: ScratchpadPageLinksRow[] = [];
+  const externalLinks: ScratchpadPageLinksRow[] = [];
   const discovered = new Map<string, number | null>();
   for (const page of pages) {
     const pageDepth = depthByUrl.get(page.url) ?? null;
     const childDepth = pageDepth === null ? null : pageDepth + 1;
 
     const targets: string[] = [];
+    const externalTargets: string[] = [];
     for (const link of page.links) {
-      if (!link.isInternal) continue;
+      if (!link.isInternal) {
+        if (
+          externalTargets.length < MAX_STORED_EXTERNAL_LINKS_PER_PAGE &&
+          isCrawlableUrl(link.targetUrl)
+        ) {
+          externalTargets.push(link.targetUrl);
+        }
+        continue;
+      }
       if (targets.length < MAX_STORED_LINKS_PER_PAGE) {
         targets.push(link.targetUrl);
       }
@@ -96,6 +108,13 @@ export async function persistCrawledPages(input: {
     }
     if (targets.length > 0) {
       links.push({ pageId: page.id, url: page.url, targets });
+    }
+    if (externalTargets.length > 0) {
+      externalLinks.push({
+        pageId: page.id,
+        url: page.url,
+        targets: externalTargets,
+      });
     }
 
     // Redirect targets continue the same navigation path: same depth.
@@ -118,6 +137,7 @@ export async function persistCrawledPages(input: {
       redirectUrl: page.redirectUrl,
     })),
     links,
+    externalLinks,
     discovered: Array.from(discovered, ([url, depth]) => ({ url, depth })),
   });
 

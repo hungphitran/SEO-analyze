@@ -8,7 +8,9 @@ import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   BROKEN_LINKS_SQL,
+  EXTERNAL_LINKS_SQL,
   FRONTIER_DISCOVER_SQL,
+  INLINK_COUNTS_SQL,
   ORPHAN_PAGES_SQL,
   SCRATCHPAD_SCHEMA_SQL,
 } from "@/server/features/audit/scratchpad-sql";
@@ -251,5 +253,62 @@ describe("frontier link discovery", () => {
         .prepare(`SELECT depth, source, in_sitemap FROM frontier WHERE url = ?`)
         .get(url),
     ).toEqual({ depth: 2, source: "link", in_sitemap: 1 });
+  });
+});
+
+describe("inbound link counts", () => {
+  it("counts distinct linking pages and ignores self-links", () => {
+    addPage("p1", START);
+    addPage("p2", "https://site.test/a");
+    addPage("p3", "https://site.test/b");
+    addLinks("p1", START, [
+      START,
+      "https://site.test/a",
+      "https://site.test/b",
+    ]);
+    addLinks("p2", "https://site.test/a", [
+      "https://site.test/a",
+      "https://site.test/b",
+    ]);
+
+    const rows = db.prepare(INLINK_COUNTS_SQL).all();
+    const counts = Object.fromEntries(
+      rows.map((row) => [row.page_id, row.inlinks]),
+    );
+    // p1 is linked only by itself, so it is absent (the caller stores 0).
+    expect(counts).toEqual({ p2: 1, p3: 2 });
+  });
+
+  it("ignores targets that were never crawled", () => {
+    addPage("p1", START);
+    addLinks("p1", START, ["https://site.test/never-crawled"]);
+    expect(db.prepare(INLINK_COUNTS_SQL).all()).toEqual([]);
+  });
+});
+
+describe("external link edges", () => {
+  it("expands stored targets per page and honours the row cap", () => {
+    db.prepare(
+      `INSERT INTO page_external_links (page_id, url, targets_json) VALUES (?, ?, ?)`,
+    ).run(
+      "p1",
+      START,
+      JSON.stringify(["https://other.test/a", "https://other.test/b"]),
+    );
+    db.prepare(
+      `INSERT INTO page_external_links (page_id, url, targets_json) VALUES (?, ?, ?)`,
+    ).run(
+      "p2",
+      "https://site.test/x",
+      JSON.stringify(["https://other.test/a"]),
+    );
+
+    const all = db.prepare(EXTERNAL_LINKS_SQL).all(100);
+    expect(all).toHaveLength(3);
+    expect(all[0]).toMatchObject({
+      page_id: "p1",
+      target_url: "https://other.test/a",
+    });
+    expect(db.prepare(EXTERNAL_LINKS_SQL).all(2)).toHaveLength(2);
   });
 });

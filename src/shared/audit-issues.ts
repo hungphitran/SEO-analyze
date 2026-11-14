@@ -298,6 +298,62 @@ export const AUDIT_ISSUE_TYPES = {
     howToFix:
       'Add <link rel="alternate" hreflang="x-default" href="..."> pointing to the version that should serve everyone else (often the language selector or the main language).',
   },
+  "missing-viewport": {
+    severity: "warning",
+    title: "Missing viewport meta tag",
+    explanation:
+      'The page has no <meta name="viewport"> tag. Mobile browsers then render it at desktop width and shrink it, which hurts usability and mobile-first indexing.',
+    howToFix:
+      'Add <meta name="viewport" content="width=device-width, initial-scale=1"> to the page head.',
+  },
+  "missing-html-lang": {
+    severity: "info",
+    title: "Missing html lang attribute",
+    explanation:
+      "The <html> element has no lang attribute. Screen readers and translation tools guess the language, and search engines get one less signal about the page language.",
+    howToFix:
+      'Set the page language on the root element, for example <html lang="vi"> or <html lang="en">.',
+  },
+  "mixed-content": {
+    severity: "warning",
+    title: "Mixed content on an HTTPS page",
+    explanation:
+      "The HTTPS page loads images, scripts, styles or frames over plain http://. Browsers block or warn about these, which can break the page and removes the secure padlock.",
+    howToFix:
+      "Change every http:// resource URL to https:// (or a protocol-relative path) and make sure the host serves the file over HTTPS.",
+  },
+  "invalid-json-ld": {
+    severity: "warning",
+    title: "Structured data (JSON-LD) has a syntax error",
+    explanation:
+      "At least one application/ld+json block is not valid JSON, so search engines ignore it and the page loses rich-result eligibility.",
+    howToFix:
+      "Fix the JSON syntax (quotes, trailing commas, brackets) and validate the block with a structured-data testing tool.",
+  },
+  "missing-twitter-card": {
+    severity: "info",
+    title: "Missing Twitter Card tag",
+    explanation:
+      "The page has no twitter:card meta tag. X (Twitter) falls back to Open Graph tags, but without twitter:card the shared link often shows as a small plain preview.",
+    howToFix:
+      'Add <meta name="twitter:card" content="summary_large_image"> (or summary) to the page head.',
+  },
+  "large-html": {
+    severity: "info",
+    title: "HTML document is very large",
+    explanation:
+      "The HTML itself (not images) is over 500 KB. Large documents are slower to download and parse, especially on mobile networks, and may be cut off by crawlers.",
+    howToFix:
+      "Remove inline data and repeated markup, paginate long lists, and load heavy sections on demand.",
+  },
+  "broken-external-link": {
+    severity: "warning",
+    title: "Link to a broken external page",
+    explanation:
+      "The page links to another website whose URL answers 404 or 410. Visitors hit a dead end and the page looks poorly maintained.",
+    howToFix:
+      "Update the link to the new address, replace it with a working source, or remove it.",
+  },
 } as const satisfies Record<string, AuditIssueDescriptor>;
 
 export type AuditIssueType = keyof typeof AUDIT_ISSUE_TYPES;

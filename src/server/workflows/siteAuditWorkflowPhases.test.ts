@@ -39,12 +39,24 @@ vi.mock("@/server/features/audit/repositories/AuditRepository", () => ({
     updateAuditProgress: updateAuditProgressMock,
     hasPagesForAudit: vi.fn().mockResolvedValue(true),
     insertIssues: vi.fn(),
+    updatePageInlinkCounts: vi.fn(),
     countPagesByFetchClass: vi.fn().mockResolvedValue(0),
     completeAudit: vi.fn(),
   },
 }));
 vi.mock("@/server/features/audit/AuditScratchpad", () => ({
   getAuditScratchpad: vi.fn(),
+}));
+vi.mock("@/server/lib/audit/external-links", () => ({
+  MAX_EXTERNAL_EDGE_ROWS: 5000,
+  findBrokenExternalLinks: vi.fn().mockResolvedValue([
+    {
+      pageId: "p1",
+      pageUrl: "https://example.com/",
+      targetUrl: "https://other.test/gone",
+      targetStatus: 404,
+    },
+  ]),
 }));
 vi.mock("@/server/lib/audit/progress-kv", () => ({
   AuditProgressKV: { clear: vi.fn() },
@@ -226,6 +238,10 @@ describe("app-shell crawl coverage", () => {
       // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
       vi.mocked(getAuditScratchpad).mockReturnValue({
         runFinalizeChecks: finalize,
+        getInlinkCounts: vi
+          .fn()
+          .mockResolvedValue([{ pageId: "p1", count: 3 }]),
+        getExternalLinks: vi.fn().mockResolvedValue([]),
         destroy: vi.fn(),
       } as unknown as ReturnType<typeof getAuditScratchpad>);
       pgStepMock.mockImplementation(
@@ -251,6 +267,19 @@ describe("app-shell crawl coverage", () => {
         startUrl: "https://example.com/",
         crawlCompleted: !hasShells,
       });
+      expect(AuditRepository.updatePageInlinkCounts).toHaveBeenCalledWith(
+        expect.any(String),
+        [{ pageId: "p1", count: 3 }],
+      );
+      const issues = vi.mocked(AuditRepository.insertIssues).mock.calls.at(-1);
+      expect(issues?.[1]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            issueType: "broken-external-link",
+            dedupeKey: "https://other.test/gone",
+          }),
+        ]),
+      );
     },
   );
 });
