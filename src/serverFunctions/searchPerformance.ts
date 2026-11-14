@@ -9,6 +9,8 @@ import {
   type GscPerformanceFilter,
 } from "@/server/features/gsc/searchAnalytics";
 import {
+  buildCannibalizationRows,
+  buildDecliningPages,
   buildStrikingDistanceRows,
   previousPeriod,
   sumSearchTotals,
@@ -130,6 +132,71 @@ export const getSearchPerformanceReport = createServerFn({ method: "POST" })
         prevTotals: sumSearchTotals(previous.rows),
         strikingDistance: buildStrikingDistanceRows(queryPages.rows),
         countries: toDimensionRows(countries.rows),
+      };
+    } catch (error) {
+      if (isExpectedConnectionFailure(error)) {
+        return { connected: false as const };
+      }
+      throw error;
+    }
+  });
+
+// Insights read whole-property rows in one call each; GSC caps rows per call.
+const INSIGHTS_FETCH_LIMIT = 1000;
+
+/**
+ * Cannibalization (queries answered by several of the site's own pages) and
+ * declining pages (clicks down versus the previous equal period). Both are
+ * computed from first-party GSC rows, free; fetched only when their tab opens.
+ */
+export const getSearchInsights = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(searchPerformanceInputSchema)
+  .handler(async ({ data, context }) => {
+    const { startDate, endDate } = resolveDateRange({
+      dateRange: data.dateRange,
+    });
+    const prev = previousPeriod(startDate, endDate);
+    const projectId = context.projectId;
+    const { filters } = buildGscFilters(data);
+
+    try {
+      const [queryPages, pages, prevPages] = await Promise.all([
+        GscService.getPerformance({
+          projectId,
+          startDate,
+          endDate,
+          dimensions: ["query", "page"],
+          filters,
+          rowLimit: INSIGHTS_FETCH_LIMIT,
+        }),
+        GscService.getPerformance({
+          projectId,
+          startDate,
+          endDate,
+          dimensions: ["page"],
+          filters,
+          rowLimit: INSIGHTS_FETCH_LIMIT,
+        }),
+        GscService.getPerformance({
+          projectId,
+          startDate: prev.startDate,
+          endDate: prev.endDate,
+          dimensions: ["page"],
+          filters,
+          rowLimit: INSIGHTS_FETCH_LIMIT,
+        }),
+      ]);
+      return {
+        connected: true as const,
+        range: {
+          startDate,
+          endDate,
+          prevStartDate: prev.startDate,
+          prevEndDate: prev.endDate,
+        },
+        cannibalization: buildCannibalizationRows(queryPages.rows),
+        declining: buildDecliningPages(pages.rows, prevPages.rows),
       };
     } catch (error) {
       if (isExpectedConnectionFailure(error)) {

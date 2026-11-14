@@ -36,8 +36,13 @@ import {
 import { getStandardErrorMessage } from "@/client/lib/error-messages";
 import {
   exportSearchPerformanceTable,
+  getSearchInsights,
   getSearchPerformanceReport,
 } from "@/serverFunctions/searchPerformance";
+import {
+  CannibalizationTable,
+  DecliningPagesTable,
+} from "@/client/features/search-performance/SearchInsightsTables";
 import {
   SEARCH_PERFORMANCE_DEFAULT_PAGE_SIZE,
   SEARCH_PERFORMANCE_TABS,
@@ -46,6 +51,12 @@ import {
   type SearchPerformanceTableDimension,
 } from "@/types/schemas/search-performance";
 import { t } from "@/shared/i18n";
+
+function isInsightsTab(
+  tab: SearchPerformanceTab,
+): tab is "cannibalization" | "declining" {
+  return tab === "cannibalization" || tab === "declining";
+}
 
 function tabDimension(
   tab: SearchPerformanceTab,
@@ -132,6 +143,14 @@ export function SearchPerformancePage({
         : undefined,
   });
 
+  // Cannibalization / declining pages: three GSC calls, only when opened.
+  const insightsQuery = useQuery({
+    queryKey: ["searchInsights", projectId, filterInput],
+    queryFn: () => getSearchInsights({ data: { projectId, ...filterInput } }),
+    enabled: report?.connected === true && isInsightsTab(tab),
+    staleTime: 5 * 60_000,
+  });
+
   // Warm the Queries tab (first page) as soon as the report connects so the tab
   // opens instantly instead of showing a spinner. Free first-party GSC data.
   useEffect(() => {
@@ -156,7 +175,12 @@ export function SearchPerformancePage({
   ]);
 
   const handleExport = async (target: ExportTarget) => {
-    if (!report?.connected || reportQuery.isPlaceholderData || isExporting)
+    if (
+      !report?.connected ||
+      reportQuery.isPlaceholderData ||
+      isExporting ||
+      isInsightsTab(tab)
+    )
       return;
     setIsExporting(true);
     try {
@@ -274,7 +298,9 @@ export function SearchPerformancePage({
                     actions={["sheets", "csv"]}
                     onExport={(target) => void handleExport(target)}
                     busy={isExporting}
-                    disabled={reportQuery.isPlaceholderData}
+                    disabled={
+                      reportQuery.isPlaceholderData || isInsightsTab(tab)
+                    }
                   />
                 }
               >
@@ -288,6 +314,12 @@ export function SearchPerformancePage({
                 </TabsTrigger>
                 <TabsTrigger value="pages">
                   {t("gscInsights.pages")}
+                </TabsTrigger>
+                <TabsTrigger value="cannibalization">
+                  {t("gscInsights.cannibalization")}
+                </TabsTrigger>
+                <TabsTrigger value="declining">
+                  {t("gscInsights.declining")}
                 </TabsTrigger>
               </DataTableTabs>
               <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
@@ -336,6 +368,25 @@ export function SearchPerformancePage({
                   isFiltered={activeFilterCount > 0}
                   onClearFilters={resetFilters}
                 />
+              ) : isInsightsTab(tab) ? (
+                insightsQuery.isPending ? (
+                  <div className="p-8 text-sm" role="status">
+                    {t("ui.loadingMatchingResults")}
+                  </div>
+                ) : insightsQuery.isError || !insightsQuery.data?.connected ? (
+                  <QueryError
+                    error={insightsQuery.error}
+                    fallback={t("gscInsights.insightsFailed")}
+                    onRetry={() => void insightsQuery.refetch()}
+                    isRetrying={insightsQuery.isFetching}
+                  />
+                ) : tab === "cannibalization" ? (
+                  <CannibalizationTable
+                    rows={insightsQuery.data.cannibalization}
+                  />
+                ) : (
+                  <DecliningPagesTable rows={insightsQuery.data.declining} />
+                )
               ) : (
                 <DimensionSection
                   projectId={projectId}

@@ -401,7 +401,7 @@ export const messages = {
   "dashboard.couldNotLoadNewKeywords": "Không tải được từ khóa mới",
   "dashboard.noKeywordsYet": "Chưa có từ khóa",
   "dashboard.noKeywordsInRange":
-    "Không có từ khóa ở vị trí 5–20 trong khoảng thời gian này",
+    "Không có từ khóa ở vị trí 4–20 trong khoảng thời gian này",
   "dashboard.newBacklinks": "Backlink mới",
   "dashboard.aboutNewLinks": "Về liên kết mới",
   "dashboard.newLinksHelp1":
@@ -2687,7 +2687,7 @@ export const messages = {
   "ui.noSearchDataYet": "Chưa có dữ liệu tìm kiếm",
   "ui.noNewKeywordsThisWeek": "Không có từ khóa mới trong tuần này",
   "ui.noKeywordsAtPositions520":
-    "Không có từ khóa ở vị trí 5–20 trong giai đoạn này",
+    "Không có từ khóa ở vị trí 4–20 trong giai đoạn này",
   "ui.noKeywordsYet": "Chưa có từ khóa",
   "ui.viewFullGscInsights": "Xem đầy đủ thông tin GSC →",
   "ui.newKeywords": "Từ khóa mới",
@@ -3009,10 +3009,10 @@ export const messages = {
   "ui.copied": "Đã sao chép {v0} từ khóa",
   "ui.saved": "Đã lưu {v0} từ khóa",
   "ui.queriesRankingAtPositions5To":
-    "Các truy vấn đang ở vị trí 5 đến 20, sắp xếp theo lượt hiển thị. Hãy cải thiện trang tương ứng để đưa chúng lên nhóm kết quả đầu.",
+    "Các truy vấn đang ở vị trí 4 đến 20, sắp xếp theo lượt hiển thị. Hãy cải thiện trang tương ứng để đưa chúng lên nhóm kết quả đầu.",
   "ui.noStrikingDistanceQueries": "Không có truy vấn sắp lên top",
   "ui.queriesRankingAtPositions5To_8962":
-    "Các truy vấn ở vị trí 5 đến 20 sẽ hiển thị ở đây.",
+    "Các truy vấn ở vị trí 4 đến 20 sẽ hiển thị ở đây.",
   "ui.copyKeywords": "Sao chép từ khóa",
   "ui.saveAsKeywords": "Lưu thành từ khóa",
   "ui.allDevices": "Tất cả thiết bị",
@@ -3247,7 +3247,7 @@ export const messages = {
   "ui.searchesBringingTheMostClicksTo":
     "Các lượt tìm kiếm mang lại nhiều lượt nhấp nhất cho website của bạn trong 28 ngày qua.",
   "ui.keywordsAtPositions520Over":
-    "Các từ khóa ở vị trí 5–20 trong 28 ngày qua. Cải thiện trang tương ứng có thể giúp chúng lên cao hơn.",
+    "Các từ khóa ở vị trí 4–20 trong 28 ngày qua. Cải thiện trang tương ứng có thể giúp chúng lên cao hơn.",
   "ui.info_313d": "Thông tin",
   "ui.comm": "Thương mại",
   "ui.trans": "Giao dịch",
@@ -3415,6 +3415,30 @@ export const messages = {
   "title.organization": "Tổ chức",
   "title.reportTemplates": "Mẫu báo cáo",
   "title.integrations": "Tích hợp",
+  "gscInsights.cannibalization": "Trùng từ khóa",
+  "gscInsights.declining": "Trang giảm lưu lượng",
+  "gscInsights.cannibalizationDesc":
+    "Truy vấn mà từ 2 trang trở lên của bạn cùng xuất hiện trên Google. Các trang này cạnh tranh nhau; hãy gộp nội dung, đặt canonical hoặc phân biệt rõ ý định tìm kiếm.",
+  "gscInsights.decliningDesc":
+    "Các trang mất ít nhất 20% và 5 lượt nhấp so với giai đoạn liền trước cùng độ dài. Kiểm tra nội dung đã cũ, thứ hạng tụt, hoặc lỗi kỹ thuật.",
+  "gscInsights.noCannibalization": "Chưa phát hiện truy vấn trùng nhau",
+  "gscInsights.noCannibalizationHint":
+    "Mỗi truy vấn có đủ lượt hiển thị đều chỉ do một trang chính phụ trách.",
+  "gscInsights.noDeclining": "Không có trang nào giảm đáng kể",
+  "gscInsights.noDecliningHint":
+    "Chưa trang nào mất đủ lượt nhấp so với giai đoạn trước.",
+  "gscInsights.colPages": "Các trang cạnh tranh",
+  "gscInsights.colTotalImpressions": "Tổng hiển thị",
+  "gscInsights.colClicks": "Lượt nhấp",
+  "gscInsights.colPrevClicks": "Kỳ trước",
+  "gscInsights.colChange": "Thay đổi",
+  "gscInsights.colPosition": "Vị trí",
+  "gscInsights.colPrevPosition": "Vị trí kỳ trước",
+  "gscInsights.colQuery": "Truy vấn",
+  "gscInsights.colPage": "Trang",
+  "gscInsights.colImpressions": "Hiển thị",
+  "gscInsights.insightsFailed": "Không tải được phân tích. Hãy thử lại.",
+  "gscInsights.noPosition": "—",
 } as const;
 
 export type MessageKey = keyof typeof messages;

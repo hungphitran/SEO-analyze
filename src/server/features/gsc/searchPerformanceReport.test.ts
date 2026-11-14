@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildCannibalizationRows,
+  buildDecliningPages,
   buildStrikingDistanceRows,
   previousPeriod,
   sumSearchTotals,
@@ -45,10 +47,11 @@ const pageRow = (
 ) => ({ keys: [query, page], clicks: 1, impressions, ctr: 0.01, position });
 
 describe("buildStrikingDistanceRows", () => {
-  it("keeps positions 5..20 inclusive and sorts by impressions desc", () => {
+  it("keeps positions 4..20 inclusive and sorts by impressions desc", () => {
     const rows = buildStrikingDistanceRows([
       row("top-spot", 2, 900),
-      row("low-edge", 5, 10),
+      row("just-above", 3.9, 700),
+      row("low-edge", 4, 10),
       row("close", 6.4, 100),
       row("closer", 11, 400),
       row("high-edge", 20, 20),
@@ -96,4 +99,101 @@ describe("previousPeriod", () => {
       });
     },
   );
+});
+
+const qp = (
+  query: string,
+  page: string,
+  impressions: number,
+  position = 8,
+  clicks = 1,
+) => ({ keys: [query, page], clicks, impressions, ctr: 0.01, position });
+
+describe("buildCannibalizationRows", () => {
+  it("flags a query served by two pages that each hold a real share", () => {
+    const rows = buildCannibalizationRows([
+      qp("seo tools", "https://x.com/a", 300),
+      qp("seo tools", "https://x.com/b", 200),
+      qp("seo tools", "https://x.com/c", 2),
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].query).toBe("seo tools");
+    expect(rows[0].totalImpressions).toBe(502);
+    expect(rows[0].pages.map((p) => p.page)).toEqual([
+      "https://x.com/a",
+      "https://x.com/b",
+    ]);
+  });
+
+  it("ignores single-page queries, tiny shares and low-volume queries", () => {
+    const rows = buildCannibalizationRows([
+      qp("solo", "https://x.com/a", 500),
+      qp("dominant", "https://x.com/a", 990),
+      qp("dominant", "https://x.com/b", 10),
+      qp("tiny", "https://x.com/a", 20),
+      qp("tiny", "https://x.com/b", 8),
+    ]);
+    expect(rows).toEqual([]);
+  });
+
+  it("sorts by total impressions and honours the limit", () => {
+    const rows = buildCannibalizationRows(
+      [
+        qp("small", "https://x.com/a", 40),
+        qp("small", "https://x.com/b", 40),
+        qp("big", "https://x.com/a", 400),
+        qp("big", "https://x.com/b", 400),
+      ],
+      1,
+    );
+    expect(rows.map((r) => r.query)).toEqual(["big"]);
+  });
+});
+
+const pg = (page: string, clicks: number, impressions = 100, position = 7) => ({
+  keys: [page],
+  clicks,
+  impressions,
+  ctr: clicks / impressions,
+  position,
+});
+
+describe("buildDecliningPages", () => {
+  it("lists pages that lost enough clicks, biggest loss first", () => {
+    const rows = buildDecliningPages(
+      [pg("/a", 60), pg("/b", 90), pg("/c", 50)],
+      [pg("/a", 100), pg("/b", 100), pg("/c", 52)],
+    );
+    expect(rows.map((r) => r.page)).toEqual(["/a"]);
+    expect(rows[0].clicksDelta).toBe(-40);
+    expect(rows[0].clicksChange).toBeCloseTo(-0.4);
+  });
+
+  it("treats a page missing from the current period as dropped to zero", () => {
+    const rows = buildDecliningPages([], [pg("/gone", 30, 400, 4.2)]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      page: "/gone",
+      clicks: 0,
+      position: 0,
+      prevPosition: 4.2,
+      clicksChange: -1,
+    });
+  });
+
+  it("ignores small losses and pages with no previous clicks", () => {
+    const rows = buildDecliningPages(
+      [pg("/a", 4), pg("/new", 0)],
+      [pg("/a", 8), pg("/new", 0)],
+    );
+    expect(rows).toEqual([]);
+  });
+
+  it("orders by absolute click loss", () => {
+    const rows = buildDecliningPages(
+      [pg("/a", 10), pg("/b", 0)],
+      [pg("/a", 30), pg("/b", 100)],
+    );
+    expect(rows.map((r) => r.page)).toEqual(["/b", "/a"]);
+  });
 });

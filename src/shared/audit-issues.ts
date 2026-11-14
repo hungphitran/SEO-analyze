@@ -274,6 +274,30 @@ export const AUDIT_ISSUE_TYPES = {
     howToFix:
       "Add links from higher-level pages (hubs, category pages, navigation) to flatten the path to this page.",
   },
+  "missing-open-graph": {
+    severity: "info",
+    title: "Open Graph tags are incomplete",
+    explanation:
+      "The page lacks one or more of og:title, og:description or og:image. Social networks and chat apps use these tags to build the link preview, so a shared link can look bare or pick a random image.",
+    howToFix:
+      "Add og:title, og:description and og:image (at least 1200x630 px) to the page head, usually from the same fields as the title and meta description. Check the result with a link-preview tool before sharing.",
+  },
+  "hreflang-invalid": {
+    severity: "warning",
+    title: "Hreflang values are invalid or repeated",
+    explanation:
+      "The page declares hreflang alternates, but at least one value is not a valid language or language-region code (for example 'en-uk' instead of 'en-gb'), or the same value is declared twice. Search engines ignore invalid hreflang annotations.",
+    howToFix:
+      "Use ISO 639-1 language codes with an optional ISO 3166-1 region (en, en-gb, vi-vn) or x-default, and declare each value once per page.",
+  },
+  "hreflang-missing-x-default": {
+    severity: "info",
+    title: "Hreflang has no x-default",
+    explanation:
+      "The page lists hreflang alternates but no x-default entry, so searchers whose language is not listed get no declared fallback version.",
+    howToFix:
+      'Add <link rel="alternate" hreflang="x-default" href="..."> pointing to the version that should serve everyone else (often the language selector or the main language).',
+  },
 } as const satisfies Record<string, AuditIssueDescriptor>;
 
 export type AuditIssueType = keyof typeof AUDIT_ISSUE_TYPES;

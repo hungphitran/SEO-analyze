@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { runPageReporters } from "@/server/lib/audit/issues/page-reporters";
+import {
+  findHreflangProblems,
+  runPageReporters,
+} from "@/server/lib/audit/issues/page-reporters";
 import {
   findDuplicates,
   findRedirectChainsAndLoops,
@@ -28,9 +31,9 @@ function makePage(overrides: Partial<CrawledPageResult>): CrawledPageResult {
     robotsMeta: null,
     xRobotsTag: null,
     headerCanonicalUrl: null,
-    ogTitle: null,
-    ogDescription: null,
-    ogImage: null,
+    ogTitle: "A perfectly reasonable page title",
+    ogDescription: "A reasonable share description.",
+    ogImage: "https://example.com/share.png",
     h1Count: 1,
     h2Count: 0,
     h3Count: 0,
@@ -325,5 +328,68 @@ describe("findRedirectChainsAndLoops", () => {
     const issues = findRedirectChainsAndLoops(pages);
     expect(issues).toHaveLength(1);
     expect(issues[0].issueType).toBe("redirect-loop");
+  });
+});
+
+describe("Open Graph check", () => {
+  it("is quiet when title, description and image are all present", () => {
+    expect(issueTypes(makePage({}))).not.toContain("missing-open-graph");
+  });
+
+  it("names exactly which og tags are missing", () => {
+    const issues = runPageReporters(
+      makePage({ ogTitle: null, ogImage: null }),
+    ).filter((issue) => issue.issueType === "missing-open-graph");
+    expect(issues).toHaveLength(1);
+    expect(issues[0].details).toEqual({ missing: ["og:title", "og:image"] });
+  });
+
+  it("skips non-indexable pages", () => {
+    expect(
+      issueTypes(
+        makePage({
+          ogTitle: null,
+          ogDescription: null,
+          ogImage: null,
+          isIndexable: false,
+        }),
+      ),
+    ).not.toContain("missing-open-graph");
+  });
+});
+
+describe("findHreflangProblems", () => {
+  it("accepts language, region, script and x-default values", () => {
+    expect(
+      findHreflangProblems(["en", "en-GB", "vi-vn", "zh-Hans", "x-default"]),
+    ).toEqual({ invalid: [], duplicated: [] });
+  });
+
+  it("reports invalid codes once and repeated values case-insensitively", () => {
+    expect(
+      findHreflangProblems(["en-uk-x", "english", "en-GB", "en-gb", "en-GB"]),
+    ).toEqual({ invalid: ["en-uk-x", "english"], duplicated: ["en-gb"] });
+  });
+});
+
+describe("hreflang checks", () => {
+  it("does nothing when the page declares no hreflang", () => {
+    const types = issueTypes(makePage({}));
+    expect(types).not.toContain("hreflang-invalid");
+    expect(types).not.toContain("hreflang-missing-x-default");
+  });
+
+  it("flags invalid values and a missing x-default separately", () => {
+    const types = issueTypes(makePage({ hreflangTags: ["en", "viet"] }));
+    expect(types).toContain("hreflang-invalid");
+    expect(types).toContain("hreflang-missing-x-default");
+  });
+
+  it("is clean for a valid set with x-default", () => {
+    const types = issueTypes(
+      makePage({ hreflangTags: ["en", "vi", "x-default"] }),
+    );
+    expect(types).not.toContain("hreflang-invalid");
+    expect(types).not.toContain("hreflang-missing-x-default");
   });
 });

@@ -82,6 +82,8 @@ export const SEARCH_PERFORMANCE_TABS = [
   "striking",
   "queries",
   "pages",
+  "cannibalization",
+  "declining",
 ] as const;
 export type SearchPerformanceTab = (typeof SEARCH_PERFORMANCE_TABS)[number];
 
