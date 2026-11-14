@@ -93,6 +93,16 @@ describe("runPageReporters", () => {
     ]);
   });
 
+  it("notes that rendering failed without hiding the content checks", () => {
+    expect(issueTypes(makePage({ renderFailed: true }))).toEqual([
+      "render-failed",
+    ]);
+    expect(issueTypes(makePage({ renderFailed: true, title: "" }))).toEqual([
+      "render-failed",
+      "missing-title",
+    ]);
+  });
+
   it("reports nothing for a healthy page", () => {
     expect(issueTypes(makePage({}))).toEqual([]);
   });

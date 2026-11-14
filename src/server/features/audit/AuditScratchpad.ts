@@ -18,6 +18,7 @@
  * Writes are idempotent: the workflow retries steps, so
  * every insert is OR IGNORE / OR REPLACE on a stable key.
  */
+import { nextRenderSlot } from "@/server/lib/audit/render-pacing";
 import { DurableObject, env } from "cloudflare:workers";
 import type { CrawlThrottleState } from "@/server/lib/audit/crawl-throttle";
 import {
@@ -142,6 +143,28 @@ export class AuditScratchpad extends DurableObject {
 
   async saveCrawlThrottle(state: CrawlThrottleState): Promise<void> {
     await this.ctx.storage.put("crawl-throttle", state);
+  }
+
+  /**
+   * Next turn for a Browser Run render. Called on a shared instance (see
+   * RENDER_PACER_NAME) so every crawl worker and audit on the account queues
+   * behind the same clock. The DO runs one call at a time, so read-then-write
+   * cannot interleave. Returns how long the caller must wait.
+   */
+  async reserveRenderSlot(intervalMs: number): Promise<number> {
+    const nextAt = (await this.ctx.storage.get<number>("render-next-at")) ?? 0;
+    const slot = nextRenderSlot(nextAt, Date.now(), intervalMs);
+    await this.ctx.storage.put("render-next-at", slot.nextAt);
+    return slot.waitMs;
+  }
+
+  /** After a 429: no render may start before `delayMs` from now. */
+  async deferRenderSlots(delayMs: number): Promise<void> {
+    const nextAt = (await this.ctx.storage.get<number>("render-next-at")) ?? 0;
+    await this.ctx.storage.put(
+      "render-next-at",
+      Math.max(nextAt, Date.now() + delayMs),
+    );
   }
 
   async seedSitemapUrls(urls: string[]): Promise<void> {
@@ -394,6 +417,9 @@ export class AuditScratchpad extends DurableObject {
 }
 
 /** Stub for the audit's scratchpad DO (one instance per audit id). */
+/** The scratchpad instance that keeps the account-wide render clock. */
+export const RENDER_PACER_NAME = "browser-render-pacer";
+
 export function getAuditScratchpad(auditId: string) {
   // env.d.ts declares the binding untyped (ambient contexts can't import the
   // class); narrow here so callers get typed RPC methods.

@@ -9,6 +9,7 @@ import {
 } from "@/shared/audit-rendering";
 import { classifyFetch } from "./classify-fetch";
 import { MAX_HTML_BYTES, readTextUpTo, truncateToBytes } from "./html-response";
+import { renderRetryDelayMs, type RenderPacer } from "./render-pacing";
 import { isCrawlableUrl } from "./url-policy";
 import { normalizeUrl } from "./url-utils";
 
@@ -23,6 +24,8 @@ type RenderOptions = {
   // Counts every provider attempt, including rejected ones: both providers
   // bill a request whether or not the HTML turned out to be usable.
   usage: RenderUsage;
+  /** Spaces out Browser Run calls on plans that rate limit them. */
+  pacer?: RenderPacer;
 };
 
 const cloudflareSchema = z.object({
@@ -75,13 +78,19 @@ function usableHtml(url: string, finalUrl: string, html: string) {
 /** The rendered HTML, with the origin's status when the renderer reports it. */
 export type RenderedPage = { html: string; status: number | null };
 
-/** Null when Cloudflare failed, was blocked, or saw an origin error. */
-async function renderWithCloudflare(
+/**
+ * One Browser Run call, waiting for its turn when the plan is paced. A 429 is
+ * retried once after Retry-After (at least one interval), and the same delay
+ * is pushed onto the shared pacer so concurrent callers hold back too.
+ */
+async function quickActionPaced(
   url: string,
   browser: Pick<BrowserRun, "quickAction">,
-): Promise<RenderedPage | null> {
-  try {
-    const response = await browser.quickAction("content", {
+  pacer: RenderPacer | undefined,
+): Promise<BrowserResponse> {
+  const call = async () => {
+    if (pacer) await pacer.sleep(await pacer.reserve());
+    return browser.quickAction("content", {
       url,
       cacheTTL: 0,
       gotoOptions: {
@@ -89,6 +98,26 @@ async function renderWithCloudflare(
         timeout: CLOUDFLARE_RENDER_TIMEOUT_MS,
       },
     });
+  };
+  const response = await call();
+  if (response.status !== 429 || !pacer) return response;
+  await response.body?.cancel();
+  const delayMs = renderRetryDelayMs(
+    response.headers.get("retry-after"),
+    pacer.intervalMs,
+  );
+  await pacer.defer(delayMs);
+  return call();
+}
+
+/** Null when Cloudflare failed, was blocked, or saw an origin error. */
+async function renderWithCloudflare(
+  url: string,
+  browser: Pick<BrowserRun, "quickAction">,
+  pacer?: RenderPacer,
+): Promise<RenderedPage | null> {
+  try {
+    const response = await quickActionPaced(url, browser, pacer);
     if (!response.ok) {
       await response.body?.cancel();
       return null;
@@ -172,7 +201,11 @@ async function renderPage(
   }
 
   if (options.browser) {
-    const page = await renderWithCloudflare(url, options.browser);
+    const page = await renderWithCloudflare(
+      url,
+      options.browser,
+      options.pacer,
+    );
     options.usage.cloudflareAttempts += 1;
     console.info("site_audit:render", {
       auditId: options.auditId,

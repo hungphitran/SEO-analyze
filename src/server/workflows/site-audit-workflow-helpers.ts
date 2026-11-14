@@ -189,6 +189,7 @@ export async function crawlPage(
     // authoritative.
     const challenged = fetchClass === "blocked" && statusCode !== 401;
     const throttled = renderThrottled && statusCode === 429;
+    let renderFailed = false;
     if (
       render &&
       (throttled ||
@@ -204,8 +205,15 @@ export async function crawlPage(
         // The renderer can be challenged where the direct fetch was not.
         fetchClass = classifyFetch(statusCode, false, body.slice(0, 4_000));
       } catch (error) {
-        // A challenge that neither renderer passed stays blocked.
-        if (!challenged && !throttled) throw error;
+        if (throttle.checkpointFailed) throw error;
+        // A readable page whose render failed (a Browser Run rate limit, a
+        // timeout) is analyzed from the HTML already fetched; `body` still
+        // holds it. The page is flagged so the report says it was not
+        // rendered. A challenge that neither renderer passed stays blocked.
+        if (!challenged && !throttled) {
+          renderFailed = true;
+          console.warn(`Render failed for ${url}, analyzing fetched HTML`);
+        }
         // A throttled page neither renderer read is given up on as rate
         // limited, which pauses or stops the crawl like any other refusal.
         if (throttled) {
@@ -283,6 +291,7 @@ export async function crawlPage(
           : null,
       isHtml: true,
       javascriptShell,
+      renderFailed,
       htmlBytes: body.length,
       rateLimited,
       imagesTotal: analysis.images.length,

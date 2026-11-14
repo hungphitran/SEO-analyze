@@ -13,6 +13,9 @@ export function RenderingWarnings({ data }: { data: AuditResultsData }) {
   const hasShells = data.issues.some(
     (issue) => issue.issueType === "javascript-rendering-suspected",
   );
+  const fellBackCount = data.issues.filter(
+    (issue) => issue.issueType === "render-failed",
+  ).length;
   const unreadCount = data.pages.filter(
     (page) => page.fetchClass === "error",
   ).length;
@@ -26,6 +29,16 @@ export function RenderingWarnings({ data }: { data: AuditResultsData }) {
           <AlertDescription>
             {rendered ? t("audit.stillLoading") : t("audit.turnOnRender")}
           </AlertDescription>
+        </Alert>
+      )}
+
+      {rendered && fellBackCount > 0 && (
+        <Alert variant="warning">
+          <ShieldAlert />
+          <AlertTitle>
+            {t("audit.renderFellBack", { count: fellBackCount })}
+          </AlertTitle>
+          <AlertDescription>{t("audit.renderFellBackHint")}</AlertDescription>
         </Alert>
       )}
 

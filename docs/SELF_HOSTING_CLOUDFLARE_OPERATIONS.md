@@ -69,6 +69,8 @@ Site Audit can load pages in a browser before analyzing them. Turn on **Render J
 
 Rendering uses [Cloudflare Browser Run](https://developers.cloudflare.com/browser-run/) on your own Cloudflare account. The deploy binds a browser to the audit Worker, so the toggle works with no extra setup. **Rendering needs a paid Workers plan.** The free plan allows one browser action every ten seconds, which is too slow for a crawl. The paid plan includes 10 browser hours a month, then bills $0.09 per browser hour.
 
+On the Workers Free plan, Browser Run allows one render every 10 seconds. Self-host deploys pace renders to that limit by default (`BROWSER_RENDER_MIN_INTERVAL_MS=10000`), render one page at a time, honour `Retry-After` and retry a 429 once, so a rendered audit is slow but complete. On a paid plan set `BROWSER_RENDER_MIN_INTERVAL_MS=0` in `.env.selfhost` to render without pacing. If a page still cannot be rendered, it is audited from its fetched HTML and flagged with a "JavaScript rendering failed" notice instead of failing.
+
 Some sites block Cloudflare's browser. To render those pages through [Context.dev](https://www.context.dev) instead, create a Context account, set `CONTEXT_API_KEY` in `.env.selfhost`, and redeploy. OpenSEO calls Context only for pages that Browser Run could not render, and for Shopify store pages that Shopify rate limits while project setup or AI Visibility setup reads your site. Each of those pages uses one Context credit on your Context account.
 
 Docker deployments have no browser. On Docker, set `CONTEXT_API_KEY` in `.env.local` to render every page through Context. Until the key is set, the **Render JavaScript** toggle stays disabled with a setup note.

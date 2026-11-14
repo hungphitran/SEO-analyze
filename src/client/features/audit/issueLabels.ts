@@ -21,6 +21,13 @@ const ISSUE_COPY = {
     howToFix:
       'Nếu bản kiểm tra này chưa kết xuất JavaScript, hãy chạy bản mới với tùy chọn "Kết xuất JavaScript" để kiểm tra nội dung đã tải. Để thu thập đáng tin cậy, hãy đưa nội dung và điều hướng quan trọng vào HTML ban đầu bằng kết xuất phía máy chủ hoặc prerender. Cảnh báo này không chứng minh công cụ tìm kiếm không thể lập chỉ mục trang.',
   },
+  "render-failed": {
+    title: "Kết xuất JavaScript thất bại",
+    explanation:
+      "Tùy chọn Kết xuất JavaScript đang bật nhưng trình kết xuất không tải được trang này (ví dụ do Browser Run giới hạn tần suất trên gói Workers Free). Trang được kiểm tra từ HTML đã tải về, nên nội dung do JavaScript thêm vào không có trong kết quả này.",
+    howToFix:
+      "Hãy chạy lại bản kiểm tra hoặc kiểm tra ít trang hơn. Trên gói Workers Free, Browser Run chỉ cho phép một lần kết xuất mỗi 10 giây; đặt BROWSER_RENDER_MIN_INTERVAL_MS (mặc định 10000 khi tự host, 0 với gói trả phí) cho khớp gói của bạn. Nếu trang đã có nội dung trong HTML ban đầu thì kết quả này vẫn chính xác.",
+  },
   "rate-limited-page": {
     title: "Bị giới hạn tần suất (429)",
     explanation:

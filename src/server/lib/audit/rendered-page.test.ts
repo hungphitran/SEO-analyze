@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RenderedPageService } from "./rendered-page";
+import type { RenderPacer } from "./render-pacing";
 import { MAX_HTML_BYTES } from "./html-response";
 import { isAuditRenderingAllowed } from "./rendering-policy";
 
@@ -36,7 +37,11 @@ function context(overrides: Record<string, unknown> = {}, status = 200) {
 // Stands in for provider-access.ts, which puts the key (or the gateway) on.
 const contextFetch: typeof fetch = (input, init) => fetch(input, init);
 function render(
-  options: { browser?: typeof browser; contextFetch?: typeof fetch } = {
+  options: {
+    browser?: typeof browser;
+    contextFetch?: typeof fetch;
+    pacer?: RenderPacer;
+  } = {
     browser,
     contextFetch,
   },
@@ -239,5 +244,86 @@ describe("rendering availability", () => {
     vi.stubEnv("AUTH_MODE", "local_noauth");
     vi.stubEnv("AUDIT_BROWSER_RENDERING", "true");
     expect(await isAuditRenderingAllowed()).toBe(true);
+  });
+});
+
+describe("paced Browser Run renders", () => {
+  function pacer(): RenderPacer & {
+    events: string[];
+    reserve: ReturnType<typeof vi.fn>;
+    defer: ReturnType<typeof vi.fn>;
+    sleep: ReturnType<typeof vi.fn>;
+  } {
+    const events: string[] = [];
+    return {
+      intervalMs: 10_000,
+      events,
+      reserve: vi.fn(async () => {
+        events.push("reserve");
+        return 7_000;
+      }),
+      defer: vi.fn(async (ms: number) => {
+        events.push(`defer:${ms}`);
+      }),
+      sleep: vi.fn(async (ms: number) => {
+        events.push(`sleep:${ms}`);
+      }),
+    };
+  }
+
+  beforeEach(() => browser.quickAction.mockReset());
+
+  it("waits for its turn before every call", async () => {
+    browser.quickAction.mockResolvedValue(cloudflare());
+    const p = pacer();
+    expect((await render({ browser, pacer: p }).page).html).toBe(html);
+    expect(p.events).toEqual(["reserve", "sleep:7000"]);
+    expect(browser.quickAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries a 429 once after Retry-After, deferring the shared clock", async () => {
+    browser.quickAction
+      .mockResolvedValueOnce(
+        new Response(null, { status: 429, headers: { "retry-after": "12" } }),
+      )
+      .mockResolvedValueOnce(cloudflare());
+    const p = pacer();
+    const { page, usage } = render({ browser, pacer: p });
+    expect((await page).html).toBe(html);
+    expect(browser.quickAction).toHaveBeenCalledTimes(2);
+    expect(p.defer).toHaveBeenCalledWith(12_000);
+    expect(p.events).toEqual([
+      "reserve",
+      "sleep:7000",
+      "defer:12000",
+      "reserve",
+      "sleep:7000",
+    ]);
+    expect(usage.cloudflareAttempts).toBe(1);
+  });
+
+  it("uses one interval when a 429 has no Retry-After", async () => {
+    browser.quickAction
+      .mockResolvedValueOnce(new Response(null, { status: 429 }))
+      .mockResolvedValueOnce(cloudflare());
+    const p = pacer();
+    await render({ browser, pacer: p }).page;
+    expect(p.defer).toHaveBeenCalledWith(10_000);
+  });
+
+  it("gives up after one retry and reports the render as failed", async () => {
+    browser.quickAction.mockResolvedValue(new Response(null, { status: 429 }));
+    await expect(render({ browser, pacer: pacer() }).page).rejects.toThrow(
+      "Unable to render this page",
+    );
+    expect(browser.quickAction).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry a 429 when the plan is not paced", async () => {
+    browser.quickAction.mockResolvedValue(new Response(null, { status: 429 }));
+    await expect(render({ browser }).page).rejects.toThrow(
+      "Unable to render this page",
+    );
+    expect(browser.quickAction).toHaveBeenCalledTimes(1);
   });
 });
