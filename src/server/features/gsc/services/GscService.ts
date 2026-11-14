@@ -313,7 +313,26 @@ async function inspectUrls(input: {
   };
 }
 
+/** Sitemaps submitted for a project's connected property. */
+async function listSitemaps(input: { projectId: string }) {
+  const connection = await GscConnectionRepository.getByProjectId(
+    input.projectId,
+  );
+  if (!connection) {
+    throw new GscNotConnectedError(input.projectId);
+  }
+  const client = createGscClient({
+    userId: connection.connectedByUserId,
+    gscAccountId: connection.gscAccountId ?? undefined,
+  });
+  return {
+    siteUrl: connection.siteUrl,
+    sitemaps: await client.listSitemaps(connection.siteUrl),
+  };
+}
+
 export const GscService = {
+  listSitemaps,
   getConnection,
   userHasGrant,
   listSitesForUserWithGrantStatus,

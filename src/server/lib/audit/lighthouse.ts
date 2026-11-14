@@ -4,7 +4,7 @@ import { createDataforseoClient } from "@/server/lib/dataforseo";
 import { resolveLighthouseProvider } from "@/server/lib/free-sources/mode";
 import {
   pagespeedToLighthouseResult,
-  runPagespeedAudit,
+  runPagespeedReport,
 } from "@/server/lib/free-sources/pagespeed";
 import { getOptionalEnvValue } from "@/server/lib/runtime-env";
 import type { LighthouseResult, LighthouseStrategy } from "./types";
@@ -71,10 +71,16 @@ async function fetchPagespeedLighthouseResult(
     );
   }
   try {
-    const scores = await runPagespeedAudit({ url, strategy, apiKey });
+    const { scores, report } = await runPagespeedReport({
+      url,
+      strategy,
+      apiKey,
+    });
     return {
       result: pagespeedToLighthouseResult({ url, pageId, strategy, scores }),
-      payloadJson: JSON.stringify({ provider: "pagespeed", scores }),
+      // Same schema the details screen reads, so PSI audits get their issues,
+      // metrics and field data there too.
+      payloadJson: JSON.stringify(report),
     };
   } catch (error) {
     const failed = error instanceof Error ? error : new Error(String(error));

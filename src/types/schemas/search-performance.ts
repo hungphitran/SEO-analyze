@@ -50,9 +50,17 @@ export const searchPerformanceInputSchema = z.object(
   searchPerformanceFilterShape,
 );
 
-/** The dimensions that get their own paginated table (query + page). Striking
- *  distance is computed from the overview call and never paginates. */
-export const SEARCH_PERFORMANCE_TABLE_DIMENSIONS = ["query", "page"] as const;
+/** The dimensions that get their own paginated table. Striking distance is
+ *  computed from the overview call and never paginates. `searchAppearance` is
+ *  always queried alone: Google rejects it grouped with another dimension. */
+export const SEARCH_PERFORMANCE_TABLE_DIMENSIONS = [
+  "query",
+  "page",
+  "country",
+  "device",
+  "date",
+  "searchAppearance",
+] as const;
 export type SearchPerformanceTableDimension =
   (typeof SEARCH_PERFORMANCE_TABLE_DIMENSIONS)[number];
 
@@ -82,8 +90,14 @@ export const SEARCH_PERFORMANCE_TABS = [
   "striking",
   "queries",
   "pages",
+  "countries",
+  "devices",
+  "dates",
+  "appearance",
   "cannibalization",
   "declining",
+  "sitemaps",
+  "inspection",
 ] as const;
 export type SearchPerformanceTab = (typeof SEARCH_PERFORMANCE_TABS)[number];
 

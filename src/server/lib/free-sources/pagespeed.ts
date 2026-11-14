@@ -10,6 +10,8 @@
  */
 import { safeErrorMessage } from "@/server/lib/free-sources/redact";
 import type { LighthouseResult } from "@/server/lib/audit/types";
+import { buildPagespeedReport } from "@/server/lib/free-sources/pagespeedReport";
+import type { StoredLighthousePayload } from "@/server/lib/lighthouseStoredPayload";
 
 export const PAGESPEED_ENDPOINT =
   "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
@@ -58,7 +60,7 @@ function auditNumeric(
   return numeric(asRecord(audits[id])?.numericValue);
 }
 
-export type ParsedPagespeedScores = {
+type ParsedPagespeedScores = {
   performanceScore: number | null;
   accessibilityScore: number | null;
   bestPracticesScore: number | null;
@@ -99,12 +101,27 @@ export function parsePagespeedPayload(payload: unknown): ParsedPagespeedScores {
   };
 }
 
+/** The reduced scores plus the full stored payload (metrics, field data, audits). */
+type PagespeedRun = {
+  scores: ParsedPagespeedScores;
+  report: StoredLighthousePayload;
+};
+
 export async function runPagespeedAudit(input: {
   url: string;
   strategy: PagespeedStrategy;
   apiKey: string;
   fetchImpl?: typeof fetch;
 }): Promise<ParsedPagespeedScores> {
+  return (await runPagespeedReport(input)).scores;
+}
+
+export async function runPagespeedReport(input: {
+  url: string;
+  strategy: PagespeedStrategy;
+  apiKey: string;
+  fetchImpl?: typeof fetch;
+}): Promise<PagespeedRun> {
   const apiKey = input.apiKey.trim();
   if (!apiKey) {
     throw new PagespeedError(
@@ -157,7 +174,17 @@ export async function runPagespeedAudit(input: {
     );
   }
 
-  return parsePagespeedPayload(payload);
+  const scores = parsePagespeedPayload(payload);
+  const report = buildPagespeedReport({
+    payload,
+    url: input.url,
+    strategy: input.strategy,
+  });
+  // Lab runs never measure INP; fall back to the real-user p75 when present.
+  if (scores.inpMs == null) {
+    scores.inpMs = report.metrics.interactionToNextPaint.numericValue;
+  }
+  return { scores, report };
 }
 
 export function pagespeedToLighthouseResult(input: {

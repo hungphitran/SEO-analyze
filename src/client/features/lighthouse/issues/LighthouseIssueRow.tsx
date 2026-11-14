@@ -3,6 +3,7 @@ import { ChevronRight, ExternalLink } from "lucide-react";
 import { TableCell, TableRow } from "@/client/components/ui/table";
 import { SeverityBadge } from "@/client/features/audit/shared";
 import type { LighthouseIssue } from "./types";
+import { formatBytes, formatMs } from "./format";
 import { t } from "@/shared/i18n";
 
 export function LighthouseIssueRow({ issue }: { issue: LighthouseIssue }) {
@@ -94,18 +95,6 @@ export function LighthouseIssueRow({ issue }: { issue: LighthouseIssue }) {
       ) : null}
     </>
   );
-}
-
-function formatMs(ms: number) {
-  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${ms}ms`;
-}
-
-function formatBytes(bytes: number) {
-  if (bytes === 0) return "0 B";
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${bytes} B`;
 }
 
 function renderInlineMarkdown(markdown: string): ReactNode {

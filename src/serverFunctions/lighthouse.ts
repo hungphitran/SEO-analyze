@@ -62,6 +62,9 @@ export const getAuditLighthouseIssues = createServerFn({ method: "POST" })
       hasIssueDetails: lighthouse.payload.report.hasIssueDetails,
       scores: lighthouse.payload.storedPayload?.scores ?? null,
       metrics: lighthouse.payload.storedPayload?.metrics ?? null,
+      fieldData: lighthouse.payload.storedPayload?.fieldData ?? null,
+      lighthouseVersion:
+        lighthouse.payload.storedPayload?.metadata.lighthouseVersion ?? null,
       issues: lighthouse.payload.report.issues,
     };
   });

@@ -46,7 +46,7 @@ export function localizeFreeSourceMessage(
   }
 
   const psi = message.match(
-    /^PageSpeed Insights \(mobile\) scored performance (.+) for (.+)\.$/,
+    /^PageSpeed Insights \((?:mobile|desktop)\) scored performance (.+) for (.+)\.$/,
   );
   if (psi) {
     const score = psi[1] === "n/a" ? t("freeSources.scoreNA") : psi[1];

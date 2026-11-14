@@ -22,6 +22,8 @@ import { LighthouseIssueRow } from "./LighthouseIssueRow";
 import { LighthouseIssuesSummary } from "./LighthouseIssuesSummary";
 import { categoryLabel } from "./utils";
 import { categoryTabs } from "./types";
+import { PagespeedFieldDataView } from "@/client/features/pagespeed/PagespeedFieldDataView";
+import type { PagespeedFieldData } from "@/shared/pagespeed-detail";
 import { t } from "@/shared/i18n";
 
 export function LighthouseIssuesHeader({
@@ -31,6 +33,8 @@ export function LighthouseIssuesHeader({
   finalUrl,
   scores,
   metrics,
+  strategy,
+  fieldData,
   severityCounts,
 }: {
   onBack: () => void;
@@ -39,6 +43,8 @@ export function LighthouseIssuesHeader({
   finalUrl?: string;
   scores?: LighthouseScores | null;
   metrics?: LighthouseMetrics | null;
+  strategy?: string;
+  fieldData?: PagespeedFieldData | null;
   severityCounts: { critical: number; warning: number; info: number };
 }) {
   return (
@@ -64,7 +70,18 @@ export function LighthouseIssuesHeader({
               {finalUrl ?? (isLoading ? t("audit.loadingUrl") : null)}
             </p>
           </div>
+          {strategy ? (
+            <p className="text-xs text-muted-foreground">
+              {t("audit.lighthouseStrategy", {
+                strategy:
+                  strategy === "desktop"
+                    ? t("common.desktop")
+                    : t("common.mobile"),
+              })}
+            </p>
+          ) : null}
           <LighthouseIssuesSummary scores={scores} metrics={metrics} />
+          {fieldData ? <PagespeedFieldDataView data={fieldData} /> : null}
           <div className="flex flex-wrap gap-2">
             <SeverityBadge severity="critical">
               {t("ui.critical", { v0: severityCounts.critical })}

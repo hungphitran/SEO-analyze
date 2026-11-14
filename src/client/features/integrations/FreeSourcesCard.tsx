@@ -14,6 +14,7 @@ import type {
   FreeSourcesStatus,
 } from "@/shared/free-sources-mode";
 import { t } from "@/shared/i18n";
+import { PagespeedPanel } from "@/client/features/integrations/PagespeedPanel";
 import { CruxVitalsPanel } from "@/client/features/integrations/CruxVitalsPanel";
 import { localizeFreeSourceMessage } from "@/client/features/integrations/freeSourceMessages";
 
@@ -53,6 +54,9 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
   });
 
   const status = statusQuery.data;
+  const pagespeedSnapshot = status?.snapshots.find(
+    (snapshot) => snapshot.source === "pagespeed",
+  );
 
   return (
     <CardShell title={t("freeSources.cardTitle")}>
@@ -143,6 +147,10 @@ export function FreeSourcesCard({ projectId }: { projectId: string }) {
                 </div>
               ))}
             </div>
+          ) : null}
+
+          {pagespeedSnapshot?.summary ? (
+            <PagespeedPanel summary={pagespeedSnapshot.summary} />
           ) : null}
 
           {status.crux.configured ? (

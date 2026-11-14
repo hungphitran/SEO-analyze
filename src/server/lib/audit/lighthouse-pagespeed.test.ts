@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const runPagespeedAudit = vi.hoisted(() => vi.fn());
+const runPagespeedReport = vi.hoisted(() => vi.fn());
 const resolveLighthouseProvider = vi.hoisted(() => vi.fn());
 const createDataforseoClientMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/server/lib/free-sources/pagespeed", async (importOriginal) => ({
   ...(await importOriginal()),
-  runPagespeedAudit,
+  runPagespeedReport,
 }));
 
 vi.mock("@/server/lib/free-sources/mode", async (importOriginal) => ({
@@ -38,17 +38,20 @@ describe("fetchLighthouseResult pagespeed provider", () => {
   it("uses PageSpeed Insights and never constructs a DataForSEO client", async () => {
     vi.stubEnv("PAGESPEED_API_KEY", "psi-test-key");
     resolveLighthouseProvider.mockResolvedValue("pagespeed");
-    runPagespeedAudit.mockResolvedValue({
-      performanceScore: 80,
-      accessibilityScore: 81,
-      bestPracticesScore: 82,
-      seoScore: 83,
-      lcpMs: 2000,
-      cls: 0.1,
-      inpMs: 150,
-      ttfbMs: 200,
-      requestedUrl: "https://example.com/",
-      fetchTime: "2026-11-11T00:00:00.000Z",
+    runPagespeedReport.mockResolvedValue({
+      scores: {
+        performanceScore: 80,
+        accessibilityScore: 81,
+        bestPracticesScore: 82,
+        seoScore: 83,
+        lcpMs: 2000,
+        cls: 0.1,
+        inpMs: 150,
+        ttfbMs: 200,
+        requestedUrl: "https://example.com/",
+        fetchTime: "2026-11-11T00:00:00.000Z",
+      },
+      report: { version: 2, source: "pagespeed-insights" },
     });
 
     const fetched = await fetchLighthouseResult(
@@ -59,12 +62,17 @@ describe("fetchLighthouseResult pagespeed provider", () => {
     );
 
     expect(createDataforseoClientMock).not.toHaveBeenCalled();
-    expect(runPagespeedAudit).toHaveBeenCalledWith({
+    expect(runPagespeedReport).toHaveBeenCalledWith({
       url: "https://example.com/",
       strategy: "mobile",
       apiKey: "psi-test-key",
     });
     expect(fetched.result.performanceScore).toBe(80);
     expect(fetched.result.errorMessage).toBeUndefined();
+    // The stored payload is the report itself, so the details screen can read it.
+    expect(JSON.parse(fetched.payloadJson ?? "null")).toEqual({
+      version: 2,
+      source: "pagespeed-insights",
+    });
   });
 });

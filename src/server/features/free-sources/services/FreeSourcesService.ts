@@ -9,10 +9,8 @@ import {
   type BingQuerySummary,
 } from "@/server/lib/free-sources/bing";
 import { isFreeSourcesOnly } from "@/server/lib/free-sources/mode";
-import {
-  runPagespeedAudit,
-  type ParsedPagespeedScores,
-} from "@/server/lib/free-sources/pagespeed";
+import { runPagespeedReport } from "@/server/lib/free-sources/pagespeed";
+import { buildPagespeedSnapshotSummary } from "@/server/lib/free-sources/pagespeedReport";
 import { projectWebsiteUrlFromDomain } from "@/server/lib/free-sources/project-url";
 import { safeErrorMessage } from "@/server/lib/free-sources/redact";
 import {
@@ -254,32 +252,40 @@ async function refreshPagespeed(input: {
       summary: null,
     });
   }
-  try {
-    const mobile = await runPagespeedAudit({
-      url,
-      strategy: "mobile",
-      apiKey,
-    });
-    const summary: { url: string; mobile: ParsedPagespeedScores } = {
-      url,
-      mobile,
-    };
-    return recordSnapshot({
-      ...input,
-      source: "pagespeed",
-      status: "ok",
-      message: `PageSpeed Insights (mobile) scored performance ${mobile.performanceScore ?? "n/a"} for ${url}.`,
-      summary,
-    });
-  } catch (error) {
+  // Mobile and desktop are separate Lighthouse runs: two calls per manual
+  // refresh, each settled on its own so one failing does not hide the other.
+  const [mobileRun, desktopRun] = await Promise.allSettled([
+    runPagespeedReport({ url, strategy: "mobile", apiKey }),
+    runPagespeedReport({ url, strategy: "desktop", apiKey }),
+  ]);
+  const summary = buildPagespeedSnapshotSummary({
+    url,
+    mobile: mobileRun,
+    desktop: desktopRun,
+    apiKey,
+  });
+  const done =
+    mobileRun.status === "fulfilled"
+      ? { strategy: "mobile", run: mobileRun.value }
+      : desktopRun.status === "fulfilled"
+        ? { strategy: "desktop", run: desktopRun.value }
+        : null;
+  if (!done) {
     return recordSnapshot({
       ...input,
       source: "pagespeed",
       status: "error",
-      message: safeErrorMessage(error, apiKey),
-      summary: { url },
+      message: summary.mobileError ?? "PageSpeed Insights failed.",
+      summary,
     });
   }
+  return recordSnapshot({
+    ...input,
+    source: "pagespeed",
+    status: "ok",
+    message: `PageSpeed Insights (${done.strategy}) scored performance ${done.run.scores.performanceScore ?? "n/a"} for ${url}.`,
+    summary,
+  });
 }
 
 async function refreshBing(input: {

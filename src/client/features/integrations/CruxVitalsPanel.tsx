@@ -22,7 +22,7 @@ const FORM_FACTOR_LABELS: Record<CruxFormFactor, MessageKey> = {
   DESKTOP: "crux.formDesktop",
 };
 
-const METRIC_LABELS: Record<CruxMetricKey, MessageKey> = {
+export const METRIC_LABELS: Record<CruxMetricKey, MessageKey> = {
   lcp: "crux.metric.lcp",
   inp: "crux.metric.inp",
   cls: "crux.metric.cls",
@@ -30,13 +30,13 @@ const METRIC_LABELS: Record<CruxMetricKey, MessageKey> = {
   ttfb: "crux.metric.ttfb",
 };
 
-const RATING_LABELS: Record<CruxRating, MessageKey> = {
+export const RATING_LABELS: Record<CruxRating, MessageKey> = {
   good: "crux.rating.good",
   "needs-improvement": "crux.rating.needs-improvement",
   poor: "crux.rating.poor",
 };
 
-const RATING_CLASSES: Record<CruxRating, string> = {
+export const RATING_CLASSES: Record<CruxRating, string> = {
   good: "text-success",
   "needs-improvement": "text-warning-foreground dark:text-warning",
   poor: "text-destructive",
@@ -84,7 +84,7 @@ function Sparkline({ values }: { values: (number | null)[] }) {
   );
 }
 
-function DistributionBar({
+export function DistributionBar({
   good,
   needsImprovement,
   poor,
