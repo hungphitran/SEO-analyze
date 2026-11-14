@@ -280,7 +280,7 @@ describe("Bing Webmaster edge cases", () => {
   it.each([
     ["key_rejected", "BING_KEY_REJECTED"],
     ["not_verified", "BING_SITE_NOT_VERIFIED"],
-    ["throttled", "RATE_LIMITED"],
+    ["throttled", "BING_THROTTLED"],
     ["invalid_input", "VALIDATION_ERROR"],
     ["unavailable", "BING_UNAVAILABLE"],
     ["invalid_response", "BING_UNAVAILABLE"],
