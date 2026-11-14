@@ -7,7 +7,8 @@ import { runOpenSerpRankCheck } from "./openSerpRankCheck";
 const mocks = vi.hoisted(() => ({
   reserveOpenSerpRequest: vi.fn(),
   insertOpenSerpSnapshot: vi.fn(),
-  insertSnapshots: vi.fn(),
+  insertSnapshots:
+    vi.fn<(rows: { position: number | null; url: string | null }[]) => void>(),
   insertOpenSerpFailure: vi.fn(),
   setRunErrorIfEmpty: vi.fn(),
   updateRun: vi.fn(),

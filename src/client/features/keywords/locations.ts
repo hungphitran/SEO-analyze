@@ -3,7 +3,6 @@
 export {
   DEFAULT_LOCATION_CODE,
   LABS_LOCATION_OPTIONS,
-  LOCATIONS,
   getLanguageCode,
   getLanguageDisplayName,
   getLanguageOptions,

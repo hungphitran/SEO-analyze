@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- prompt table and its row editor stay together */
 import { useState } from "react";
 import { cn } from "cn";
 import { Link } from "@tanstack/react-router";

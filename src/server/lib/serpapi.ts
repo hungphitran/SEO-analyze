@@ -26,13 +26,7 @@ import {
   responseSchema,
 } from "@/server/lib/serpapi-parse";
 
-export {
-  SerpApiError,
-  assertSerpApiReady,
-  getSerpApiDailyRequestLimit,
-  getSerpApiLimits,
-  normalizeSerpKeyword,
-};
+export { SerpApiError, getSerpApiDailyRequestLimit, normalizeSerpKeyword };
 
 /**
  * SerpApi (https://serpapi.com) adapter for rank tracking and SERP features.

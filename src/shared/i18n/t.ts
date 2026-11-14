@@ -1,7 +1,5 @@
 import { messages, type MessageKey } from "./messages";
 
-export type { MessageKey };
-
 const PLACEHOLDER = /\{([a-zA-Z0-9_]+)\}/g;
 
 /**

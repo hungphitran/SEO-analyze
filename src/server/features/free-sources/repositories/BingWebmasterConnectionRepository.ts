@@ -2,8 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { bingWebmasterConnections } from "@/db/schema";
 
-export type BingWebmasterConnection =
-  typeof bingWebmasterConnections.$inferSelect;
+type BingWebmasterConnection = typeof bingWebmasterConnections.$inferSelect;
 
 async function getByProjectId(
   projectId: string,

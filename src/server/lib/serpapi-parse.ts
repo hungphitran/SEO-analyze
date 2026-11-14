@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const organicResultSchema = z
+const organicResultSchema = z
   .object({
     position: z.number().int().positive().optional(),
     title: z.string().nullish(),

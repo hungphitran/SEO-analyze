@@ -9,7 +9,6 @@ import {
   type SerpSourceProvider,
 } from "@/server/lib/openserp";
 import {
-  assertSerpApiReady,
   getSerpApiDailyRequestLimit,
   searchSerpApi,
 } from "@/server/lib/serpapi";
@@ -33,14 +32,6 @@ export async function getFreeSerpDailyLimit(
   return provider === "serpapi"
     ? getSerpApiDailyRequestLimit()
     : getOpenSerpDailyRequestLimit();
-}
-
-export async function assertFreeSerpReady(
-  provider: FreeSerpProvider,
-  input: { locationName?: string | null },
-): Promise<void> {
-  if (provider === "serpapi") return assertSerpApiReady(input);
-  return assertOpenSerpReady(input);
 }
 
 /**

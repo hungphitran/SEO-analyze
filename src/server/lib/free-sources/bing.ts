@@ -21,10 +21,9 @@ import {
   safeErrorMessage,
 } from "@/server/lib/free-sources/redact";
 
-export const BING_WEBMASTER_JSON_BASE =
-  "https://ssl.bing.com/webmaster/api.svc/json";
+const BING_WEBMASTER_JSON_BASE = "https://ssl.bing.com/webmaster/api.svc/json";
 
-export type BingVerifiedSite = {
+type BingVerifiedSite = {
   url: string;
 };
 
@@ -391,7 +390,5 @@ export async function assertVerifiedBingSite(input: {
 export {
   BingWebmasterError,
   bingRefreshMessage,
-  kindForResponse,
   toBingAppError,
-  type BingErrorKind,
 } from "@/server/lib/free-sources/bing-errors";

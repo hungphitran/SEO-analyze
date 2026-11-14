@@ -13,7 +13,7 @@ import { safeErrorMessage } from "@/server/lib/free-sources/redact";
  * seen from Cloudflare Workers even with a valid key), unavailable (network, 5xx,
  * timeout), invalid_response (unreadable payload), invalid_input (no key).
  */
-export type BingErrorKind =
+type BingErrorKind =
   | "key_rejected"
   | "not_verified"
   | "throttled"
@@ -43,13 +43,13 @@ export class BingWebmasterError extends Error {
 }
 
 // Bing's ApiErrorCode enum (Microsoft.Bing.Webmaster.Api.Interfaces).
-export const BING_CODE_INVALID_API_KEY = 3;
-export const BING_CODE_THROTTLE_USER = 4;
-export const BING_CODE_THROTTLE_HOST = 5;
+const BING_CODE_INVALID_API_KEY = 3;
+const BING_CODE_THROTTLE_USER = 4;
+const BING_CODE_THROTTLE_HOST = 5;
 export const BING_CODE_NOT_AUTHORIZED = 14;
 // Observed from Cloudflare Workers with a valid key: {"ErrorCode":17,
 // "Message":"ERROR!!! ThrottleIP"}. Not in the public ApiErrorCode docs.
-export const BING_CODE_THROTTLE_IP = 17;
+const BING_CODE_THROTTLE_IP = 17;
 export const BING_CODE_INVALID_URL = 7;
 /**
  * Classify a non-2xx Bing response. Bing reports API errors as HTTP 400 with

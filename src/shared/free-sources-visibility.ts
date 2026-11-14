@@ -27,7 +27,7 @@ export const PAID_ONLY_PROJECT_ROUTE_SEGMENTS = [
 ] as const;
 
 /** Dashboard tabs backed only by DataForSEO. */
-export const PAID_ONLY_DASHBOARD_TABS = ["backlinks"] as const;
+const PAID_ONLY_DASHBOARD_TABS = ["backlinks"] as const;
 
 /** Onboarding steps that open DataForSEO-only pages. */
 export const PAID_ONLY_SETUP_STEPS = ["competitor", "keywords"] as const;
@@ -61,7 +61,7 @@ export function isPaidOnlyNavPath(to: string): boolean {
   );
 }
 
-export type ProjectRouteGate = "render" | "wait" | "redirect";
+type ProjectRouteGate = "render" | "wait" | "redirect";
 
 /**
  * What the project layout does for a URL: show the page, wait for the mode to

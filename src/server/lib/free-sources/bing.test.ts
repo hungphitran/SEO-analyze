@@ -138,8 +138,10 @@ describe("Bing Webmaster edge cases", () => {
       () => null,
       (e: unknown) => e,
     );
-    expect(error).toBeInstanceOf(BingWebmasterError);
-    const bing = error as BingWebmasterError;
+    if (!(error instanceof BingWebmasterError)) {
+      throw new Error("expected BingWebmasterError");
+    }
+    const bing = error;
     expect(bing.message).not.toContain(KEY);
     return bing;
   }
@@ -286,8 +288,8 @@ describe("Bing Webmaster edge cases", () => {
     ["invalid_response", "BING_UNAVAILABLE"],
   ] as const)("maps %s to the client code %s", (kind, code) => {
     const mapped = toBingAppError(new BingWebmasterError("m", 0, kind));
-    expect(mapped).toBeInstanceOf(AppError);
-    expect((mapped as AppError).code).toBe(code);
+    if (!(mapped instanceof AppError)) throw new Error("expected AppError");
+    expect(mapped.code).toBe(code);
     const other = new Error("x");
     expect(toBingAppError(other)).toBe(other);
   });

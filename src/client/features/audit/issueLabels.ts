@@ -1,8 +1,4 @@
-import {
-  AUDIT_ISSUE_TYPES,
-  getIssueDescriptor,
-  type AuditIssueType,
-} from "@/shared/audit-issues";
+import { getIssueDescriptor, type AuditIssueType } from "@/shared/audit-issues";
 
 type IssueCopy = { title: string; explanation: string; howToFix: string };
 
@@ -253,5 +249,3 @@ export function getAuditIssueCopy(issueType: string): IssueCopy {
 export function getAuditIssueTitle(issueType: string): string {
   return getAuditIssueCopy(issueType).title;
 }
-
-export const AUDIT_ISSUE_TYPE_IDS = Object.keys(AUDIT_ISSUE_TYPES);

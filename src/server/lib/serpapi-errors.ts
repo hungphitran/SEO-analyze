@@ -1,6 +1,6 @@
 import { OpenSerpError, type OpenSerpErrorCode } from "@/server/lib/openserp";
 
-export const MAX_RESPONSE_BYTES = 3_000_000;
+const MAX_RESPONSE_BYTES = 3_000_000;
 
 export class SerpApiError extends OpenSerpError {
   /** Only transient transport failures are retried; never quota or auth. */

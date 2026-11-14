@@ -7,7 +7,6 @@ import {
   bingRefreshMessage,
   getBingQueryStats,
   type BingQuerySummary,
-  type BingVerifiedSite,
 } from "@/server/lib/free-sources/bing";
 import { isFreeSourcesOnly } from "@/server/lib/free-sources/mode";
 import {
@@ -39,8 +38,6 @@ import {
 
 const QUERY_LIMIT = 25;
 const TWENTY_EIGHT_DAYS_MS = 28 * 24 * 60 * 60 * 1000;
-
-export type { FreeSourceSnapshotView, FreeSourcesStatus };
 
 function isJsonValue(value: unknown): value is JsonValue {
   if (
@@ -360,7 +357,6 @@ export async function refreshOwnedSiteSources(input: {
   return { snapshots };
 }
 
-export type { BingVerifiedSite };
 export {
   disconnectBing,
   listBingSitesForKey,

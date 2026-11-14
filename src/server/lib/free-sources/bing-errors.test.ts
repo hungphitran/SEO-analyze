@@ -19,8 +19,10 @@ describe("Bing Webmaster error classification and manual site path", () => {
       () => null,
       (e: unknown) => e,
     );
-    expect(error).toBeInstanceOf(BingWebmasterError);
-    const bing = error as BingWebmasterError;
+    if (!(error instanceof BingWebmasterError)) {
+      throw new Error("expected BingWebmasterError");
+    }
+    const bing = error;
     expect(bing.message).not.toContain(KEY);
     return bing;
   }

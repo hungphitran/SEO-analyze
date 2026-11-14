@@ -225,7 +225,7 @@ export interface SerpApiLimits {
   hourly: number;
 }
 
-export type SerpApiReservation =
+type SerpApiReservation =
   | { ok: true; keys: { day: string; month: string; hour: string } }
   | { ok: false; reason: "daily" | "monthly" | "hourly" };
 

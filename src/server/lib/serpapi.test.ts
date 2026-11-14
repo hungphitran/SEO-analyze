@@ -31,6 +31,14 @@ vi.mock(
   }),
 );
 
+/** The URL string the n-th mocked fetch call was made with. */
+function calledUrl(index: number): string {
+  const input: unknown = fetchMock().mock.calls[index][0];
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  throw new Error("fetch was not called with a string or URL");
+}
+
 const organic = (n: number, offset = 0) =>
   Array.from({ length: n }, (_, i) => ({
     position: offset + i + 1,
@@ -68,14 +76,16 @@ async function expectError(
     () => null,
     (e: unknown) => e,
   );
-  expect(error).toBeInstanceOf(SerpApiError);
-  expect((error as SerpApiError).code).toBe(code);
+  if (!(error instanceof SerpApiError)) {
+    throw new Error("expected SerpApiError");
+  }
+  expect(error.code).toBe(code);
   // The key must never be present in anything an error can surface.
-  expect(String((error as SerpApiError).message)).not.toContain(KEY);
+  expect(String(error.message)).not.toContain(KEY);
   expect(
     JSON.stringify(error, Object.getOwnPropertyNames(error)),
   ).not.toContain(KEY);
-  return error as SerpApiError;
+  return error;
 }
 
 function resetAdapterMocks() {
@@ -122,7 +132,7 @@ describe("SerpApi adapter: requests and failures", () => {
       expect(snapshot.limitRequested).toBe(10);
       expect(snapshot.requestId).toBe("abc");
       expect(mocks.setCached).toHaveBeenCalledOnce();
-      const url = new URL(String(fetchMock().mock.calls[0][0]));
+      const url = new URL(calledUrl(0));
       expect(url.hostname).toBe("serpapi.com");
       expect(url.searchParams.get("gl")).toBe("us");
       expect(url.searchParams.get("engine")).toBe("google");
@@ -138,9 +148,7 @@ describe("SerpApi adapter: requests and failures", () => {
         Array.from({ length: 20 }, (_, i) => i + 1),
       );
       expect(mocks.reserve).toHaveBeenCalledTimes(2);
-      expect(
-        new URL(String(fetchMock().mock.calls[1][0])).searchParams.get("start"),
-      ).toBe("10");
+      expect(new URL(calledUrl(1)).searchParams.get("start")).toBe("10");
     });
 
     it("never returns a partial list when a later page fails", async () => {
@@ -410,12 +418,12 @@ describe("SerpApi adapter: input and cache", () => {
       fetchMock().mockResolvedValue(ok({ organic_results: organic(10) }));
       const keyword = 'dịch vụ SEO "giá rẻ" & site:vn +100% #1?';
       await searchSerpApi({ ...baseInput, keyword, region: "VN", lang: "vi" });
-      const url = new URL(String(fetchMock().mock.calls[0][0]));
+      const url = new URL(calledUrl(0));
       expect(url.searchParams.get("q")).toBe(keyword);
       expect(url.searchParams.get("gl")).toBe("vn");
       expect(url.searchParams.get("hl")).toBe("vi");
       // The raw URL must be percent-encoded, with no bare '&' from the keyword.
-      expect(String(fetchMock().mock.calls[0][0])).not.toContain("giá rẻ");
+      expect(calledUrl(0)).not.toContain("giá rẻ");
     });
 
     it.each(["", "USA", "1A", "u s"])(
