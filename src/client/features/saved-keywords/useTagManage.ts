@@ -57,12 +57,7 @@ export function useTagManage(projectId: string) {
       toast.success(t("saved.tagDeleted"));
       return true;
     } catch (error) {
-      toast.error(
-        getStandardErrorMessage(
-          error,
-          t("saved.couldNotDeleteTag"),
-        ),
-      );
+      toast.error(getStandardErrorMessage(error, t("saved.couldNotDeleteTag")));
       return false;
     } finally {
       markBusy(tagId, false);

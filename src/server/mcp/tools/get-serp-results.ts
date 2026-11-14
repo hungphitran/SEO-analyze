@@ -245,10 +245,9 @@ export const getSerpResultsTool = {
             ok: true as const,
             items: trimmed,
             fetchedAt,
-            marketHint:
-              isFreeRankSource(sourceProvider)
-                ? getIsoCountryCode(market.locationCode)
-                : undefined,
+            marketHint: isFreeRankSource(sourceProvider)
+              ? getIsoCountryCode(market.locationCode)
+              : undefined,
             ...scope,
           };
         } catch (error) {

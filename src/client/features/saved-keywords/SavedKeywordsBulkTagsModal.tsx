@@ -121,7 +121,9 @@ export function SavedKeywordsBulkTagsModal({
       <DialogContent showCloseButton={false} className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("saved.updateTags")}</DialogTitle>
-          <DialogDescription>{t("ui.applyOrRemoveTagsAcrossSelected", { v0: selectedCount })}</DialogDescription>
+          <DialogDescription>
+            {t("ui.applyOrRemoveTagsAcrossSelected", { v0: selectedCount })}
+          </DialogDescription>
         </DialogHeader>
 
         <ToggleGroup
@@ -134,7 +136,11 @@ export function SavedKeywordsBulkTagsModal({
           }}
           className="rounded-lg bg-muted p-0.5 ring-1 ring-border ring-inset"
         >
-          <SegmentItem value="add" label={t("saved.addTags")} count={addNames.length} />
+          <SegmentItem
+            value="add"
+            label={t("saved.addTags")}
+            count={addNames.length}
+          />
           <SegmentItem
             value="remove"
             label={t("saved.removeTags")}
@@ -204,7 +210,9 @@ export function SavedKeywordsBulkTagsModal({
                   onClick={handleCreate}
                 >
                   <Plus data-icon="inline-start" className="text-primary" />
-                  <span className="text-muted-foreground">{t("common.create")}</span>
+                  <span className="text-muted-foreground">
+                    {t("common.create")}
+                  </span>
                   <span className="font-medium">
                     &ldquo;{trimmedQuery}&rdquo;
                   </span>
@@ -250,13 +258,19 @@ export function SavedKeywordsBulkTagsModal({
                     onClick={() => handleToggleRemove(tag)}
                     selected={checked}
                     trailing={checked ? <Check className="size-3" /> : null}
-                    title={checked ? t("saved.willBeRemoved") : t("saved.clickToRemove")}
+                    title={
+                      checked
+                        ? t("saved.willBeRemoved")
+                        : t("saved.clickToRemove")
+                    }
                   />
                 );
               })}
             </div>
             {removeIds.length > 0 ? (
-              <p className="text-xs text-muted-foreground">{t("ui.tagWillBeDetachedFromThe", { v0: removeIds.length })}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("ui.tagWillBeDetachedFromThe", { v0: removeIds.length })}
+              </p>
             ) : null}
           </div>
         )}

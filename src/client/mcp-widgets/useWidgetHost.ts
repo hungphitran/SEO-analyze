@@ -106,10 +106,7 @@ export function useWidgetHost() {
       const url = safeHttpUrl(href);
       if (!url) throw new Error(t("ui.openseoReturnedAnInvalidLink"));
       const result = await host.openLink({ url });
-      if (result.isError)
-        throw new Error(
-          t("ui.theLinkCouldNotBeOpened"),
-        );
+      if (result.isError) throw new Error(t("ui.theLinkCouldNotBeOpened"));
     });
 
   const ask = (prompt: string, context: unknown) =>

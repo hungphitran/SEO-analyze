@@ -22,8 +22,7 @@ const FEATURE_SHORT_LABELS: Record<string, string> = {
 };
 
 const FEATURE_TOOLTIPS: Record<string, string> = {
-  featured_snippet:
-    t("rank.featSnippet"),
+  featured_snippet: t("rank.featSnippet"),
   people_also_ask: t("rank.featPaa"),
   ai_overview: t("rank.featAiOverview"),
   local_pack: t("rank.featLocalPack"),
@@ -168,7 +167,9 @@ function buildRankTrackingExport(
     t("common.keyword"),
     // Exports lack the table's tooltip, so name the city inline.
     locationName
-      ? t("rank.localVolumeExport", { location: formatLocationLabel(locationName, 2) })
+      ? t("rank.localVolumeExport", {
+          location: formatLocationLabel(locationName, 2),
+        })
       : t("kw.volume"),
     "KD",
     "CPC",

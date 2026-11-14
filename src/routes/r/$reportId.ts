@@ -17,8 +17,7 @@ import { t } from "@/shared/i18n";
 // ids cannot be probed for existence. An archived project of the reader's own
 // organization gets its own message: the reader is already a member, so naming
 // it leaks nothing and "does not exist" would send them hunting.
-const NOT_FOUND_BODY =
-  t("ui.thisReportDoesNotExistOr");
+const NOT_FOUND_BODY = t("ui.thisReportDoesNotExistOr");
 
 const reportNotFound = () => textResponse(NOT_FOUND_BODY, 404);
 

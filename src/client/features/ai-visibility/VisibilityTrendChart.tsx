@@ -48,7 +48,10 @@ export function VisibilityTrendChart({ trend }: { trend: AiTrend }) {
     time: Date.parse(run.createdAt),
     mentionRate: run.mentionRate,
     citationRate: run.citationRate,
-    collected: t("ui.ofAnswersCollected", { v0: run.coverage.answered, v1: run.coverage.expected }),
+    collected: t("ui.ofAnswersCollected", {
+      v0: run.coverage.answered,
+      v1: run.coverage.expected,
+    }),
   }));
   return (
     <ChartContainer

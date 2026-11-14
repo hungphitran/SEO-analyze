@@ -59,7 +59,10 @@ function ReportsPage() {
           }
         />
 
-        <QueryState query={reportsQuery} errorFallback={t("reports.failedLoad")}>
+        <QueryState
+          query={reportsQuery}
+          errorFallback={t("reports.failedLoad")}
+        >
           {(data) => (
             <ReportsList
               projectId={projectId}

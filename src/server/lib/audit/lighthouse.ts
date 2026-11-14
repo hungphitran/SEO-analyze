@@ -78,7 +78,9 @@ async function fetchPagespeedLighthouseResult(
     };
   } catch (error) {
     const failed = error instanceof Error ? error : new Error(String(error));
-    console.error(`PageSpeed Insights failed for ${url} (${strategy}): ${failed.message}`);
+    console.error(
+      `PageSpeed Insights failed for ${url} (${strategy}): ${failed.message}`,
+    );
     return failedLighthouseFetch(url, pageId, strategy, failed.message);
   }
 }

@@ -310,7 +310,9 @@ function KeywordSaveDialog({
 
   return (
     <FormDialog
-      title={t("ui.saveKeywords_d634", { v0: controller.selectedKeywordRows.length })}
+      title={t("ui.saveKeywords_d634", {
+        v0: controller.selectedKeywordRows.length,
+      })}
       onClose={() => controller.setShowSaveDialog(false)}
       actions={
         <>
@@ -332,7 +334,11 @@ function KeywordSaveDialog({
       <div className="space-y-2 text-sm text-muted-foreground">
         <p>{t("kw.willSaveToProject")}</p>
         {controller.locationName ? (
-          <p>{t("ui.savedKeywordsShowNationalMetricsThe", { v0: formatLocationLabel(controller.locationName) })}</p>
+          <p>
+            {t("ui.savedKeywordsShowNationalMetricsThe", {
+              v0: formatLocationLabel(controller.locationName),
+            })}
+          </p>
         ) : null}
       </div>
     </FormDialog>

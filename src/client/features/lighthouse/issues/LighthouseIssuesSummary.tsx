@@ -20,9 +20,18 @@ export function LighthouseIssuesSummary({
     <>
       {scores ? (
         <div className="grid grid-cols-4 gap-3">
-          <ScoreGauge label={t("audit.performance")} score={scores.performance} />
-          <ScoreGauge label={t("audit.accessibility")} score={scores.accessibility} />
-          <ScoreGauge label={t("audit.bestPractices")} score={scores["best-practices"]} />
+          <ScoreGauge
+            label={t("audit.performance")}
+            score={scores.performance}
+          />
+          <ScoreGauge
+            label={t("audit.accessibility")}
+            score={scores.accessibility}
+          />
+          <ScoreGauge
+            label={t("audit.bestPractices")}
+            score={scores["best-practices"]}
+          />
           <ScoreGauge label="SEO" score={scores.seo} />
         </div>
       ) : null}

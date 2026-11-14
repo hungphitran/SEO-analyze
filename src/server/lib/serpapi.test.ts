@@ -371,7 +371,6 @@ describe("SerpApi adapter: requests and failures", () => {
       await expectError(searchSerpApi(baseInput), "invalid_response");
     });
   });
-
 });
 
 describe("SerpApi adapter: input and cache", () => {

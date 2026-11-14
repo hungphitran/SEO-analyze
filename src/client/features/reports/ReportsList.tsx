@@ -75,7 +75,9 @@ export function ReportsList({
                   {formatRelativeTime(report.updatedAt)}
                 </TableCell>
                 <TableCell className="w-10 text-right">
-                  <RowActionsMenu label={t("ui.actionsFor", { v0: report.title })}>
+                  <RowActionsMenu
+                    label={t("ui.actionsFor", { v0: report.title })}
+                  >
                     <DropdownMenuItem
                       variant="destructive"
                       onClick={() => onDelete(report)}
@@ -91,7 +93,9 @@ export function ReportsList({
         </Table>
       </TableCard>
       {reports.length === REPORT_APP_LIST_LIMIT ? (
-        <p className="text-xs text-muted-foreground">{t("ui.showingTheMostRecentReports", { v0: REPORT_APP_LIST_LIMIT })}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("ui.showingTheMostRecentReports", { v0: REPORT_APP_LIST_LIMIT })}
+        </p>
       ) : null}
     </div>
   );

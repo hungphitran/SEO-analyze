@@ -17,9 +17,7 @@ export function SamBetaGate({ onContinue }: { onContinue: () => void }) {
       title={t("sam.inBeta")}
       description={
         <>
-          <p>
-            {t("ui.samIsTheOpenseoMcpAnd")}
-          </p>
+          <p>{t("ui.samIsTheOpenseoMcpAnd")}</p>
           <p>{t("sam.betaDisclaimer")}</p>
         </>
       }

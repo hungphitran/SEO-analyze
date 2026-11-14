@@ -54,8 +54,12 @@ function BacklinksSourceLink({
 function BacklinkFlags({ row }: { row: BacklinksRow }) {
   return (
     <div className="flex flex-wrap gap-1">
-      {row.isLost ? <Badge variant="destructive">{t("backlinks.lost")}</Badge> : null}
-      {row.isBroken ? <Badge variant="warning">{t("backlinks.broken")}</Badge> : null}
+      {row.isLost ? (
+        <Badge variant="destructive">{t("backlinks.lost")}</Badge>
+      ) : null}
+      {row.isBroken ? (
+        <Badge variant="warning">{t("backlinks.broken")}</Badge>
+      ) : null}
       {row.isDofollow === false ? (
         <Badge variant="outline">{t("backlinks.nofollow")}</Badge>
       ) : null}
@@ -116,7 +120,11 @@ function SourceCell({
           variant="ghost"
           size="icon-xs"
           className="-ml-1 shrink-0"
-          aria-label={expanded ? t("backlinks.hideLinksFrom", { domain: domainLabel }) : t("backlinks.showLinksFrom", { domain: domainLabel })}
+          aria-label={
+            expanded
+              ? t("backlinks.hideLinksFrom", { domain: domainLabel })
+              : t("backlinks.showLinksFrom", { domain: domainLabel })
+          }
           aria-expanded={expanded}
           onClick={() => onToggleDomain(row.domainFrom ?? "")}
         >
@@ -153,7 +161,12 @@ function buildBaseColumns(
     {
       id: "source",
       enableSorting: false,
-      header: () => <HelpLabel label={t("backlinks.source")} helpText={t("backlinks.pageLinkingToYou")} />,
+      header: () => (
+        <HelpLabel
+          label={t("backlinks.source")}
+          helpText={t("backlinks.pageLinkingToYou")}
+        />
+      ),
       meta: { headerClassName: "min-w-[200px]" },
       cell: ({ row }) => (
         <SourceCell displayRow={row.original} onToggleDomain={onToggleDomain} />
@@ -163,7 +176,10 @@ function buildBaseColumns(
       id: "target",
       enableSorting: false,
       header: () => (
-        <HelpLabel label={t("backlinks.target")} helpText={t("backlinks.destinationOnSite")} />
+        <HelpLabel
+          label={t("backlinks.target")}
+          helpText={t("backlinks.destinationOnSite")}
+        />
       ),
       meta: { headerClassName: "min-w-[180px]" },
       cell: linkCell((row) => (
@@ -180,12 +196,17 @@ function buildBaseColumns(
       id: "anchor",
       enableSorting: false,
       header: () => (
-        <HelpLabel label={t("backlinks.anchor")} helpText={t("backlinks.anchorHelp")} />
+        <HelpLabel
+          label={t("backlinks.anchor")}
+          helpText={t("backlinks.anchorHelp")}
+        />
       ),
       meta: { headerClassName: "min-w-[150px]" },
       cell: linkCell((row) => (
         <div className="space-y-0.5 wrap-anywhere">
-          <span className="text-sm">{row.anchor || t("backlinks.noAnchorText")}</span>
+          <span className="text-sm">
+            {row.anchor || t("backlinks.noAnchorText")}
+          </span>
           {row.itemType ? (
             <div className="text-xs text-muted-foreground">{row.itemType}</div>
           ) : null}
@@ -284,7 +305,9 @@ function buildBaseColumns(
         <div className="whitespace-nowrap text-sm">
           <div>{formatCompactDate(row.firstSeen)}</div>
           {row.lastSeen ? (
-            <div className="text-xs text-muted-foreground">{t("ui.last", { v0: formatCompactDate(row.lastSeen) })}</div>
+            <div className="text-xs text-muted-foreground">
+              {t("ui.last", { v0: formatCompactDate(row.lastSeen) })}
+            </div>
           ) : null}
         </div>
       )),

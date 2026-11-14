@@ -38,9 +38,7 @@ function SupportPage() {
               <CardTitle>
                 <h2>{t("help.email")}</h2>
               </CardTitle>
-              <CardDescription>
-                {t("help.emailDesc")}
-              </CardDescription>
+              <CardDescription>{t("help.emailDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <CopyButton

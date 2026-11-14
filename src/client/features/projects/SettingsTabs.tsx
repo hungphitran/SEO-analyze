@@ -2,8 +2,15 @@ import { NavTab, NavTabs } from "@/client/components/NavTabs";
 import { t } from "@/shared/i18n";
 
 const tabs = [
-  { to: "/p/$projectId/settings" as const, label: t("settings.general"), exact: true },
-  { to: "/p/$projectId/settings/integrations" as const, label: t("settings.integrations") },
+  {
+    to: "/p/$projectId/settings" as const,
+    label: t("settings.general"),
+    exact: true,
+  },
+  {
+    to: "/p/$projectId/settings/integrations" as const,
+    label: t("settings.integrations"),
+  },
 ];
 
 export function SettingsTabs({ projectId }: { projectId: string }) {

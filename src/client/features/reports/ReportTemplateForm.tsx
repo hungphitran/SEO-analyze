@@ -20,14 +20,8 @@ import { t } from "@/shared/i18n";
 // caps come back from the service with their copy and show in a toast.
 const formSchema = z.object({
   name: z.string().trim().min(1, t("reports.nameRequired")),
-  description: z
-    .string()
-    .trim()
-    .min(1, t("reports.whenToUseRequired")),
-  instructions: z
-    .string()
-    .trim()
-    .min(1, t("reports.instructionsRequired")),
+  description: z.string().trim().min(1, t("reports.whenToUseRequired")),
+  instructions: z.string().trim().min(1, t("reports.instructionsRequired")),
 });
 
 const INSTRUCTIONS_PLACEHOLDER = t("reports.instructionsPlaceholder");
@@ -61,7 +55,11 @@ export function ReportTemplateForm({
         is_update: !result.created,
         source: "app",
       });
-      toast.success(result.created ? t("reports.templateCreated") : t("reports.templateSaved"));
+      toast.success(
+        result.created
+          ? t("reports.templateCreated")
+          : t("reports.templateSaved"),
+      );
       onSaved();
     },
   });
@@ -89,7 +87,9 @@ export function ReportTemplateForm({
           <form.Form className="flex flex-col gap-4">
             <DialogHeader>
               <DialogTitle>
-                {template ? t("reports.editTemplate") : t("reports.newTemplate")}
+                {template
+                  ? t("reports.editTemplate")
+                  : t("reports.newTemplate")}
               </DialogTitle>
             </DialogHeader>
 
@@ -136,7 +136,9 @@ export function ReportTemplateForm({
                 {t("common.cancel")}
               </Button>
               <form.SubmitButton>
-                {template ? t("common.saveChanges") : t("reports.createTemplate")}
+                {template
+                  ? t("common.saveChanges")
+                  : t("reports.createTemplate")}
               </form.SubmitButton>
             </DialogFooter>
           </form.Form>

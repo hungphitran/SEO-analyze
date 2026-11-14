@@ -15,10 +15,8 @@ import { t } from "@/shared/i18n";
 type SummaryStat = { label: string; value: string; description: string };
 
 const SCOPE_NOTES: Partial<Record<BacklinksOverviewData["scope"], string>> = {
-  exact_url:
-    t("backlinks.scopeExactPage"),
-  subfolder:
-    t("backlinks.scopeSubfolder"),
+  exact_url: t("backlinks.scopeExactPage"),
+  subfolder: t("backlinks.scopeSubfolder"),
 };
 
 export function BacklinksScopeAlert({
@@ -53,7 +51,9 @@ export function BacklinksOverviewPanels({
           </h2>
           <Badge variant="outline">{RESEARCH_SCOPE_LABELS[data.scope]}</Badge>
         </div>
-        <p className="ml-auto text-xs text-muted-foreground">{t("ui.updated", { v0: formatRelativeTimestamp(data.fetchedAt) })}</p>
+        <p className="ml-auto text-xs text-muted-foreground">
+          {t("ui.updated", { v0: formatRelativeTimestamp(data.fetchedAt) })}
+        </p>
       </div>
       <div className="px-4 pb-4">
         <OverviewGrid data={data} summaryStats={summaryStats} />

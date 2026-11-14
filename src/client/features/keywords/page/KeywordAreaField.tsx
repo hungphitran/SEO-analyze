@@ -47,6 +47,8 @@ export function LocalVolumeCostNote() {
     ? applyBillingMarkupUsd(LOCAL_VOLUME_COST_USD)
     : LOCAL_VOLUME_COST_USD;
   return (
-    <span className="text-xs text-muted-foreground">{t("ui.localVolumeAddsPerSearch", { v0: costUsd.toFixed(2) })}</span>
+    <span className="text-xs text-muted-foreground">
+      {t("ui.localVolumeAddsPerSearch", { v0: costUsd.toFixed(2) })}
+    </span>
   );
 }

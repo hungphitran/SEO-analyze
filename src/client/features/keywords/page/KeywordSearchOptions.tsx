@@ -33,8 +33,7 @@ const MODE_ITEMS: { value: KeywordMode; label: string }[] = [
   { value: "related", label: t("kw.peopleAlsoSearch") },
 ];
 
-const GOOGLE_ADS_ONLY_NOTE =
-  t("kw.notAvailGoogleAdsCountries");
+const GOOGLE_ADS_ONLY_NOTE = t("kw.notAvailGoogleAdsCountries");
 
 /** The search settings most people leave at their defaults. */
 export function KeywordSearchOptions({ controller }: Props) {
@@ -68,11 +67,18 @@ export function KeywordSearchOptions({ controller }: Props) {
               <FormDialog
                 title={t("kw.searchOptions")}
                 onClose={() => setOpen(false)}
-                actions={<Button onClick={() => setOpen(false)}>{t("common.done")}</Button>}
+                actions={
+                  <Button onClick={() => setOpen(false)}>
+                    {t("common.done")}
+                  </Button>
+                }
               >
                 <controlsForm.AppField name="resultLimit">
                   {(field) => (
-                    <field.SelectField label={t("common.results")} items={RESULT_ITEMS} />
+                    <field.SelectField
+                      label={t("common.results")}
+                      items={RESULT_ITEMS}
+                    />
                   )}
                 </controlsForm.AppField>
 

@@ -35,7 +35,9 @@ const promptColumns: ColumnDef<AiResearchedPrompt>[] = [
           <p
             className="text-xs text-muted-foreground"
             title={prompt.variants.join("\n")}
-          >{t("ui.similarMerged", { v0: prompt.variants.length })}</p>
+          >
+            {t("ui.similarMerged", { v0: prompt.variants.length })}
+          </p>
         )}
       </>
     ),
@@ -93,9 +95,8 @@ export function PromptResearchTable({
   const selectAnchorRef = useSelectionAnchor();
   const columns = useMemo(
     () => [
-      makeSelectionColumn<AiResearchedPrompt>(
-        selectAnchorRef,
-        (row) => t("ui.select", { v0: row.original.text }),
+      makeSelectionColumn<AiResearchedPrompt>(selectAnchorRef, (row) =>
+        t("ui.select", { v0: row.original.text }),
       ),
       ...promptColumns,
     ],

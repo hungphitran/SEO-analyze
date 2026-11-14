@@ -203,7 +203,9 @@ function Sidebar({
         >
           <SheetHeader className="sr-only">
             <SheetTitle>{t("ui.sidebar")}</SheetTitle>
-            <SheetDescription>{t("ui.displaysTheMobileSidebar")}</SheetDescription>
+            <SheetDescription>
+              {t("ui.displaysTheMobileSidebar")}
+            </SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>

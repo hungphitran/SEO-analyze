@@ -36,18 +36,14 @@ function DataforseoApiKeyHelpPage() {
   return (
     <SecretHelpPage
       title={t("help.dataforseoHeading")}
-      intro={
-        t("help.dfsIntro")
-      }
+      intro={t("help.dfsIntro")}
       everyAppIntro={t("help.dfsEveryAppIntro")}
       secretName="DATAFORSEO_API_KEY"
       steps={
         <>
           {requestStep}
           {encodeStep}
-          <li>
-            {t("help.dfsSaveSecret")}
-          </li>
+          <li>{t("help.dfsSaveSecret")}</li>
         </>
       }
       everyAppSteps={
@@ -62,9 +58,7 @@ function DataforseoApiKeyHelpPage() {
         </>
       }
       dashboardPasteStep={t("help.dfsDashboardPaste")}
-      terminalPromptHint={
-        t("help.dfsTerminalHint")
-      }
+      terminalPromptHint={t("help.dfsTerminalHint")}
     />
   );
 }

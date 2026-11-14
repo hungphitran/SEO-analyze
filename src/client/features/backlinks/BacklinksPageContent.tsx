@@ -143,9 +143,7 @@ export function BacklinksBody({
         <QueryError
           title={t("backlinks.couldNotLoad")}
           cause={data.overviewQuery.error}
-          fallback={
-            data.overviewErrorMessage ?? t("common.tryAgainSoon")
-          }
+          fallback={data.overviewErrorMessage ?? t("common.tryAgainSoon")}
           onRetry={() => void data.overviewQuery.refetch()}
           isRetrying={data.overviewQuery.isFetching}
         />

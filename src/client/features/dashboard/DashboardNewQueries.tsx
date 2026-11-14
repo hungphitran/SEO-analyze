@@ -35,7 +35,10 @@ export function DashboardNewQueries({
   });
   if (!connected) return null;
   return (
-    <QueryState query={query} errorFallback={t("dashboard.couldNotLoadNewKeywords")}>
+    <QueryState
+      query={query}
+      errorFallback={t("dashboard.couldNotLoadNewKeywords")}
+    >
       {(data) =>
         !data.value.connected ? (
           <GoogleConnectionCard
@@ -49,9 +52,7 @@ export function DashboardNewQueries({
             titleInfo={
               <DashboardInfo label={t("dashboard.aboutNewKeywords")}>
                 <p>{t("dashboard.newKeywordsHelp")}</p>
-                <p className="mt-2">
-                  {t("ui.weSawTheseInTheLatest")}
-                </p>
+                <p className="mt-2">{t("ui.weSawTheseInTheLatest")}</p>
               </DashboardInfo>
             }
             action={

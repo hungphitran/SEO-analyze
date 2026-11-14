@@ -80,12 +80,16 @@ export function SearchPerformanceTextFilters({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold">{t("gscInsights.refineResults")}</p>
+          <p className="text-sm font-semibold">
+            {t("gscInsights.refineResults")}
+          </p>
           {activeFilterCount > 0 ? (
             <Badge size="sm">{t("ui.active", { v0: activeFilterCount })}</Badge>
           ) : null}
           {dirtyCount > 0 ? (
-            <Badge variant="warning" size="sm">{t("ui.unapplied", { v0: dirtyCount })}</Badge>
+            <Badge variant="warning" size="sm">
+              {t("ui.unapplied", { v0: dirtyCount })}
+            </Badge>
           ) : null}
         </div>
         <Button

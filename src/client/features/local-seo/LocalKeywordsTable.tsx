@@ -122,7 +122,10 @@ export function LocalKeywordsTable({
                   type="button"
                   className="font-mono text-xs decoration-dotted underline-offset-2 hover:underline aria-pressed:text-primary"
                   aria-pressed={scan.id === selectedScanId}
-                  title={t("ui.viewMapFor", { v0: row.original.keyword, v1: new Date(check.createdAt).toLocaleString() })}
+                  title={t("ui.viewMapFor", {
+                    v0: row.original.keyword,
+                    v1: new Date(check.createdAt).toLocaleString(),
+                  })}
                   onClick={(event) => {
                     event.stopPropagation();
                     onSelect(row.id, scan.id);
@@ -219,8 +222,7 @@ export function LocalKeywordsTable({
       onRowClick={(row) => onSelect(row.id)}
       empty={{
         title: t("local.addKeywordsToStart"),
-        description:
-          t("local.enterThenCheck"),
+        description: t("local.enterThenCheck"),
         action: (
           <Button size="sm" onClick={onManage}>
             {t("ui.addKeywords")}
@@ -242,7 +244,9 @@ function LastChecked({ scan }: { scan: KeywordRow["latest"] }) {
             scan.status === LocalScanStatus.Failed ? "destructive" : "secondary"
           }
         >
-          {scan.status === LocalScanStatus.Running ? t("local.checking") : scan.status}
+          {scan.status === LocalScanStatus.Running
+            ? t("local.checking")
+            : scan.status}
         </Badge>
       )}
     </span>

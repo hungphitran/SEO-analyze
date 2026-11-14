@@ -106,7 +106,9 @@ export function ProjectWebsiteSetup({ projectId }: { projectId: string }) {
             </p>
           </div>
           <Field>
-            <FieldLabel htmlFor="project-website">{t("ui.websiteUrl")}</FieldLabel>
+            <FieldLabel htmlFor="project-website">
+              {t("ui.websiteUrl")}
+            </FieldLabel>
             <Input
               id="project-website"
               inputMode="url"
@@ -118,7 +120,9 @@ export function ProjectWebsiteSetup({ projectId }: { projectId: string }) {
             />
           </Field>
           {getErrorCode(researchMutation.error) === "INSUFFICIENT_CREDITS" ? (
-            <InsufficientCreditsError title={t("ui.weCouldnTResearchThisWebsite")} />
+            <InsufficientCreditsError
+              title={t("ui.weCouldnTResearchThisWebsite")}
+            />
           ) : (
             researchMutation.isError && (
               <Alert variant="destructive">

@@ -289,7 +289,10 @@ export function KeywordSuggestionStep({
     <>
       <StepHeader
         title={t("rank.chooseKeywords")}
-        description={t("ui.weFoundKeywordsRanksFor", { v0: data.length, v1: domain })}
+        description={t("ui.weFoundKeywordsRanksFor", {
+          v0: data.length,
+          v1: domain,
+        })}
       />
 
       <DataTable
@@ -305,7 +308,9 @@ export function KeywordSuggestionStep({
       />
 
       <DialogFooter className="items-center sm:justify-between">
-        <p className="text-xs text-muted-foreground">{t("ui.ofSelected", { v0: selectedCount, v1: data.length })}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("ui.ofSelected", { v0: selectedCount, v1: data.length })}
+        </p>
         <div className="flex items-center gap-2">
           <Button variant="ghost" onClick={onClose}>
             {t("ui.skip")}
@@ -314,7 +319,9 @@ export function KeywordSuggestionStep({
             onClick={handleAdd}
             pending={addMutation.isPending}
             disabled={selectedCount === 0}
-          >{t("ui.saveKeyword")}</Button>
+          >
+            {t("ui.saveKeyword")}
+          </Button>
         </div>
       </DialogFooter>
     </>

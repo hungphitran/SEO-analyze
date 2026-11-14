@@ -134,14 +134,18 @@ function buildPerformanceColumns({
       meta: { cellClassName: "max-w-[180px] truncate" },
     }),
     performanceColumnHelper.accessor("strategy", {
-      header: ({ column }) => <SortableHeader column={column} label={t("common.device")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("common.device")} />
+      ),
       cell: ({ getValue }) => (
         <span className="capitalize text-xs">{getValue()}</span>
       ),
     }),
     performanceColumnHelper.display({
       id: "status",
-      header: ({ column }) => <SortableHeader column={column} label={t("audit.status")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("audit.status")} />
+      ),
       cell: ({ row }) => {
         const isFailed = isLighthouseFailure(row.original);
         const failureMessage =
@@ -160,7 +164,9 @@ function buildPerformanceColumns({
         Number(isLighthouseFailure(right.original)),
     }),
     performanceColumnHelper.accessor("performanceScore", {
-      header: ({ column }) => <SortableHeader column={column} label={t("audit.perfShort")} />,
+      header: ({ column }) => (
+        <SortableHeader column={column} label={t("audit.perfShort")} />
+      ),
       cell: ({ getValue }) => <LighthouseScoreBadge score={getValue()} />,
       sortingFn: nullableNumberSort,
     }),

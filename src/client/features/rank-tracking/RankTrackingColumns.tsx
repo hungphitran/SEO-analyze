@@ -27,10 +27,8 @@ const HEADER_TOOLTIPS: Record<string, string> = {
   volume: t("rank.volumeFromGoogle"),
   kd: t("rank.kdHelp"),
   cpc: t("rank.cpcAvgHelp"),
-  desktopPosition:
-    t("rank.positionChangeHelp"),
-  mobilePosition:
-    t("rank.positionChangeHelp"),
+  desktopPosition: t("rank.positionChangeHelp"),
+  mobilePosition: t("rank.positionChangeHelp"),
   url: t("rank.rankingPageHelp"),
   serp: t("rank.serpFeaturesHelp"),
 };

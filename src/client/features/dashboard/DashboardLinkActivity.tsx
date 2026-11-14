@@ -29,7 +29,10 @@ export function DashboardLinkActivity({
     retry: false,
   });
   return (
-    <QueryState query={query} errorFallback={t("dashboard.couldNotLoadNewLinks")}>
+    <QueryState
+      query={query}
+      errorFallback={t("dashboard.couldNotLoadNewLinks")}
+    >
       {(data) => (
         <CardShell
           title={t("dashboard.newBacklinks")}
@@ -56,7 +59,9 @@ export function DashboardLinkActivity({
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("ui.referringDomain")}</TableHead>
-                  <TableHead className="text-right">{t("ui.backlinks")}</TableHead>
+                  <TableHead className="text-right">
+                    {t("ui.backlinks")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -69,7 +74,9 @@ export function DashboardLinkActivity({
                       />
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {row.backlinks != null ? formatUiNumber(row.backlinks) : "—"}
+                      {row.backlinks != null
+                        ? formatUiNumber(row.backlinks)
+                        : "—"}
                     </TableCell>
                   </TableRow>
                 ))}

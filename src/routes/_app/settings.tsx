@@ -17,7 +17,12 @@ function SettingsLayout() {
     // Access / no-auth self-host has no memberships — the organization tab
     // would 404.
     ...(usesBetterAuthClient()
-      ? [{ to: "/settings/organization" as const, label: t("settings.organization") }]
+      ? [
+          {
+            to: "/settings/organization" as const,
+            label: t("settings.organization"),
+          },
+        ]
       : []),
   ];
 

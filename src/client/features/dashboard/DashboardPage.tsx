@@ -239,13 +239,14 @@ export function DashboardPage({
               ] as const
             )
               .filter(
-                ([value]) => !(freeSourcesOnly && isPaidOnlyDashboardTab(value)),
+                ([value]) =>
+                  !(freeSourcesOnly && isPaidOnlyDashboardTab(value)),
               )
               .map(([value, label]) => (
-              <TabsTrigger key={value} value={value} className="px-3">
-                {label}
-              </TabsTrigger>
-            ))}
+                <TabsTrigger key={value} value={value} className="px-3">
+                  {label}
+                </TabsTrigger>
+              ))}
           </TabsList>
 
           {/* Base UI unmounts inactive panels, so paid detail queries load only on opening their tab. */}
@@ -270,35 +271,35 @@ export function DashboardPage({
             />
           </TabsContent>
           {freeSourcesOnly ? null : (
-          <TabsContent value="backlinks" keepMounted={false}>
-            {activation.domain ? (
-              <DashboardBacklinks
-                key={activation.domain}
-                projectId={projectId}
-                domain={activation.domain}
-              />
-            ) : (
-              <EmptyState
-                variant="card"
-                icon={Link2}
-                title={t("dashboard.seeWhoLinks")}
-                description={t("dashboard.addWebsiteForBacklinks")}
-                action={
-                  <Button
-                    nativeButton={false}
-                    render={
-                      <Link
-                        to="/p/$projectId/settings"
-                        params={{ projectId }}
-                      />
-                    }
-                  >
-                    {t("common.addYourWebsite")}
-                  </Button>
-                }
-              />
-            )}
-          </TabsContent>
+            <TabsContent value="backlinks" keepMounted={false}>
+              {activation.domain ? (
+                <DashboardBacklinks
+                  key={activation.domain}
+                  projectId={projectId}
+                  domain={activation.domain}
+                />
+              ) : (
+                <EmptyState
+                  variant="card"
+                  icon={Link2}
+                  title={t("dashboard.seeWhoLinks")}
+                  description={t("dashboard.addWebsiteForBacklinks")}
+                  action={
+                    <Button
+                      nativeButton={false}
+                      render={
+                        <Link
+                          to="/p/$projectId/settings"
+                          params={{ projectId }}
+                        />
+                      }
+                    >
+                      {t("common.addYourWebsite")}
+                    </Button>
+                  }
+                />
+              )}
+            </TabsContent>
           )}
         </Tabs>
       </div>

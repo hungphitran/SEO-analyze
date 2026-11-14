@@ -40,8 +40,7 @@ function HeaderWithHelp({
   );
 }
 
-const PLATFORM_HELP =
-  t("search.surfaceHelp");
+const PLATFORM_HELP = t("search.surfaceHelp");
 
 /**
  * Platform indicator used only when a table actually spans >1 platform. A dot +
@@ -158,7 +157,9 @@ function KeywordsCell({
             <span
               className="shrink-0 text-muted-foreground tabular-nums"
               title={t("search.promptVolumeSample")}
-            >{t("ui.vol", { v0: formatCount(keyword.aiSearchVolume) })}</span>
+            >
+              {t("ui.vol", { v0: formatCount(keyword.aiSearchVolume) })}
+            </span>
           </Link>
         </li>
       )}
@@ -204,7 +205,10 @@ export function buildTopPagesColumns({
             id: "platform",
             meta: { cellClassName: "whitespace-nowrap align-top" },
             header: () => (
-              <HeaderWithHelp label={t("search.platform")} helpText={PLATFORM_HELP} />
+              <HeaderWithHelp
+                label={t("search.platform")}
+                helpText={PLATFORM_HELP}
+              />
             ),
             enableSorting: false,
             cell: ({ getValue }) => <PlatformCell platform={getValue()} />,
@@ -272,7 +276,11 @@ export function buildTopQueriesColumns({
         <>
           <p className="break-words font-medium">{row.original.question}</p>
           {row.original.brandsMentioned.length > 0 ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">{t("ui.brands", { v0: row.original.brandsMentioned.slice(0, 5).join(", ") })}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {t("ui.brands", {
+                v0: row.original.brandsMentioned.slice(0, 5).join(", "),
+              })}
+            </p>
           ) : null}
         </>
       ),
@@ -283,7 +291,10 @@ export function buildTopQueriesColumns({
             id: "platform",
             meta: { cellClassName: "whitespace-nowrap align-top" },
             header: () => (
-              <HeaderWithHelp label={t("search.platform")} helpText={PLATFORM_HELP} />
+              <HeaderWithHelp
+                label={t("search.platform")}
+                helpText={PLATFORM_HELP}
+              />
             ),
             enableSorting: false,
             cell: ({ getValue }) => <PlatformCell platform={getValue()} />,

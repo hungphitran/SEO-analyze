@@ -21,8 +21,7 @@ export function Ga4ConnectCard({
     mutationFn: () => dismissDashboardGa4Card({ data: { projectId } }),
     onSuccess: () => {
       toast.success(t("dashboard.useAnotherAnalytics"), {
-        description:
-          t("dashboard.useAnotherAnalyticsDesc"),
+        description: t("dashboard.useAnotherAnalyticsDesc"),
         duration: 10000,
       });
       void queryClient.invalidateQueries({
@@ -38,7 +37,9 @@ export function Ga4ConnectCard({
           {t("ui.bringYourOrganicTrafficAndConversions")}
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
-          <Button onClick={() => setUsesGa4(true)}>{t("dashboard.yesConnectGa4")}</Button>
+          <Button onClick={() => setUsesGa4(true)}>
+            {t("dashboard.yesConnectGa4")}
+          </Button>
           <Button
             variant="outline"
             disabled={dismissMutation.isPending}

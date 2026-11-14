@@ -49,7 +49,13 @@ function strikingExportTable(report: Report): ExportTable {
   const stamp = `${report.range.startDate}-to-${report.range.endDate}`;
   return {
     filename: `search-performance-striking-distance-${stamp}`,
-    headers: [t("ui.query"), t("ui.page"), t("ui.impressions"), t("ui.clicks"), t("ui.position")],
+    headers: [
+      t("ui.query"),
+      t("ui.page"),
+      t("ui.impressions"),
+      t("ui.clicks"),
+      t("ui.position"),
+    ],
     rows: report.strikingDistance.map((row) => [
       row.query,
       row.page,
@@ -133,7 +139,10 @@ function positionDelta(current: number, previous: number): Delta {
 
 export function TotalsTable({ report }: { report: Report }) {
   const { totals, prevTotals, range } = report;
-  const deltaTitle = t("gscInsights.comparedWith", { start: range.prevStartDate, end: range.prevEndDate });
+  const deltaTitle = t("gscInsights.comparedWith", {
+    start: range.prevStartDate,
+    end: range.prevEndDate,
+  });
   const metrics = [
     {
       label: t("ui.clicks"),
@@ -162,7 +171,9 @@ export function TotalsTable({ report }: { report: Report }) {
         <TableHeader>
           <TableRow>
             <TableHead className="w-full">{t("gscInsights.metric")}</TableHead>
-            <TableHead className="min-w-32 text-right">{t("gscInsights.value")}</TableHead>
+            <TableHead className="min-w-32 text-right">
+              {t("gscInsights.value")}
+            </TableHead>
             <TableHead className="min-w-32 text-right" title={deltaTitle}>
               {t("ui.change")}
             </TableHead>
@@ -285,9 +296,7 @@ export function StrikingDistanceTable({
         .map((query) => normalizeExportValue(query))
         .join("\n");
       await navigator.clipboard.writeText(text);
-      toast.success(
-        t("ui.copied", { v0: selectedQueries.length }),
-      );
+      toast.success(t("ui.copied", { v0: selectedQueries.length }));
     } catch {
       toast.error(t("gscInsights.couldntCopy"));
     }
@@ -306,9 +315,7 @@ export function StrikingDistanceTable({
       void queryClient.invalidateQueries({
         queryKey: ["savedKeywords", projectId],
       });
-      toast.success(
-        t("ui.saved", { v0: keywords.length }),
-      );
+      toast.success(t("ui.saved", { v0: keywords.length }));
       setRowSelection({});
     },
   });
@@ -340,8 +347,7 @@ export function StrikingDistanceTable({
                 }
               : {
                   title: t("ui.noStrikingDistanceQueries"),
-                  description:
-                    t("ui.queriesRankingAtPositions5To_8962"),
+                  description: t("ui.queriesRankingAtPositions5To_8962"),
                 }
           }
         />
@@ -371,19 +377,19 @@ export function StrikingDistanceTable({
               {t("ui.copyKeywords")}
             </TableBulkActionButton>
             {freeSourcesOnly ? null : (
-            <TableBulkActionButton
-              icon={
-                save.isPending ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Save className="size-3.5" />
-                )
-              }
-              onClick={() => save.mutate(selectedQueries)}
-              disabled={save.isPending}
-            >
-              {t("ui.saveAsKeywords")}
-            </TableBulkActionButton>
+              <TableBulkActionButton
+                icon={
+                  save.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Save className="size-3.5" />
+                  )
+                }
+                onClick={() => save.mutate(selectedQueries)}
+                disabled={save.isPending}
+              >
+                {t("ui.saveAsKeywords")}
+              </TableBulkActionButton>
             )}
           </div>
         }

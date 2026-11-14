@@ -81,12 +81,14 @@ function AuthConfigErrorCard({ message, onRetry }: CardProps) {
           <p className="text-muted-foreground">
             {t("ui.hostedModeRequires")}{" "}
             <code className="mx-1">BETTER_AUTH_SECRET</code>
-            {t("ui.32Characters")} <code className="mx-1">BETTER_AUTH_URL</code>{t("ui.andGoogleOauthCredentialsOnThe")}
+            {t("ui.32Characters")} <code className="mx-1">BETTER_AUTH_URL</code>
+            {t("ui.andGoogleOauthCredentialsOnThe")}
           </p>
         ) : null}
         {clientAuthMode === "everyapp" ? (
           <p className="text-muted-foreground">
-            {t("ui.openseoRunsBehindAnEveryApp")} <code className="mx-1">pnpm everyapp install</code>{" "}
+            {t("ui.openseoRunsBehindAnEveryApp")}{" "}
+            <code className="mx-1">pnpm everyapp install</code>{" "}
             {t("ui.soItGetsTheGatewayS")}
           </p>
         ) : null}
@@ -94,7 +96,8 @@ function AuthConfigErrorCard({ message, onRetry }: CardProps) {
           <p className="text-muted-foreground">
             {t("ui.cloudflareAccessModeRequires")}
             <code className="mx-1">TEAM_DOMAIN</code> {t("ui.aFullHttpsUrlAnd")}
-            <code className="mx-1">POLICY_AUD</code> {t("ui.setOnTheDeploymentWithAn")}
+            <code className="mx-1">POLICY_AUD</code>{" "}
+            {t("ui.setOnTheDeploymentWithAn")}
           </p>
         ) : null}
       </CardContent>
@@ -146,9 +149,7 @@ function UnauthenticatedErrorCard({ message, onRetry }: CardProps) {
       </CardHeader>
       <CardContent className="space-y-4 text-muted-foreground">
         <p>{message}</p>
-        <p>
-          {t("ui.thisDeploymentUsesExternalAuthenticationRefresh")}
-        </p>
+        <p>{t("ui.thisDeploymentUsesExternalAuthenticationRefresh")}</p>
       </CardContent>
       <CardFooter className="justify-end">
         <Button onClick={onRetry}>{t("ui.tryAgain")}</Button>

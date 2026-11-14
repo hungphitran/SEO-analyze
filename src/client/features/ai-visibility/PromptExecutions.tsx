@@ -72,7 +72,9 @@ export function PromptExecutions({
                   {aiDate(observation.collectedAt ?? run.createdAt)}
                   {run.trigger !== "manual" && (
                     <span className="ml-2 hidden text-[0.625rem] lg:inline">
-                      {run.trigger === "baseline" ? t("ai.baseline") : t("ai.scheduled")}
+                      {run.trigger === "baseline"
+                        ? t("ai.baseline")
+                        : t("ai.scheduled")}
                     </span>
                   )}
                 </span>

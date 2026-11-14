@@ -119,7 +119,9 @@ export function PromptExplorerForm({
       <CardContent>
         <form onSubmit={onSubmit} noValidate className="space-y-5">
           <Field>
-            <FieldLabel htmlFor="prompt-explorer-prompt">{t("search.prompt")}</FieldLabel>
+            <FieldLabel htmlFor="prompt-explorer-prompt">
+              {t("search.prompt")}
+            </FieldLabel>
             <Textarea
               id="prompt-explorer-prompt"
               className="resize-none"
@@ -173,7 +175,11 @@ export function PromptExplorerForm({
                       {formatModelLabel(model)}
                       {unsupportedModels.includes(model) &&
                       form.webSearchCountryCode !== "default" ? (
-                        <span className="block text-xs text-muted-foreground">{t("ui.skippedFor", { v0: formatCountryLabel(form.webSearchCountryCode) })}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {t("ui.skippedFor", {
+                            v0: formatCountryLabel(form.webSearchCountryCode),
+                          })}
+                        </span>
                       ) : null}
                     </span>
                   </Label>
@@ -242,7 +248,9 @@ export function PromptExplorerForm({
               type="submit"
               className="px-6"
               disabled={supportedModels.length === 0}
-            >{t("ui.run_ea0a", { v0: supportedModels.length })}</Button>
+            >
+              {t("ui.run_ea0a", { v0: supportedModels.length })}
+            </Button>
           </div>
 
           {validationError ? (

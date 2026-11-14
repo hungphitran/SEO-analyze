@@ -125,9 +125,15 @@ describe("onboarding connection actions", () => {
     });
     expect(html).toContain(t("integrations.chooseProperty"));
     expect(html).not.toContain("check your Google connection.");
-    expect(html.match(new RegExp(t("onboarding.saveAndContinue"), "g"))).toHaveLength(1);
-    expect(html.match(new RegExp(t("onboarding.skipForNow"), "g"))).toHaveLength(1);
-    expect(html.match(new RegExp(` ${t("common.back")}</button>`,"g"))).toHaveLength(1);
+    expect(
+      html.match(new RegExp(t("onboarding.saveAndContinue"), "g")),
+    ).toHaveLength(1);
+    expect(
+      html.match(new RegExp(t("onboarding.skipForNow"), "g")),
+    ).toHaveLength(1);
+    expect(
+      html.match(new RegExp(` ${t("common.back")}</button>`, "g")),
+    ).toHaveLength(1);
   });
 
   it("keeps a saved connection usable after a failed refetch", () => {
@@ -146,7 +152,9 @@ describe("onboarding connection actions", () => {
     expect(html).toContain("Không kiểm tra được kết nối Google.");
     expect(html).toContain(t("common.tryAgain"));
     expect(html).not.toContain(t("integrations.chooseProperty"));
-    expect(html).toMatch(new RegExp(`disabled=""[^>]*>${t("onboarding.saveAndContinue")}`));
+    expect(html).toMatch(
+      new RegExp(`disabled=""[^>]*>${t("onboarding.saveAndContinue")}`),
+    );
   });
 });
 
@@ -170,7 +178,8 @@ describe("Search Console website setup guidance", () => {
       expect(html).toContain("/blogs/google-search-console-setup");
       expect(html).toContain(t("common.refresh"));
       expect(html).toContain(t("integrations.useDifferentGoogleAccount"));
-      if (surface === "onboarding") expect(html).toContain(t("onboarding.skipForNow"));
+      if (surface === "onboarding")
+        expect(html).toContain(t("onboarding.skipForNow"));
     },
   );
 

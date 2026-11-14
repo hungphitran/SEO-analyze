@@ -92,7 +92,9 @@ function ModelResultCard({
 
       <p className="px-5 pt-3 text-xs text-muted-foreground">
         {modelResult.webSearchCountryCode
-          ? t("ui.countryHintSentThisIsNot", { v0: formatCountryLabel(modelResult.webSearchCountryCode) })
+          ? t("ui.countryHintSentThisIsNot", {
+              v0: formatCountryLabel(modelResult.webSearchCountryCode),
+            })
           : t("search.noCountryHint")}
       </p>
       <div className="px-5 py-5">
@@ -137,7 +139,9 @@ function CitationsList({
 }) {
   return (
     <div className="border-t border-border bg-muted/30 px-5 py-3">
-      <p className="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">{t("ui.citedSources", { v0: citations.length })}</p>
+      <p className="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        {t("ui.citedSources", { v0: citations.length })}
+      </p>
       <ExpandableList
         items={citations}
         className="space-y-1.5"
@@ -197,7 +201,9 @@ function ModelHeader({
         {modelName ? (
           <code className="text-xs text-muted-foreground">{modelName}</code>
         ) : null}
-        {status === "error" ? <Badge variant="destructive">{t("common.error")}</Badge> : null}
+        {status === "error" ? (
+          <Badge variant="destructive">{t("common.error")}</Badge>
+        ) : null}
         {status === "skipped" ? (
           <Badge variant="secondary">{t("common.skipped")}</Badge>
         ) : null}
@@ -220,7 +226,9 @@ function ModelHeader({
         ) : null}
       </div>
       {tokens != null ? (
-        <span className="text-xs text-muted-foreground tabular-nums">{t("ui.tokens", { v0: tokens.toLocaleString() })}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {t("ui.tokens", { v0: tokens.toLocaleString() })}
+        </span>
       ) : null}
     </header>
   );

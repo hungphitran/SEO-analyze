@@ -33,8 +33,7 @@ type Props = {
   projectId: string;
 };
 
-const DOMAIN_LEVEL_TIP =
-  t("search.mentionsPerDomain");
+const DOMAIN_LEVEL_TIP = t("search.mentionsPerDomain");
 
 export function BrandLookupResults({ result, projectId }: Props) {
   if (!result.hasData) {
@@ -51,7 +50,8 @@ export function BrandLookupResults({ result, projectId }: Props) {
           <TriangleAlert aria-hidden />
           <AlertTitle className="font-normal">
             {t("ui.aiMentionDataIsTemporarilyUnavailable")}{" "}
-            <strong>{result.resolvedTarget}</strong>{t("ui.pleaseTryAgainShortly")}
+            <strong>{result.resolvedTarget}</strong>
+            {t("ui.pleaseTryAgainShortly")}
           </AlertTitle>
         </Alert>
       );
@@ -61,7 +61,8 @@ export function BrandLookupResults({ result, projectId }: Props) {
         <Alert variant="info">
           <Info aria-hidden />
           <AlertTitle className="font-normal">
-            {t("ui.noAiMentionsFoundFor")} <strong>{result.resolvedTarget}</strong>.
+            {t("ui.noAiMentionsFoundFor")}{" "}
+            <strong>{result.resolvedTarget}</strong>.
           </AlertTitle>
         </Alert>
         {erroredPlatforms.length > 0 ? (
@@ -125,7 +126,9 @@ function BrandHeader({ result }: { result: BrandLookupResult }) {
           <Badge variant="outline">{RESEARCH_SCOPE_LABELS[result.scope]}</Badge>
         ) : null}
       </div>
-      <p className="ml-auto text-xs text-muted-foreground">{t("ui.updated", { v0: formatRelative(result.fetchedAt) })}</p>
+      <p className="ml-auto text-xs text-muted-foreground">
+        {t("ui.updated", { v0: formatRelative(result.fetchedAt) })}
+      </p>
     </section>
   );
 }
@@ -178,7 +181,9 @@ function StatsCard({ result }: { result: BrandLookupResult }) {
                     <InfoTooltip text={t("search.chatgptUsOnly")} />
                   )}
                   {row.status === "error" && (
-                    <span className="text-destructive">{t("common.unavailable")}</span>
+                    <span className="text-destructive">
+                      {t("common.unavailable")}
+                    </span>
                   )}
                 </span>
               </TableCell>

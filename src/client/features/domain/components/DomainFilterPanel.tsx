@@ -162,14 +162,26 @@ export function DomainFilterPanel<TValues extends FilterValues>({
         {meta.overLimit ? (
           <Alert variant="warning">
             <AlertTriangle />
-            <AlertDescription className="text-foreground">{t("ui.tooManyFilterConditionsOfMax", { v0: meta.conditionCount, v1: maxConditions })}</AlertDescription>
+            <AlertDescription className="text-foreground">
+              {t("ui.tooManyFilterConditionsOfMax", {
+                v0: meta.conditionCount,
+                v1: maxConditions,
+              })}
+            </AlertDescription>
           </Alert>
         ) : null}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground tabular-nums">{t("ui.conditions", { v0: meta.conditionCount, v1: maxConditions })}</span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {t("ui.conditions", {
+                v0: meta.conditionCount,
+                v1: maxConditions,
+              })}
+            </span>
             {meta.dirtyCount > 0 ? (
-              <Badge size="sm" variant="warning">{t("ui.unapplied", { v0: meta.dirtyCount })}</Badge>
+              <Badge size="sm" variant="warning">
+                {t("ui.unapplied", { v0: meta.dirtyCount })}
+              </Badge>
             ) : null}
           </div>
           <div className="flex items-center gap-2">

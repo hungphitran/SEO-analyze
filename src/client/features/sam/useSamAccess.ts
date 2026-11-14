@@ -49,10 +49,7 @@ export function useSamAccess(projectId: string): SamAccess {
     errorMessage:
       data.errorMessage ??
       (error
-        ? getStandardErrorMessage(
-            error,
-            t("sam.couldNotLoadSetup"),
-          )
+        ? getStandardErrorMessage(error, t("sam.couldNotLoadSetup"))
         : null),
     isRefetching,
     onRetry,

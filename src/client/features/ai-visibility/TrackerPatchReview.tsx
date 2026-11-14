@@ -68,7 +68,9 @@ export function TrackerPatchReview({
     >
       <DialogContent className="sm:max-w-lg" showCloseButton={false}>
         <DialogHeader className="flex-row items-center justify-between gap-3">
-          <DialogTitle className="text-lg">{t("ai.reviewTrackingChange")}</DialogTitle>
+          <DialogTitle className="text-lg">
+            {t("ai.reviewTrackingChange")}
+          </DialogTitle>
           <Button
             variant="ghost"
             size="icon-sm"

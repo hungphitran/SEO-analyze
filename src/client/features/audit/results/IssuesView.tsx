@@ -216,7 +216,9 @@ function AffectedUrlList({ issues }: { issues: AuditIssueRow[] }) {
         </div>
       ))}
       {remaining > 0 && (
-        <div className="px-3 py-2 text-xs text-muted-foreground">{t("ui.andMoreExportTheIssuesCsv", { v0: remaining })}</div>
+        <div className="px-3 py-2 text-xs text-muted-foreground">
+          {t("ui.andMoreExportTheIssuesCsv", { v0: remaining })}
+        </div>
       )}
     </div>
   );

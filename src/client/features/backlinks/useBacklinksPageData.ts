@@ -235,7 +235,10 @@ export function useBacklinksPageData({
   const activeTabFilterError = tab === "backlinks" ? rowsFilterError : null;
   const activeTabErrorMessage =
     activeTabFilterError ??
-    getBacklinksErrorMessage(activeTabQuery.error, t("backlinks.couldNotLoadTab"));
+    getBacklinksErrorMessage(
+      activeTabQuery.error,
+      t("backlinks.couldNotLoadTab"),
+    );
 
   return {
     activeTabErrorMessage,

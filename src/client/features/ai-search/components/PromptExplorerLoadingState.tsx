@@ -13,7 +13,11 @@ export function PromptExplorerLoadingState({
   models: PromptExplorerModel[];
 }) {
   return (
-    <div className="space-y-5" aria-busy="true" aria-label={t("search.loadingAnswers")}>
+    <div
+      className="space-y-5"
+      aria-busy="true"
+      aria-label={t("search.loadingAnswers")}
+    >
       {models.map((model) => (
         <article
           key={model}

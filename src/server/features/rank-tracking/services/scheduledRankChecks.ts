@@ -50,10 +50,9 @@ export async function runScheduledRankChecks(env: Env) {
     return;
   }
   const sourceProvider = await resolveSerpProvider();
-  const taskUnitBudget =
-    isFreeRankSource(sourceProvider)
-      ? OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET
-      : SCHEDULED_TASK_UNIT_BUDGET;
+  const taskUnitBudget = isFreeRankSource(sourceProvider)
+    ? OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET
+    : SCHEDULED_TASK_UNIT_BUDGET;
   const nowIso = new Date().toISOString();
   const dueConfigs =
     await RankTrackingRepository.getDueConfigsWithOrganization(nowIso);
@@ -109,10 +108,9 @@ export async function runScheduledRankChecks(env: Env) {
       if (!interval || !config.nextCheckAt) continue;
 
       const kwCount = keywordCounts.get(config.id) ?? 0;
-      const taskUnits =
-        isFreeRankSource(sourceProvider)
-          ? Math.min(kwCount, OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET)
-          : kwCount * devicesCount(config.devices);
+      const taskUnits = isFreeRankSource(sourceProvider)
+        ? Math.min(kwCount, OPEN_SERP_SCHEDULED_TASK_UNIT_BUDGET)
+        : kwCount * devicesCount(config.devices);
       if (isFreeRankSource(sourceProvider) && config.locationName) {
         const claimed = await RankTrackingRepository.claimDueConfig({
           configId: config.id,

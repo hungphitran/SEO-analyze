@@ -34,7 +34,9 @@ export function PromptAnswers({
         <p
           className="border-b px-5 py-3 text-xs text-muted-foreground border-border"
           data-ph-mask
-        >{t("ui.collectedPrompt", { v0: observation.prompt })}</p>
+        >
+          {t("ui.collectedPrompt", { v0: observation.prompt })}
+        </p>
       )}
       {observation.status === "completed" ? (
         <AnswerContent

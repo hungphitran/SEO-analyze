@@ -130,7 +130,11 @@ export function AuditDetail({
               </h1>
               {!isRunning && <StatusBadge status={status.status} />}
             </div>
-            <p className="text-sm text-muted-foreground">{t("ui.siteAuditStarted", { v0: formatStartedAt(status.startedAt) })}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("ui.siteAuditStarted", {
+                v0: formatStartedAt(status.startedAt),
+              })}
+            </p>
           </div>
         </div>
 
@@ -145,16 +149,17 @@ export function AuditDetail({
         {failedWithoutResults && (
           <Alert variant="destructive">
             <AlertCircle />
-            <AlertTitle>
-              {t("ui.thisAuditStoppedBeforeItCrawled")}
-            </AlertTitle>
+            <AlertTitle>{t("ui.thisAuditStoppedBeforeItCrawled")}</AlertTitle>
             <AlertDescription>
               <p>
                 {t("ui.runANewAuditToTry")}{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> {t("ui.ifThisKeepsHappening")}
+                <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>{" "}
+                {t("ui.ifThisKeepsHappening")}
               </p>
               {status.errorCode ? (
-                <p className="font-mono text-xs">{t("ui.code", { v0: status.errorCode })}</p>
+                <p className="font-mono text-xs">
+                  {t("ui.code", { v0: status.errorCode })}
+                </p>
               ) : null}
             </AlertDescription>
           </Alert>
@@ -163,9 +168,7 @@ export function AuditDetail({
         {siteBlocked && results && (
           <Alert variant="warning">
             <AlertCircle />
-            <AlertTitle>
-              {t("ui.thisSiteSBotProtectionBlocked")}
-            </AlertTitle>
+            <AlertTitle>{t("ui.thisSiteSBotProtectionBlocked")}</AlertTitle>
             <AlertDescription>
               <BotProtectionAdvice
                 projectId={projectId}
@@ -178,10 +181,13 @@ export function AuditDetail({
         {failedWithResults && (
           <Alert variant="warning">
             <AlertCircle />
-            <AlertTitle>{t("ui.thisAuditStoppedEarlyAfterPage", { v0: partialPageCount })}</AlertTitle>
+            <AlertTitle>
+              {t("ui.thisAuditStoppedEarlyAfterPage", { v0: partialPageCount })}
+            </AlertTitle>
             <AlertDescription>
               {t("ui.theResultsBelowCoverEverythingCrawled")}{" "}
-              <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> {t("ui.ifThisKeepsHappening")}
+              <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>{" "}
+              {t("ui.ifThisKeepsHappening")}
             </AlertDescription>
           </Alert>
         )}
@@ -261,7 +267,9 @@ function ProgressCard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-medium">
             <Spinner className="text-primary" aria-hidden />
-            {isLighthousePhase ? t("audit.runningLighthouse") : t("audit.crawlingPages")}
+            {isLighthousePhase
+              ? t("audit.runningLighthouse")
+              : t("audit.crawlingPages")}
           </CardTitle>
           <CardAction>
             <Badge variant="secondary">{phaseLabel}</Badge>
@@ -271,10 +279,20 @@ function ProgressCard({
           <Progress value={progress}>
             <ProgressLabel className="font-normal">
               {isLighthousePhase
-                ? t("ui.checks", { v0: lighthouseDone, v1: status.lighthouseTotal, v2: status.lighthouseFailed > 0
-                      ? t("ui.lighthouseFailedSuffix", { n: status.lighthouseFailed })
-                      : "" })
-                : t("ui.pages", { v0: status.pagesCrawled, v1: status.pagesTotal })}
+                ? t("ui.checks", {
+                    v0: lighthouseDone,
+                    v1: status.lighthouseTotal,
+                    v2:
+                      status.lighthouseFailed > 0
+                        ? t("ui.lighthouseFailedSuffix", {
+                            n: status.lighthouseFailed,
+                          })
+                        : "",
+                  })
+                : t("ui.pages", {
+                    v0: status.pagesCrawled,
+                    v1: status.pagesTotal,
+                  })}
             </ProgressLabel>
             <ProgressValue />
           </Progress>
@@ -284,8 +302,14 @@ function ProgressCard({
       {crawledUrls.length > 0 && (
         <Card size="sm">
           <CardHeader>
-            <CardTitle className="font-medium text-muted-foreground">{t("ui.crawledPages", { v0: crawledUrls.length })}</CardTitle>
-            <CardAction className="text-xs text-muted-foreground">{t("ui.updated", { v0: new Date(crawledUrls[0].crawledAt).toLocaleTimeString() })}</CardAction>
+            <CardTitle className="font-medium text-muted-foreground">
+              {t("ui.crawledPages", { v0: crawledUrls.length })}
+            </CardTitle>
+            <CardAction className="text-xs text-muted-foreground">
+              {t("ui.updated", {
+                v0: new Date(crawledUrls[0].crawledAt).toLocaleTimeString(),
+              })}
+            </CardAction>
           </CardHeader>
           <CardContent className="max-h-[400px] overflow-y-auto">
             {crawledUrls.map((entry, i) => (

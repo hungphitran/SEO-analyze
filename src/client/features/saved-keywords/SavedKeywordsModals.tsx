@@ -31,6 +31,8 @@ export function DeleteSavedKeywordsModal({
       pending={isPending}
       onClose={onClose}
       onConfirm={onConfirm}
-    >{t("ui.thisWillPermanentlyDeleteSavedKeyword", { v0: selectedCount })}</ConfirmDialog>
+    >
+      {t("ui.thisWillPermanentlyDeleteSavedKeyword", { v0: selectedCount })}
+    </ConfirmDialog>
   );
 }

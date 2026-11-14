@@ -152,9 +152,7 @@ export function IndexNowSettings({ projectId }: { projectId: string }) {
     <section id="indexnow" className="scroll-mt-6">
       <CardShell title="IndexNow">
         <div className="flex flex-1 flex-col gap-4 text-sm">
-          <p className="text-muted-foreground">
-            {t("indexNow.intro")}
-          </p>
+          <p className="text-muted-foreground">{t("indexNow.intro")}</p>
           {!domain ? (
             <p className="text-muted-foreground">
               {t("indexNow.addWebsiteFirst")}
@@ -179,10 +177,7 @@ export function IndexNowSettings({ projectId }: { projectId: string }) {
                 isChecking={keyFilesQuery.isFetching}
                 onCheck={() => void keyFilesQuery.refetch()}
               />
-              <Step
-                number={2}
-                title={t("indexNow.submitWhenPublish")}
-              >
+              <Step number={2} title={t("indexNow.submitWhenPublish")}>
                 <p className="text-muted-foreground">
                   {t("indexNow.pasteChangedOnly")}
                 </p>
@@ -201,14 +196,18 @@ export function IndexNowSettings({ projectId }: { projectId: string }) {
                         />
                       )}
                     </form.AppField>
-                    <form.SubmitButton>{t("indexNow.submit")}</form.SubmitButton>
+                    <form.SubmitButton>
+                      {t("indexNow.submit")}
+                    </form.SubmitButton>
                   </form.Form>
                 </form.AppForm>
                 <div className="space-y-1 rounded-md bg-muted/50 p-3 text-muted-foreground">
                   <div className="flex flex-wrap items-center gap-2">
                     <span>
                       {t("indexNow.orAskAgent")}{" "}
-                      <span className="text-foreground">"{AGENT_PROMPT()}"</span>
+                      <span className="text-foreground">
+                        "{AGENT_PROMPT()}"
+                      </span>
                     </span>
                     <CopyButton
                       value={AGENT_PROMPT()}
@@ -218,9 +217,7 @@ export function IndexNowSettings({ projectId }: { projectId: string }) {
                       label={t("indexNow.copyPrompt")}
                     />
                   </div>
-                  <p className="text-xs">
-                    {t("indexNow.agentCanAddFile")}
-                  </p>
+                  <p className="text-xs">{t("indexNow.agentCanAddFile")}</p>
                 </div>
               </Step>
             </ol>
@@ -257,9 +254,7 @@ function KeyFileStep({
   return (
     <Step
       number={1}
-      title={
-        verified ? t("indexNow.keyFileReady") : t("indexNow.addKeyFile")
-      }
+      title={verified ? t("indexNow.keyFileReady") : t("indexNow.addKeyFile")}
     >
       {verified ? null : (
         <>
@@ -272,9 +267,7 @@ function KeyFileStep({
             <Download className="size-4" />
             {t("indexNow.downloadKeyFile")}
           </Button>
-          <p className="text-muted-foreground">
-            {t("indexNow.putAtRoot")}
-          </p>
+          <p className="text-muted-foreground">{t("indexNow.putAtRoot")}</p>
         </>
       )}
       <ul className="space-y-1">
@@ -315,15 +308,9 @@ function KeyFileStep({
               <li>
                 {t("indexNow.helpCode", { public: "public", static: "static" })}
               </li>
-              <li>
-                {t("indexNow.helpWp", { wpconfig: "wp-config.php" })}
-              </li>
-              <li>
-                {t("indexNow.helpCf")}
-              </li>
-              <li>
-                {t("indexNow.helpBuilders")}
-              </li>
+              <li>{t("indexNow.helpWp", { wpconfig: "wp-config.php" })}</li>
+              <li>{t("indexNow.helpCf")}</li>
+              <li>{t("indexNow.helpBuilders")}</li>
             </ul>
           </CollapsibleContent>
         </Collapsible>

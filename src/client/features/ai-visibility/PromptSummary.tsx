@@ -59,7 +59,10 @@ export function PromptSummary({ summaries }: { summaries: AiBrandSummary[] }) {
               </TableCell>
               <TableCell
                 className="tabular-nums"
-                title={t("ui.ofAnswers", { v0: brand.mentions, v1: brand.answers })}
+                title={t("ui.ofAnswers", {
+                  v0: brand.mentions,
+                  v1: brand.answers,
+                })}
               >
                 {aiRate(brand.mentions, brand.answers)}
                 {brand.answers > 0 && (
@@ -70,7 +73,10 @@ export function PromptSummary({ summaries }: { summaries: AiBrandSummary[] }) {
               </TableCell>
               <TableCell
                 className="tabular-nums"
-                title={t("ui.ofAnswers", { v0: brand.citations, v1: brand.answers })}
+                title={t("ui.ofAnswers", {
+                  v0: brand.citations,
+                  v1: brand.answers,
+                })}
               >
                 {aiRate(brand.citations, brand.answers)}
                 {brand.answers > 0 && (
@@ -97,7 +103,9 @@ export function PromptSummary({ summaries }: { summaries: AiBrandSummary[] }) {
             size="xs"
             className="h-auto px-0 text-muted-foreground hover:text-foreground"
             onClick={() => setExpanded(true)}
-          >{t("ui.showMore", { v0: hiddenCount })}</Button>
+          >
+            {t("ui.showMore", { v0: hiddenCount })}
+          </Button>
         </div>
       )}
     </div>

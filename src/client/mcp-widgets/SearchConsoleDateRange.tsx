@@ -51,7 +51,10 @@ export function SearchConsoleDateRange({
         if (value != null) onChange(value);
       }}
     >
-      <SelectTrigger aria-label={t("ui.dateRange")} className="w-44 bg-card pr-3">
+      <SelectTrigger
+        aria-label={t("ui.dateRange")}
+        className="w-44 bg-card pr-3"
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

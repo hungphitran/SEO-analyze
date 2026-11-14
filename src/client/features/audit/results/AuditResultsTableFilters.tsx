@@ -184,7 +184,8 @@ export function ResultsTableToolbar({
     <DataTableToolbar
       actions={
         <span className="text-sm tabular-nums text-muted-foreground">
-          {resultCount.toLocaleString()} {t("ui.of")} {totalCount.toLocaleString()}
+          {resultCount.toLocaleString()} {t("ui.of")}{" "}
+          {totalCount.toLocaleString()}
         </span>
       }
     >

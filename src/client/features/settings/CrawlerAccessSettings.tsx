@@ -30,7 +30,6 @@ import {
 } from "@/client/components/ui/card";
 import { formatUiDate, t } from "@/shared/i18n";
 
-
 /**
  * Shopify crawler-access signatures saved on this project. The audit crawler
  * replays them per host, and other projects in the organization that audit
@@ -121,14 +120,18 @@ export function CrawlerAccessSettings({ projectId }: { projectId: string }) {
                           ? formatUiDate(credential.expiresAt)
                           : t("common.unknown")}
                         {isCrawlerAccessExpired(credential.expiresAt) && (
-                          <span className="ml-2 text-destructive">{t("settings.expired")}</span>
+                          <span className="ml-2 text-destructive">
+                            {t("settings.expired")}
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          aria-label={t("settings.removeCrawlerAria", { host: credential.host })}
+                          aria-label={t("settings.removeCrawlerAria", {
+                            host: credential.host,
+                          })}
                           disabled={deleteMutation.isPending}
                           onClick={() => deleteMutation.mutate(credential.id)}
                         >

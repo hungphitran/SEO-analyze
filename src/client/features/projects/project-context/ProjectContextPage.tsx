@@ -36,14 +36,10 @@ const SECTION_HINTS: Record<ProjectContextSectionKey, string> = {
 };
 
 const SECTION_PLACEHOLDERS: Record<ProjectContextSectionKey, string> = {
-  business_overview:
-    t("ui.eGBookingSoftwareForIndependent"),
-  current_goal:
-    t("ui.eGDoubleOrganicSignupsBy"),
-  positioning:
-    t("ui.eGTheOnlyBookingTool"),
-  writing_preferences:
-    t("ui.eGPlainAndDirectNo"),
+  business_overview: t("ui.eGBookingSoftwareForIndependent"),
+  current_goal: t("ui.eGDoubleOrganicSignupsBy"),
+  positioning: t("ui.eGTheOnlyBookingTool"),
+  writing_preferences: t("ui.eGPlainAndDirectNo"),
 };
 
 export function ProjectContextPage({ projectId }: { projectId: string }) {
@@ -56,10 +52,7 @@ export function ProjectContextPage({ projectId }: { projectId: string }) {
   });
 
   return (
-    <QueryState
-      query={contextQuery}
-      errorFallback={t("context.failedLoad")}
-    >
+    <QueryState query={contextQuery} errorFallback={t("context.failedLoad")}>
       {(context) => (
         // key remounts the whole page when the project switches under it, so no
         // draft, open form, or edit state can carry over to another project.
@@ -172,7 +165,9 @@ function ProseSections({
               {section ? (
                 <Provenance by={section.updatedBy} at={section.updatedAt} />
               ) : (
-                <span className="text-xs text-muted-foreground">{t("context.empty")}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t("context.empty")}
+                </span>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -271,13 +266,17 @@ function CustomSections({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      aria-label={t("ui.edit", { v0: custom.title ?? custom.slug })}
+                      aria-label={t("ui.edit", {
+                        v0: custom.title ?? custom.slug,
+                      })}
                       onClick={() => setEditingSlug(custom.slug)}
                     >
                       <Pencil className="size-3.5" />
                     </Button>
                     <InlineConfirm
-                      label={t("ui.delete", { v0: custom.title ?? custom.slug })}
+                      label={t("ui.delete", {
+                        v0: custom.title ?? custom.slug,
+                      })}
                       pending={update.isPending}
                       onConfirm={() =>
                         update.mutate([{ deleteCustomSection: custom.slug }])

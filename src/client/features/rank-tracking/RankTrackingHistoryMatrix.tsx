@@ -121,9 +121,7 @@ function NotCheckedCell() {
       >
         <CircleSlash className="size-3.5" aria-hidden />
       </TooltipTrigger>
-      <TooltipContent>
-        {t("ui.notCheckedCheckFailedNoPosition")}
-      </TooltipContent>
+      <TooltipContent>{t("ui.notCheckedCheckFailedNoPosition")}</TooltipContent>
     </Tooltip>
   );
 }

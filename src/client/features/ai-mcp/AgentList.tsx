@@ -27,7 +27,9 @@ export function AgentList() {
           {name}
         </li>
       ))}
-      <li className="text-xs text-muted-foreground/75">{t("agent.orAnyMcp")}</li>
+      <li className="text-xs text-muted-foreground/75">
+        {t("agent.orAnyMcp")}
+      </li>
     </ul>
   );
 }

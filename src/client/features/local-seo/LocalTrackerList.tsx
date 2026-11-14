@@ -29,7 +29,9 @@ export function LocalTrackerList({
     <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-3">
         <CardTitle>
-          <h2 className="text-sm font-semibold">{t("local.trackedBusinesses")}</h2>
+          <h2 className="text-sm font-semibold">
+            {t("local.trackedBusinesses")}
+          </h2>
         </CardTitle>
         <CardAction className="self-center">
           <Button size="sm" onClick={onAdd}>
@@ -71,7 +73,13 @@ export function LocalTrackerList({
                     <p className="truncate text-xs text-muted-foreground">
                       {tracker.address}
                     </p>
-                    <p className="text-xs text-muted-foreground">{t("ui.gridKmSpacingMobile", { v0: tracker.gridSize, v1: tracker.gridSize, v2: tracker.spacingKm })}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("ui.gridKmSpacingMobile", {
+                        v0: tracker.gridSize,
+                        v1: tracker.gridSize,
+                        v2: tracker.spacingKm,
+                      })}
+                    </p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </Link>

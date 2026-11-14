@@ -61,7 +61,9 @@ export function DomainTableToolbar({
         <div className="border-b border-border px-4 py-3">
           <Alert variant="warning">
             <AlertTriangle />
-            <AlertDescription className="text-foreground">{t("ui.savedFiltersExceedThisScopeS", { v0: overBudgetLimit })}</AlertDescription>
+            <AlertDescription className="text-foreground">
+              {t("ui.savedFiltersExceedThisScopeS", { v0: overBudgetLimit })}
+            </AlertDescription>
           </Alert>
         </div>
       ) : null}

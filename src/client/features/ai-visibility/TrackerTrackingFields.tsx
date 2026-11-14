@@ -108,7 +108,12 @@ export function TrackerTrackingFields({
                   <TriangleAlert className="ml-auto size-4 text-muted-foreground" />
                 )}
               </TooltipTrigger>
-              <TooltipContent>{t("ui.canTCollectAnswersIn", { v0: capability.label, v1: country })}</TooltipContent>
+              <TooltipContent>
+                {t("ui.canTCollectAnswersIn", {
+                  v0: capability.label,
+                  v1: country,
+                })}
+              </TooltipContent>
             </Tooltip>
           );
         })}

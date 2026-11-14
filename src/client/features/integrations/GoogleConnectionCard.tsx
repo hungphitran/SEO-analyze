@@ -117,9 +117,7 @@ export function GoogleConnectionCard({
     meta: { errorToast: false },
     mutationFn: () => config.disconnect(projectId),
     onSuccess: () => {
-      toast.success(
-        t("integrations.disconnectedToast", { name: config.name }),
-      );
+      toast.success(t("integrations.disconnectedToast", { name: config.name }));
       queryClient.setQueryData(
         connectionKey,
         (current: GoogleConnection | undefined) =>

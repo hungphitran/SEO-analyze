@@ -181,11 +181,13 @@ export function AuditHealthCard({
           <ScanSearch className="size-7 text-muted-foreground" />
           <h3 className="font-medium">{t("dashboard.findWhatsHoldingBack")}</h3>
           <p className="max-w-sm text-sm text-muted-foreground">
-{t("dashboard.scanPitch", { max: 50 })}
+            {t("dashboard.scanPitch", { max: 50 })}
           </p>
           {domain ? (
             <Button disabled={scan.isPending} onClick={() => scan.mutate()}>
-              {scan.isPending ? t("dashboard.startingScan") : t("dashboard.scanMyWebsite")}
+              {scan.isPending
+                ? t("dashboard.startingScan")
+                : t("dashboard.scanMyWebsite")}
             </Button>
           ) : (
             <Button
@@ -246,7 +248,11 @@ export function AuditHealthCard({
               className="w-full max-w-xs"
               value={checked}
               max={total || 1}
-              aria-label={isLighthouse ? t("dashboard.lighthouseChecks") : t("dashboard.pagesCrawled")}
+              aria-label={
+                isLighthouse
+                  ? t("dashboard.lighthouseChecks")
+                  : t("dashboard.pagesCrawled")
+              }
             />
           )}
           <p className="text-sm text-muted-foreground tabular-nums">
@@ -290,7 +296,10 @@ export function AuditHealthCard({
       )}
       {audit.status === "completed" && (
         <p className="mb-4 text-sm text-muted-foreground">
-          {t("dashboard.pagesCheckedOn", { count: formatUiNumber(audit.pagesCrawled), date: formatDay(audit.startedAt) })}
+          {t("dashboard.pagesCheckedOn", {
+            count: formatUiNumber(audit.pagesCrawled),
+            date: formatDay(audit.startedAt),
+          })}
         </p>
       )}
       {audit.topIssues.length === 0 ? (
@@ -310,15 +319,15 @@ export function AuditHealthCard({
             <TableRow>
               <TableHead>{t("common.issue")}</TableHead>
               <TableHead>{t("common.severity")}</TableHead>
-              <TableHead className="text-right">{t("dashboard.pagesAffected")}</TableHead>
+              <TableHead className="text-right">
+                {t("dashboard.pagesAffected")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {audit.topIssues.map((issue) => (
               <TableRow key={issue.issueType}>
-                <TableCell>
-                  {getAuditIssueTitle(issue.issueType)}
-                </TableCell>
+                <TableCell>{getAuditIssueTitle(issue.issueType)}</TableCell>
                 <TableCell>
                   <SeverityBadge severity={issue.severity}>
                     {issue.severity === "critical"

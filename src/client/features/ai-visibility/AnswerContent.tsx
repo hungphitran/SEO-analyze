@@ -105,7 +105,9 @@ function AnswerEvidence({ answer }: { answer: AiAnswer }) {
           variant={view === "citations" ? "secondary" : "outline"}
           aria-pressed={view === "citations"}
           onClick={() => setView("citations")}
-        >{t("ui.citations", { v0: citations.length })}</Button>
+        >
+          {t("ui.citations", { v0: citations.length })}
+        </Button>
         <Button
           size="sm"
           variant={view === "brands" ? "secondary" : "outline"}
@@ -131,7 +133,11 @@ function AnswerEvidence({ answer }: { answer: AiAnswer }) {
           ) : answer.answerText ? (
             <div className="whitespace-pre-wrap">{answer.answerText}</div>
           ) : (
-            <p className="text-muted-foreground">{t("ui.noAnswerWasCapturedStatusThis", { v0: aiObservationStatusLabel(answer.observation.status) })}</p>
+            <p className="text-muted-foreground">
+              {t("ui.noAnswerWasCapturedStatusThis", {
+                v0: aiObservationStatusLabel(answer.observation.status),
+              })}
+            </p>
           )}
         </article>
         <aside
@@ -146,7 +152,9 @@ function AnswerEvidence({ answer }: { answer: AiAnswer }) {
             className="gap-4"
           >
             <TabsList className="hidden w-full lg:flex">
-              <TabsTrigger value="citations">{t("ui.citations", { v0: citations.length })}</TabsTrigger>
+              <TabsTrigger value="citations">
+                {t("ui.citations", { v0: citations.length })}
+              </TabsTrigger>
               <TabsTrigger value="brands">{t("ai.brands")}</TabsTrigger>
             </TabsList>
             <TabsContent value="citations" className="space-y-3">
@@ -209,7 +217,9 @@ function AnswerEvidence({ answer }: { answer: AiAnswer }) {
                     {spans.length > 0 && answer.answerText && (
                       <Accordion>
                         <AccordionItem value="mentions">
-                          <AccordionTrigger className="py-1 text-xs">{t("ui.mentionExcerpts", { v0: spans.length })}</AccordionTrigger>
+                          <AccordionTrigger className="py-1 text-xs">
+                            {t("ui.mentionExcerpts", { v0: spans.length })}
+                          </AccordionTrigger>
                           <AccordionContent
                             className="space-y-2 pt-2 text-xs text-muted-foreground"
                             data-ph-mask

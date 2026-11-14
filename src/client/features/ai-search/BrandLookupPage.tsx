@@ -149,7 +149,9 @@ export function BrandLookupPage({
     if (trimmed.length > BRAND_LOOKUP_MAX_INPUT_LENGTH) {
       setValidationError({
         field: "query",
-        message: t("ui.keepItUnderCharacters", { v0: BRAND_LOOKUP_MAX_INPUT_LENGTH }),
+        message: t("ui.keepItUnderCharacters", {
+          v0: BRAND_LOOKUP_MAX_INPUT_LENGTH,
+        }),
       });
       return;
     }
@@ -164,7 +166,9 @@ export function BrandLookupPage({
     if (tooLong) {
       setValidationError({
         field: "competitors",
-        message: t("ui.keepEachCompetitorUnderCharacters", { v0: BRAND_LOOKUP_MAX_INPUT_LENGTH }),
+        message: t("ui.keepEachCompetitorUnderCharacters", {
+          v0: BRAND_LOOKUP_MAX_INPUT_LENGTH,
+        }),
       });
       return;
     }
@@ -210,8 +214,7 @@ export function BrandLookupPage({
       description={t("search.brandLookupDesc")}
       gate={{
         feature: t("search.brandLookup"),
-        description:
-          t("search.brandIntro"),
+        description: t("search.brandIntro"),
         features: BRAND_LOOKUP_BULLETS,
         alternative: (
           <PromptTrackingWithoutUpgradeButton projectId={projectId} />

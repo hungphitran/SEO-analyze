@@ -33,7 +33,8 @@ const HIDDEN_FEATURE_DIRS = [
 /** Reviewed files that mention a hidden route but gate it (with the reason). */
 const GATED_LINKS: Record<string, string> = {
   "client/navigation/items.ts": "nav items filtered by getProjectNavGroups",
-  "client/components/Sidebar.tsx": "only active-state matching for a hidden item",
+  "client/components/Sidebar.tsx":
+    "only active-state matching for a hidden item",
   "client/features/dashboard/DashboardSetupAction.tsx":
     "competitor/keywords setup steps are removed in free mode",
   "routes/_authenticated.onboarding.index.tsx":

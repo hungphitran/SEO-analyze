@@ -12,9 +12,9 @@ describe("t", () => {
     expect(t("auth.passwordMin", { min: 8 })).toBe(
       "Mật khẩu phải có ít nhất 8 ký tự.",
     );
-    expect(t("integrations.wasCanceled", { what: "Google Search Console" })).toBe(
-      "Google Search Console đã bị hủy",
-    );
+    expect(
+      t("integrations.wasCanceled", { what: "Google Search Console" }),
+    ).toBe("Google Search Console đã bị hủy");
   });
 
   it("keeps unknown placeholders intact", () => {

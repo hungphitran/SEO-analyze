@@ -206,7 +206,9 @@ export function SearchConsoleWidget({
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           />
-          <span className="text-xs text-muted-foreground">{t("ui.ofReturnedRows", { v0: matching.length, v1: rows.length })}</span>
+          <span className="text-xs text-muted-foreground">
+            {t("ui.ofReturnedRows", { v0: matching.length, v1: rows.length })}
+          </span>
         </div>
         <SearchConsoleTable
           matching={matching}
@@ -280,7 +282,9 @@ export function SearchConsoleWidget({
       </div>
       {selection.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
-          <span className="mr-auto text-sm">{t("ui.selected", { v0: selection.length })}</span>
+          <span className="mr-auto text-sm">
+            {t("ui.selected", { v0: selection.length })}
+          </span>
           <Button
             variant="ghost"
             disabled={busy}
@@ -305,11 +309,11 @@ export function SearchConsoleWidget({
       )}
       {confirmSave && selection.length > 0 && (
         <div className="space-y-3 rounded-xl border border-border bg-card p-4">
-          <p className="text-sm">
-            {t("ui.saveTheseQueriesToThisProject")}
-          </p>
+          <p className="text-sm">{t("ui.saveTheseQueriesToThisProject")}</p>
           <div className="flex gap-2">
-            <Button pending={busy} onClick={save}>{t("ui.confirmSave", { v0: keywords.length })}</Button>
+            <Button pending={busy} onClick={save}>
+              {t("ui.confirmSave", { v0: keywords.length })}
+            </Button>
             <Button
               variant="ghost"
               disabled={busy}
@@ -329,18 +333,15 @@ export function SearchConsoleWidget({
         <Button
           disabled={busy}
           onClick={() =>
-            host.ask(
-              t("ui.useThisSearchConsoleSelectionTo"),
-              {
-                projectId: input.projectId,
-                siteUrl: data.siteUrl,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                request: input,
-                dimensions,
-                rows: selection.length ? selection : matching,
-              },
-            )
+            host.ask(t("ui.useThisSearchConsoleSelectionTo"), {
+              projectId: input.projectId,
+              siteUrl: data.siteUrl,
+              startDate: data.startDate,
+              endDate: data.endDate,
+              request: input,
+              dimensions,
+              rows: selection.length ? selection : matching,
+            })
           }
         >
           <MessageSquare />

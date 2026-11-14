@@ -68,7 +68,10 @@ export function MemberRow({
         <p className="truncate font-medium" data-ph-mask>
           {member.user.name || member.user.email}
           {isSelf ? (
-            <span className="font-normal text-muted-foreground"> {t("team.you")}</span>
+            <span className="font-normal text-muted-foreground">
+              {" "}
+              {t("team.you")}
+            </span>
           ) : null}
         </p>
         <p className="truncate text-xs text-muted-foreground" data-ph-mask>
@@ -78,10 +81,14 @@ export function MemberRow({
       <TableCell>
         <Badge variant="secondary">{formatRole(member.role)}</Badge>
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">{t("team.active")}</TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {t("team.active")}
+      </TableCell>
       <TableCell>
         {canRemove ? (
-          <RowActionsMenu label={t("settings.actionsFor", { name: member.user.email })}>
+          <RowActionsMenu
+            label={t("settings.actionsFor", { name: member.user.email })}
+          >
             {canTransferOwnership ? (
               <DropdownMenuItem onClick={onTransferOwnership}>
                 <Crown />
@@ -145,7 +152,7 @@ export function InvitationRow({
         </Badge>
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
-{t("team.invitedExpires", { date: formatUiDate(invitation.expiresAt) })}
+        {t("team.invitedExpires", { date: formatUiDate(invitation.expiresAt) })}
       </TableCell>
       <TableCell>
         {canManageTeam ? (

@@ -13,9 +13,7 @@ describe("getAuditIssueCopy", () => {
       );
       // Schema identifiers stay English in the registry and as the lookup key.
       const registry: Record<string, { title: string }> = AUDIT_ISSUE_TYPES;
-      expect(registry[id]?.title).not.toBe(
-        copy.title,
-      );
+      expect(registry[id]?.title).not.toBe(copy.title);
       expect(copy.explanation.length).toBeGreaterThan(20);
       expect(copy.howToFix.length).toBeGreaterThan(10);
     }

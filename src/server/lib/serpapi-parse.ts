@@ -43,7 +43,6 @@ export function isNonEmpty(value: unknown) {
     : Boolean(value);
 }
 
-
 export function normalizeHostname(hostname: string) {
   const normalized = hostname.toLowerCase().replace(/^www\./, "");
   return normalized.endsWith(".") ? normalized.slice(0, -1) : normalized;

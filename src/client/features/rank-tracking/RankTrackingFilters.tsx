@@ -102,29 +102,29 @@ export function FilterPanel({
         />
       </div>
       {freeSourcesOnly ? null : (
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        <RangeFilter
-          title={t("kw.volume")}
-          minValue={draft.minVolume}
-          maxValue={draft.maxVolume}
-          onMinChange={(v) => update("minVolume", v)}
-          onMaxChange={(v) => update("maxVolume", v)}
-        />
-        <RangeFilter
-          title={t("rank.keywordDifficulty")}
-          minValue={draft.minKd}
-          maxValue={draft.maxKd}
-          onMinChange={(v) => update("minKd", v)}
-          onMaxChange={(v) => update("maxKd", v)}
-        />
-        <RangeFilter
-          title="CPC"
-          minValue={draft.minCpc}
-          maxValue={draft.maxCpc}
-          onMinChange={(v) => update("minCpc", v)}
-          onMaxChange={(v) => update("maxCpc", v)}
-        />
-      </div>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <RangeFilter
+            title={t("kw.volume")}
+            minValue={draft.minVolume}
+            maxValue={draft.maxVolume}
+            onMinChange={(v) => update("minVolume", v)}
+            onMaxChange={(v) => update("maxVolume", v)}
+          />
+          <RangeFilter
+            title={t("rank.keywordDifficulty")}
+            minValue={draft.minKd}
+            maxValue={draft.maxKd}
+            onMinChange={(v) => update("minKd", v)}
+            onMaxChange={(v) => update("maxKd", v)}
+          />
+          <RangeFilter
+            title="CPC"
+            minValue={draft.minCpc}
+            maxValue={draft.maxCpc}
+            onMinChange={(v) => update("minCpc", v)}
+            onMaxChange={(v) => update("maxCpc", v)}
+          />
+        </div>
       )}
     </div>
   );

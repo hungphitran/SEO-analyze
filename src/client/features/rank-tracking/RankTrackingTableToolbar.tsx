@@ -91,7 +91,9 @@ export function RankTrackingTableToolbar({
           <span>
             {latestRun.status === "pending"
               ? t("common.preparing")
-              : t("ui.gettingRankingsForKeyword", { v0: latestRun.keywordsTotal || "?" })}{" "}
+              : t("ui.gettingRankingsForKeyword", {
+                  v0: latestRun.keywordsTotal || "?",
+                })}{" "}
             {latestRun.keywordsChecked}/{latestRun.keywordsTotal || "?"}
           </span>
           {latestRun.keywordsTotal > 0 && (
@@ -104,7 +106,9 @@ export function RankTrackingTableToolbar({
           )}
         </div>
       ) : (
-        <span className="text-sm text-muted-foreground">{t("ui.keywords_1c59", { v0: keywordCount })}</span>
+        <span className="text-sm text-muted-foreground">
+          {t("ui.keywords_1c59", { v0: keywordCount })}
+        </span>
       )}
 
       <div className="flex-1" />

@@ -237,9 +237,7 @@ function SavedKeywordsPage() {
       captureClientEvent("saved_keywords:bulk_remove", {
         count: result.deletedCount,
       });
-      toast.success(
-        t("ui.keywordRemoved", { v0: result.deletedCount }),
-      );
+      toast.success(t("ui.keywordRemoved", { v0: result.deletedCount }));
     },
     onError: (error) => {
       setRemoveError(getStandardErrorMessage(error, t("saved.removeFailed")));
@@ -264,9 +262,7 @@ function SavedKeywordsPage() {
       setRowSelection({});
       setShowTagModal(false);
       void invalidateSavedKeywords();
-      toast.success(
-        t("ui.updatedTagsForKeyword", { v0: result.taggedCount }),
-      );
+      toast.success(t("ui.updatedTagsForKeyword", { v0: result.taggedCount }));
     },
   });
 
@@ -274,9 +270,7 @@ function SavedKeywordsPage() {
     mutationFn: () => refreshSavedKeywordMetrics({ data: { projectId } }),
     onSuccess: (result) => {
       void invalidateSavedKeywords();
-      toast.success(
-        t("ui.updatedStatsForKeyword", { v0: result.updated }),
-      );
+      toast.success(t("ui.updatedStatsForKeyword", { v0: result.updated }));
     },
   });
 
@@ -386,9 +380,7 @@ function SavedKeywordsPage() {
               .writeText(selectedRows.map((row) => row.keyword).join("\n"))
               .then(
                 () =>
-                  toast.success(
-                    t("ui.keywordCopied", { v0: selectedCount }),
-                  ),
+                  toast.success(t("ui.keywordCopied", { v0: selectedCount })),
                 () => toast.error(t("saved.couldNotCopy")),
               );
           }}

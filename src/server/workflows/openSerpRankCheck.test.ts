@@ -21,7 +21,9 @@ vi.mock(
 );
 const serpApi = vi.hoisted(() => ({ searchSerpApi: vi.fn() }));
 vi.mock("@/server/lib/serpapi", async () => {
-  const actual = await vi.importActual<typeof SerpApiModule>("@/server/lib/serpapi");
+  const actual = await vi.importActual<typeof SerpApiModule>(
+    "@/server/lib/serpapi",
+  );
   return { ...actual, searchSerpApi: serpApi.searchSerpApi };
 });
 vi.mock("@/server/lib/r2-cache", () => ({

@@ -32,5 +32,9 @@ it("keeps context list drafts in place while a save is pending", () => {
   const $ = load(html);
 
   expect($("button:contains('Add competitor')").is(":disabled")).toBe(true);
-  expect($(`button[aria-label='${t("ui.edit", { v0: "alpha.com" })}']`).is(":disabled")).toBe(true);
+  expect(
+    $(`button[aria-label='${t("ui.edit", { v0: "alpha.com" })}']`).is(
+      ":disabled",
+    ),
+  ).toBe(true);
 });

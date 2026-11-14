@@ -84,7 +84,9 @@ export function RankTrackingOverview({
     <div className="px-4 pt-4 pb-4">
       <div className="space-y-2 rounded-lg border border-border p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium">{t("rank.positionDistribution")}</span>
+          <span className="text-sm font-medium">
+            {t("rank.positionDistribution")}
+          </span>
           <TrendRangeToggle value={sinceDays} onChange={setSinceDays} />
         </div>
 

@@ -165,7 +165,8 @@ export function CitationTabsCard({
                   <strong className="text-foreground">
                     {result.resolvedTarget}
                   </strong>
-                  {isUrlScoped ? "." : t("ui.inAiAnswers")} {t("ui.promptExamplesComeFromTheFetched")}
+                  {isUrlScoped ? "." : t("ui.inAiAnswers")}{" "}
+                  {t("ui.promptExamplesComeFromTheFetched")}
                 </>
               ) : (
                 <>
@@ -230,9 +231,7 @@ export function CitationTabsCard({
         title: isUrlScoped
           ? t("ui.noneOfThisDomainSTop", { v0: result.resolvedTarget })
           : t("search.noCitedSources"),
-        description: isUrlScoped
-          ? t("search.broadenCitations")
-          : undefined,
+        description: isUrlScoped ? t("search.broadenCitations") : undefined,
       }}
       {...tableProps}
     />
@@ -243,9 +242,7 @@ export function CitationTabsCard({
         title: isUrlScoped
           ? t("ui.noSampledPromptsCitedAPage", { v0: result.resolvedTarget })
           : t("search.noMatchingQueries"),
-        description: isUrlScoped
-          ? t("search.broadenPrompts")
-          : undefined,
+        description: isUrlScoped ? t("search.broadenPrompts") : undefined,
       }}
       {...tableProps}
     />

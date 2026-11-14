@@ -209,7 +209,9 @@ export function DashboardSetupAction({
       <p className="text-sm leading-relaxed text-muted-foreground">
         {t("ui.bringATeammateIntoYourWorkspace")}
       </p>
-      <Button onClick={() => setShowModal(true)}>{t("dashboard.inviteTeammate")}</Button>
+      <Button onClick={() => setShowModal(true)}>
+        {t("dashboard.inviteTeammate")}
+      </Button>
       {showModal && (
         <InviteTeammateModal
           onClose={() => setShowModal(false)}

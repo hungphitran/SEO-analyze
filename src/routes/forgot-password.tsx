@@ -83,7 +83,9 @@ function ForgotPasswordPage() {
 
           return (
             <AuthPageCard
-              title={isSuccess ? t("auth.checkYourEmail") : t("auth.forgotPassword")}
+              title={
+                isSuccess ? t("auth.checkYourEmail") : t("auth.forgotPassword")
+              }
               helperText={
                 isSuccess
                   ? undefined
@@ -107,7 +109,9 @@ function ForgotPasswordPage() {
             >
               {isSuccess ? (
                 <Alert variant="success">
-                  <AlertDescription>{t("ui.ifAnAccountExistsForYou", { v0: submittedEmail })}</AlertDescription>
+                  <AlertDescription>
+                    {t("ui.ifAnAccountExistsForYou", { v0: submittedEmail })}
+                  </AlertDescription>
                 </Alert>
               ) : (
                 <form.AppForm>

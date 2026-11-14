@@ -169,9 +169,7 @@ export function TrendEmptyState({ checks }: { checks: number }) {
       size="sm"
       title={checks === 0 ? t("rank.noHistory") : t("rank.onlyOneCheck")}
       description={
-        checks === 0
-          ? t("rank.runCheckToStart")
-          : t("rank.trendAfterNext")
+        checks === 0 ? t("rank.runCheckToStart") : t("rank.trendAfterNext")
       }
     />
   );

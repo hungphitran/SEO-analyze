@@ -14,7 +14,9 @@ describe("getProjectNavGroups with FREE_SOURCES_ONLY", () => {
     expect(all).toContain("/p/$projectId/keywords");
     expect(all).toContain("/p/$projectId/backlinks");
     expect(all).toContain("/p/$projectId/ai-visibility/research");
-    expect(all).toEqual(hrefs(getProjectNavGroups("p1", { freeSourcesOnly: false })));
+    expect(all).toEqual(
+      hrefs(getProjectNavGroups("p1", { freeSourcesOnly: false })),
+    );
   });
 
   it("drops every DataForSEO-only item and nothing that free sources serve", () => {

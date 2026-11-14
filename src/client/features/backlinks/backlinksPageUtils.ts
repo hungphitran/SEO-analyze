@@ -3,12 +3,9 @@ import type { BacklinksOverviewData } from "./backlinksPageTypes";
 import { t } from "@/shared/i18n";
 
 export const TAB_DESCRIPTIONS: Record<BacklinksTab, string> = {
-  backlinks:
-    t("backlinks.tabLinksHelp"),
-  domains:
-    t("backlinks.tabDomainsHelp"),
-  pages:
-    t("backlinks.tabPagesHelp"),
+  backlinks: t("backlinks.tabLinksHelp"),
+  domains: t("backlinks.tabDomainsHelp"),
+  pages: t("backlinks.tabPagesHelp"),
 };
 
 export function buildSummaryStats(data: BacklinksOverviewData | undefined) {

@@ -31,7 +31,10 @@ import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import { isErrorCode } from "@/shared/error-codes";
 import { runOpenSerpRankCheck } from "@/server/workflows/openSerpRankCheck";
 import { getFreeSerpDailyLimit } from "@/server/lib/free-serp";
-import { isFreeRankSource, type RankSourceProvider } from "@/shared/rank-tracking";
+import {
+  isFreeRankSource,
+  type RankSourceProvider,
+} from "@/shared/rank-tracking";
 
 // These steps cost nothing and are safe to repeat: they touch our own rows,
 // prepare's Autumn calls only read balances, and its credits email is sent

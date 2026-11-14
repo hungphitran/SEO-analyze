@@ -184,9 +184,7 @@ export function SamConversation({
         <div className="mx-auto max-w-2xl space-y-6">
           {messages.length === 0 ? (
             <div className="space-y-2 text-sm text-foreground/80">
-              <p>
-                {t("ui.heyIMSamYourIn")}
-              </p>
+              <p>{t("ui.heyIMSamYourIn")}</p>
               <p>{t("sam.askAnything")}</p>
             </div>
           ) : null}
@@ -275,7 +273,9 @@ export function SamConversation({
               />
             </div>
           ) : isReconnecting ? (
-            <p className="mb-2 text-xs text-muted-foreground">{t("sam.reconnecting")}</p>
+            <p className="mb-2 text-xs text-muted-foreground">
+              {t("sam.reconnecting")}
+            </p>
           ) : null}
           <ChatComposer
             busy={isBusy}

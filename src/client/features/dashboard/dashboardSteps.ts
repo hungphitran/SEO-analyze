@@ -49,8 +49,7 @@ export const setupSteps: {
   {
     id: "project",
     label: t("dashboard.workingOnMultipleSites"),
-    detail:
-      t("dashboard.multipleSitesDesc"),
+    detail: t("dashboard.multipleSitesDesc"),
     icon: FolderPlus,
   },
 ];

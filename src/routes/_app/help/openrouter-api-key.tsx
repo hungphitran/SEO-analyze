@@ -44,9 +44,7 @@ function OpenrouterApiKeyHelpPage() {
   return (
     <SecretHelpPage
       title={t("help.openrouterHeading")}
-      intro={
-        t("help.orIntro")
-      }
+      intro={t("help.orIntro")}
       everyAppIntro={t("help.orEveryAppIntro")}
       secretName="OPENROUTER_API_KEY"
       steps={
@@ -56,13 +54,9 @@ function OpenrouterApiKeyHelpPage() {
           <li>
             {t("help.orSaveSecret")}
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>
-                {t("help.orDockerEnv", { file: ".env" })}
-              </li>
+              <li>{t("help.orDockerEnv", { file: ".env" })}</li>
               <li>{t("help.orCloudflareUi")}</li>
-              <li>
-                {t("help.orLocalEnv", { file: ".env.local" })}
-              </li>
+              <li>{t("help.orLocalEnv", { file: ".env.local" })}</li>
             </ul>
           </li>
           <li>{t("help.orRestart")}</li>

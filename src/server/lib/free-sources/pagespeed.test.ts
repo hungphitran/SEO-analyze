@@ -53,21 +53,23 @@ describe("parsePagespeedPayload", () => {
 describe("runPagespeedAudit", () => {
   it("sends the API key in a header and never as a query parameter", async () => {
     let apiKeyHeader: string | null = null;
-    const fetchImpl = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = new URL(input instanceof Request ? input.url : input);
-      expect(url.origin + url.pathname).toBe(PAGESPEED_ENDPOINT);
-      expect(url.searchParams.get("url")).toBe("https://example.com/");
-      expect(url.searchParams.get("strategy")).toBe("mobile");
-      expect(url.searchParams.get("key")).toBeNull();
-      expect(url.searchParams.getAll("category")).toEqual([
-        "performance",
-        "accessibility",
-        "best-practices",
-        "seo",
-      ]);
-      apiKeyHeader = new Headers(init?.headers).get("X-goog-api-key");
-      return new Response(JSON.stringify(fixture), { status: 200 });
-    });
+    const fetchImpl = vi.fn(
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const url = new URL(input instanceof Request ? input.url : input);
+        expect(url.origin + url.pathname).toBe(PAGESPEED_ENDPOINT);
+        expect(url.searchParams.get("url")).toBe("https://example.com/");
+        expect(url.searchParams.get("strategy")).toBe("mobile");
+        expect(url.searchParams.get("key")).toBeNull();
+        expect(url.searchParams.getAll("category")).toEqual([
+          "performance",
+          "accessibility",
+          "best-practices",
+          "seo",
+        ]);
+        apiKeyHeader = new Headers(init?.headers).get("X-goog-api-key");
+        return new Response(JSON.stringify(fixture), { status: 200 });
+      },
+    );
 
     const result = await runPagespeedAudit({
       url: "https://example.com/",

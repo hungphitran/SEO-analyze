@@ -64,7 +64,9 @@ export function ReportTemplatesList({
                 {formatRelativeTime(template.updatedAt)}
               </TableCell>
               <TableCell className="w-10 text-right">
-                <RowActionsMenu label={t("ui.actionsFor", { v0: template.name })}>
+                <RowActionsMenu
+                  label={t("ui.actionsFor", { v0: template.name })}
+                >
                   <DropdownMenuItem onClick={() => onEdit(template)}>
                     <Pencil />
                     {t("common.edit")}

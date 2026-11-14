@@ -15,7 +15,9 @@ type Keyword = {
 const columns: ColumnDef<Keyword>[] = [
   {
     accessorKey: "query",
-    header: ({ column }) => <SortableHeader column={column} label={t("ui.keyword")} />,
+    header: ({ column }) => (
+      <SortableHeader column={column} label={t("ui.keyword")} />
+    ),
     filterFn: "includesString",
   },
   ...(["impressions", "clicks", "position"] as const).map(

@@ -91,7 +91,9 @@ export function McpConnectionsSettings() {
                       </TableCell>
                       <TableCell>
                         <RowActionsMenu
-                          label={t("settings.actionsFor", { name: connection.clientName })}
+                          label={t("settings.actionsFor", {
+                            name: connection.clientName,
+                          })}
                         >
                           <DropdownMenuItem
                             variant="destructive"
@@ -118,7 +120,9 @@ export function McpConnectionsSettings() {
 
       {disconnecting ? (
         <ConfirmDialog
-          title={t("settings.disconnectAgentTitle", { name: disconnecting.clientName })}
+          title={t("settings.disconnectAgentTitle", {
+            name: disconnecting.clientName,
+          })}
           confirmLabel={t("common.disconnect")}
           destructive
           pending={disconnectMutation.isPending}

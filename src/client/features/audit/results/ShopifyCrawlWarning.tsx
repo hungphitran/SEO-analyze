@@ -58,8 +58,7 @@ export function ShopifyCrawlWarning({
   const canStoreCrawlerAccess = !useCrawlerAccessNeedsSetup(projectId);
   const setupHint = canStoreCrawlerAccess ? null : (
     <p className="text-muted-foreground">
-      {t("ui.aSignatureCanTBeSaved")}{" "}
-      <CrawlerAccessSetupHint />
+      {t("ui.aSignatureCanTBeSaved")} <CrawlerAccessSetupHint />
     </p>
   );
   // A recorded credential id names the signature this crawl used, whatever
@@ -168,9 +167,7 @@ export function ShopifyCrawlWarning({
       <div className="min-w-0 space-y-3">
         {expiredCredential?.expiresAt ? (
           <>
-            <AlertTitle>
-              {t("audit.signatureExpiredTitle")}
-            </AlertTitle>
+            <AlertTitle>{t("audit.signatureExpiredTitle")}</AlertTitle>
             {setupHint}
             <p className="text-muted-foreground">
               {t("audit.signatureExpiredBody", {
@@ -197,11 +194,11 @@ export function ShopifyCrawlWarning({
         {canStoreCrawlerAccess ? (
           <>
             <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
+              <li>{t("ui.inShopifyAdminGoToOnline")}</li>
               <li>
-                {t("ui.inShopifyAdminGoToOnline")}
-              </li>
-              <li>
-                {t("ui.pickTheDomain")} <span className="font-mono">{host}</span> {t("ui.andAnExpiryUpTo3")}
+                {t("ui.pickTheDomain")}{" "}
+                <span className="font-mono">{host}</span>{" "}
+                {t("ui.andAnExpiryUpTo3")}
               </li>
               <li>{t("audit.pasteTwoValues")}</li>
             </ol>

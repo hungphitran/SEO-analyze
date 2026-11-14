@@ -169,7 +169,9 @@ export function SearchPerformancePage({
       });
       await exportDimensionRows(dimension, data.rows, report.range, target);
     } catch (error) {
-      toast.error(getStandardErrorMessage(error, t("gscInsights.exportFailed")));
+      toast.error(
+        getStandardErrorMessage(error, t("gscInsights.exportFailed")),
+      );
     } finally {
       setIsExporting(false);
     }
@@ -220,9 +222,11 @@ export function SearchPerformancePage({
       <div className="mx-auto max-w-7xl space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">{t("gscInsights.pageTitle")}</h1>
+            <h1 className="text-2xl font-semibold">
+              {t("gscInsights.pageTitle")}
+            </h1>
             <p className="text-sm text-muted-foreground">
-{t("gscInsights.pageDesc")}
+              {t("gscInsights.pageDesc")}
             </p>
           </div>
           {report?.connected ? (
@@ -279,8 +283,12 @@ export function SearchPerformancePage({
                     ? t("gscInsights.strikingDistance")
                     : `${t("gscInsights.strikingDistance")} (${report.strikingDistance.length})`}
                 </TabsTrigger>
-                <TabsTrigger value="queries">{t("gscInsights.queries")}</TabsTrigger>
-                <TabsTrigger value="pages">{t("gscInsights.pages")}</TabsTrigger>
+                <TabsTrigger value="queries">
+                  {t("gscInsights.queries")}
+                </TabsTrigger>
+                <TabsTrigger value="pages">
+                  {t("gscInsights.pages")}
+                </TabsTrigger>
               </DataTableTabs>
               <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
                 <Button

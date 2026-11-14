@@ -148,13 +148,16 @@ export function DashboardOnboarding({
                   <span className="text-sm">{item.label}</span>
                   <Button
                     variant="ghost"
-                    aria-label={t("dashboard.restoreItem", { label: item.label })}
+                    aria-label={t("dashboard.restoreItem", {
+                      label: item.label,
+                    })}
                     disabled={dismiss.isPending}
                     onClick={() =>
                       dismiss.mutate({ step: item.id, dismissed: false })
                     }
                   >
-                    <RotateCcw data-icon="inline-start" /> {t("dashboard.restore")}
+                    <RotateCcw data-icon="inline-start" />{" "}
+                    {t("dashboard.restore")}
                   </Button>
                 </li>
               ))}

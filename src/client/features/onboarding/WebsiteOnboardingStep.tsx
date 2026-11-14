@@ -196,7 +196,8 @@ function WebsiteForm({
                       submitting && "invisible",
                     )}
                   >
-                    {t("onboarding.saveAndContinue")} <ArrowRight className="size-4" />
+                    {t("onboarding.saveAndContinue")}{" "}
+                    <ArrowRight className="size-4" />
                   </span>
                   {submitting ? (
                     <SpinnerIcon className="absolute inset-0 m-auto text-muted-foreground" />

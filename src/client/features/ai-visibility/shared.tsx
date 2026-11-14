@@ -166,11 +166,7 @@ export function AiQueryError({
   retry?: () => void;
 }) {
   return (
-    <QueryError
-      error={error}
-      fallback={t("ai.couldNotLoad")}
-      onRetry={retry}
-    />
+    <QueryError error={error} fallback={t("ai.couldNotLoad")} onRetry={retry} />
   );
 }
 
@@ -203,7 +199,9 @@ export function AiMatchBadge({
 export function aiDate(value: string | null) {
   if (!value) return "—";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? t("common.unavailable") : formatUiDateTime(date);
+  return Number.isNaN(date.getTime())
+    ? t("common.unavailable")
+    : formatUiDateTime(date);
 }
 
 export function aiRate(count: number, eligible: number) {
@@ -241,10 +239,14 @@ export function AiRunStatus({ run }: { run: AiRun }) {
         </span>
       </div>
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
-        <span>{t("ui.ofAnswersCollected", { v0: run.completed, v1: run.expected })}</span>
+        <span>
+          {t("ui.ofAnswersCollected", { v0: run.completed, v1: run.expected })}
+        </span>
         {run.pending > 0 && <span>{t("ui.pending", { v0: run.pending })}</span>}
         {run.failed > 0 && (
-          <span className="text-destructive">{t("ui.failed", { v0: run.failed })}</span>
+          <span className="text-destructive">
+            {t("ui.failed", { v0: run.failed })}
+          </span>
         )}
       </div>
       {pending && (

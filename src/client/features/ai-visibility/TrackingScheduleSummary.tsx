@@ -26,7 +26,9 @@ export function TrackingScheduleSummary({
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
           <p className="text-sm">
             {scheduleLabel(tracker.scheduleInterval)}
-            <span className="text-muted-foreground">{t("ui.nextRun", { v0: aiDate(tracker.nextCheckAt) })}</span>
+            <span className="text-muted-foreground">
+              {t("ui.nextRun", { v0: aiDate(tracker.nextCheckAt) })}
+            </span>
           </p>
           <div className="flex flex-wrap gap-2">
             <Button

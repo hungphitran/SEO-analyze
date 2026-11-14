@@ -89,7 +89,9 @@ export function KeyPagesSection({
             </Badge>
           </div>
           {item.topic ? (
-            <p className="text-sm text-muted-foreground">{t("ui.target", { v0: item.topic })}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("ui.target", { v0: item.topic })}
+            </p>
           ) : null}
           {item.notes ? (
             <p className="text-sm text-muted-foreground">{item.notes}</p>

@@ -1,7 +1,4 @@
-import {
-  OpenSerpError,
-  type OpenSerpErrorCode,
-} from "@/server/lib/openserp";
+import { OpenSerpError, type OpenSerpErrorCode } from "@/server/lib/openserp";
 
 export const MAX_RESPONSE_BYTES = 3_000_000;
 
@@ -20,8 +17,10 @@ export class SerpApiError extends OpenSerpError {
   }
 }
 
-
-export function errorForStatus(response: Response, apiMessage: string): SerpApiError {
+export function errorForStatus(
+  response: Response,
+  apiMessage: string,
+): SerpApiError {
   return errorForMessage(apiMessage, response.status, undefined, {
     retryAfterSeconds: parseRetryAfter(response.headers.get("retry-after")),
   });

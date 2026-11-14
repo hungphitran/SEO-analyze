@@ -51,7 +51,9 @@ function getKeywordSearchValidationErrors(
   if (keywords.length > MAX_KEYWORDS_PER_SUBMIT) {
     return createFormValidationErrors({
       fields: {
-        keyword: t("ui.pleaseEnterNoMoreThanKeywords", { v0: MAX_KEYWORDS_PER_SUBMIT }),
+        keyword: t("ui.pleaseEnterNoMoreThanKeywords", {
+          v0: MAX_KEYWORDS_PER_SUBMIT,
+        }),
       },
     });
   }

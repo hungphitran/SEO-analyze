@@ -173,9 +173,7 @@ function SignUpPage() {
           if (signedIn.error) {
             formApi.setErrorMap({
               onSubmit: {
-                form:
-                  signedIn.error.message ||
-                  t("auth.accountCreatedSignIn"),
+                form: signedIn.error.message || t("auth.accountCreatedSignIn"),
                 fields: {},
               },
             });
@@ -224,7 +222,11 @@ function SignUpPage() {
 
   return (
     <AuthPageCard
-      title={firstAccount ? t("auth.createAdminAccount") : t("auth.createYourAccount")}
+      title={
+        firstAccount
+          ? t("auth.createAdminAccount")
+          : t("auth.createYourAccount")
+      }
       helperText={
         firstAccount
           ? t("auth.firstAccountHint")
@@ -366,10 +368,14 @@ function SignUpPage() {
                       pending={isSubmitting}
                       disabled={isTurnstileEnabled && !captcha.hasToken}
                     >
-                      {isSubmitting ? t("auth.creatingAccount") : t("auth.createAccount")}
+                      {isSubmitting
+                        ? t("auth.creatingAccount")
+                        : t("auth.createAccount")}
                     </Button>
                     {isHostedMode ? (
-                      <TermsAgreementNotice action={t("auth.byCreatingAnAccount")} />
+                      <TermsAgreementNotice
+                        action={t("auth.byCreatingAnAccount")}
+                      />
                     ) : null}
                   </>
                 );

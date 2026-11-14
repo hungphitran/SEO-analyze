@@ -49,10 +49,7 @@ export function AnalyticsOnboardingStep({
       await refetch({ query: { disableCookieCache: true } });
     },
     // A failed email sync shouldn't trap anyone in onboarding.
-    onError: () =>
-      toast.error(
-        t("onboarding.emailChoiceSaveFailed"),
-      ),
+    onError: () => toast.error(t("onboarding.emailChoiceSaveFailed")),
     onSettled: onNext,
   });
 
