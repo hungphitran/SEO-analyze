@@ -15,6 +15,7 @@ import {
 } from "@/db/schema";
 import { executeInBatches } from "@/db/runBatch";
 import { insertIssues } from "./auditIssueWrites";
+import { updatePageInlinkCounts } from "./auditPageInlinkWrites";
 import { deterministicAuditRowId } from "@/server/lib/audit/ids";
 import type { DetectedIssue } from "@/server/lib/audit/issues/page-reporters";
 import type {
@@ -200,6 +201,14 @@ async function insertCrawledBatch(
       crawlDepth: page.crawlDepth,
       inSitemap: page.inSitemap,
       responseTimeMs: page.responseTimeMs,
+      hreflangJson: page.signals ? JSON.stringify(page.hreflangTags) : null,
+      htmlLang: page.signals?.htmlLang ?? null,
+      hasViewport: page.signals ? page.signals.hasViewport : null,
+      twitterCard: page.signals?.twitterCard ?? null,
+      mixedContentCount: page.signals ? page.signals.mixedContentCount : null,
+      jsonLdCount: page.signals ? page.signals.jsonLdCount : null,
+      jsonLdInvalidCount: page.signals ? page.signals.jsonLdInvalidCount : null,
+      htmlBytes: page.htmlBytes > 0 ? page.htmlBytes : null,
     };
     return tx
       .insert(auditPages)
@@ -418,6 +427,7 @@ async function deleteAuditForProject(auditId: string, projectId: string) {
 }
 
 export const AuditRepository = {
+  updatePageInlinkCounts,
   createAudit,
   updateAuditStart,
   updateAuditProgress,

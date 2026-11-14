@@ -252,6 +252,55 @@ const ISSUE_COPY = {
     howToFix:
       'Thêm <link rel="alternate" hreflang="x-default" href="..."> trỏ tới phiên bản dành cho mọi người còn lại (thường là trang chọn ngôn ngữ hoặc ngôn ngữ chính).',
   },
+  "missing-viewport": {
+    title: "Thiếu thẻ meta viewport",
+    explanation:
+      'Trang không có thẻ <meta name="viewport">. Trình duyệt di động sẽ hiển thị ở chiều rộng máy tính rồi thu nhỏ, làm giảm trải nghiệm và ảnh hưởng đến lập chỉ mục ưu tiên thiết bị di động.',
+    howToFix:
+      'Thêm <meta name="viewport" content="width=device-width, initial-scale=1"> vào phần head của trang.',
+  },
+  "missing-html-lang": {
+    title: "Thiếu thuộc tính lang của thẻ html",
+    explanation:
+      "Thẻ <html> không có thuộc tính lang. Trình đọc màn hình và công cụ dịch phải đoán ngôn ngữ, và công cụ tìm kiếm mất một tín hiệu về ngôn ngữ của trang.",
+    howToFix:
+      'Khai báo ngôn ngữ ở thẻ gốc, ví dụ <html lang="vi"> hoặc <html lang="en">.',
+  },
+  "mixed-content": {
+    title: "Nội dung hỗn hợp trên trang HTTPS",
+    explanation:
+      "Trang HTTPS tải ảnh, script, CSS hoặc khung qua http:// thuần. Trình duyệt sẽ chặn hoặc cảnh báo, có thể làm hỏng trang và mất biểu tượng ổ khóa an toàn.",
+    howToFix:
+      "Đổi mọi URL tài nguyên từ http:// sang https:// và đảm bảo máy chủ phục vụ tệp đó qua HTTPS.",
+  },
+  "invalid-json-ld": {
+    title: "Dữ liệu có cấu trúc (JSON-LD) bị lỗi cú pháp",
+    explanation:
+      "Ít nhất một khối application/ld+json không phải JSON hợp lệ, nên công cụ tìm kiếm bỏ qua và trang mất khả năng hiển thị kết quả nâng cao.",
+    howToFix:
+      "Sửa cú pháp JSON (dấu nháy, dấu phẩy thừa, ngoặc) và kiểm tra khối đó bằng công cụ kiểm thử dữ liệu có cấu trúc.",
+  },
+  "missing-twitter-card": {
+    title: "Thiếu thẻ Twitter Card",
+    explanation:
+      "Trang không có thẻ meta twitter:card. X (Twitter) dùng lại thẻ Open Graph, nhưng thiếu twitter:card thì liên kết chia sẻ thường chỉ hiện bản xem trước nhỏ và đơn giản.",
+    howToFix:
+      'Thêm <meta name="twitter:card" content="summary_large_image"> (hoặc summary) vào phần head.',
+  },
+  "large-html": {
+    title: "Tài liệu HTML quá lớn",
+    explanation:
+      "Riêng HTML (không tính ảnh) đã vượt 500 KB. Tài liệu lớn tải và phân tích chậm hơn, nhất là trên mạng di động, và có thể bị trình thu thập cắt bớt.",
+    howToFix:
+      "Bỏ dữ liệu nhúng và phần markup lặp lại, chia trang cho danh sách dài, và tải phần nặng khi cần.",
+  },
+  "broken-external-link": {
+    title: "Liên kết tới trang ngoài bị hỏng",
+    explanation:
+      "Trang liên kết tới một website khác có URL trả về 404 hoặc 410. Người xem gặp ngõ cụt và trang trông kém được chăm sóc.",
+    howToFix:
+      "Cập nhật liên kết sang địa chỉ mới, thay bằng nguồn còn hoạt động hoặc xoá liên kết.",
+  },
 } as const satisfies Record<AuditIssueType, IssueCopy>;
 
 export function getAuditIssueCopy(issueType: string): IssueCopy {

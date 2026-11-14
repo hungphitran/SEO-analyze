@@ -5,7 +5,7 @@ import { getAuditIssueCopy, getAuditIssueTitle } from "./issueLabels";
 describe("getAuditIssueCopy", () => {
   it("covers every registry issue type with Vietnamese titles", () => {
     const ids = Object.keys(AUDIT_ISSUE_TYPES);
-    expect(ids.length).toBe(35);
+    expect(ids.length).toBe(42);
     for (const id of ids) {
       const copy = getAuditIssueCopy(id);
       expect(copy.title, id).toMatch(

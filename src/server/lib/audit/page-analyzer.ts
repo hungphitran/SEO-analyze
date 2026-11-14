@@ -12,7 +12,7 @@
  */
 import { Parser } from "htmlparser2";
 import { normalizeUrl, isSameOrigin } from "./url-utils";
-import type { PageAnalysis, PageLink } from "./types";
+import type { PageAnalysis, PageLink, PageSignals } from "./types";
 
 const SKIPPED_LINK_PROTOCOLS = /^(javascript:|mailto:|tel:|#)/;
 /** Subtrees whose text is not visible content. */
@@ -35,6 +35,10 @@ const MAX_ANCHOR_CHARS = 200;
  */
 const MAX_EXTRACTED_LINKS = 1_000;
 const MAX_EXTRACTED_IMAGES = 1_000;
+/** Cap on JSON-LD text we try to parse, and on how many blocks we look at. */
+const MAX_JSON_LD_CHARS = 500_000;
+const MAX_JSON_LD_BLOCKS = 20;
+const MAX_MIXED_CONTENT_SAMPLES = 5;
 // Common app entry points. Scripts alone also appear on ordinary HTML pages.
 const APP_ROOT_IDS = new Set(["root", "app", "__next", "__nuxt"]);
 /**
@@ -139,6 +143,16 @@ export function analyzeHtml(
   let hasAppRoot = false;
   let hasExecutableScript = false;
   const hreflangTags: string[] = [];
+  const isHttpsPage = pageUrl.startsWith("https://");
+  let htmlLang: string | null = null;
+  let hasViewport = false;
+  let twitterCard: string | null = null;
+  let mixedContentCount = 0;
+  const mixedContentSamples: string[] = [];
+  let jsonLdCount = 0;
+  let jsonLdInvalidCount = 0;
+  let jsonLdBuffer: string[] | null = null;
+  let jsonLdChars = 0;
 
   const h1s: string[] = [];
   const headingOrder: number[] = [];
@@ -167,11 +181,40 @@ export function analyzeHtml(
     }
   };
 
+  // Sub-resources a browser blocks or warns about on an https page. Plain
+  // links (<a href>) are navigation, not mixed content.
+  const noteSubresource = (attribs: Record<string, string>, attr: string) => {
+    if (!isHttpsPage) return;
+    const value = attribs[attr]?.trim();
+    if (!value || !/^http:\/\//i.test(value)) return;
+    mixedContentCount += 1;
+    if (mixedContentSamples.length < MAX_MIXED_CONTENT_SAMPLES) {
+      mixedContentSamples.push(value.slice(0, 300));
+    }
+  };
+
+  const closeJsonLd = () => {
+    if (jsonLdBuffer === null) return;
+    const text = jsonLdBuffer.join("");
+    jsonLdBuffer = null;
+    jsonLdCount += 1;
+    if (jsonLdChars > MAX_JSON_LD_CHARS) return;
+    try {
+      JSON.parse(text);
+    } catch {
+      jsonLdInvalidCount += 1;
+    }
+  };
+
   const handleMetaTag = (attribs: Record<string, string>) => {
     const content = attribs["content"];
     // HTML meta names are ASCII case-insensitive: "Description" is valid.
     const metaName = attribs["name"]?.toLowerCase();
-    if (metaName === "description") {
+    if (metaName === "viewport") {
+      hasViewport = true;
+    } else if (metaName === "twitter:card") {
+      twitterCard ??= content?.trim() || null;
+    } else if (metaName === "description") {
       metaDescription ??= content?.trim() ?? "";
     } else if (metaName === "robots") {
       robotsMeta ??= content ?? null;
@@ -185,6 +228,10 @@ export function analyzeHtml(
   };
 
   const handleLinkTag = (attribs: Record<string, string>) => {
+    const rel = attribs["rel"]?.toLowerCase();
+    if (rel?.split(/\s+/).includes("stylesheet")) {
+      noteSubresource(attribs, "href");
+    }
     if (attribs["rel"] === "canonical") {
       canonical ??= attribs["href"] ?? null;
     } else if (attribs["rel"] === "alternate" && attribs["hreflang"]) {
@@ -212,6 +259,24 @@ export function analyzeHtml(
     });
   };
 
+  const handleScriptTag = (attribs: Record<string, string>) => {
+    const type = attribs["type"]?.toLowerCase();
+    hasExecutableScript ||= [
+      "",
+      "module",
+      "text/javascript",
+      "application/javascript",
+    ].includes(type ?? "");
+    noteSubresource(attribs, "src");
+    if (type === "application/ld+json") {
+      hasStructuredData = true;
+      if (jsonLdCount < MAX_JSON_LD_BLOCKS && jsonLdBuffer === null) {
+        jsonLdBuffer = [];
+        jsonLdChars = 0;
+      }
+    }
+  };
+
   const parser = new Parser(
     {
       onopentag(name, attribs) {
@@ -225,6 +290,17 @@ export function analyzeHtml(
           hasAppRoot ||= APP_ROOT_IDS.has(attribs["id"]) || name === "app-root";
         }
         switch (name) {
+          case "html":
+            htmlLang ??=
+              (attribs["lang"] ?? attribs["xml:lang"])?.trim() || null;
+            break;
+          case "iframe":
+          case "source":
+          case "audio":
+          case "video":
+          case "embed":
+            noteSubresource(attribs, "src");
+            break;
           case "title":
             // Ignore <title> inside <svg> — only the document title counts.
             if (!titleDone && suppressDepth === 0) {
@@ -246,6 +322,7 @@ export function analyzeHtml(
             handleLinkTag(attribs);
             break;
           case "img":
+            noteSubresource(attribs, "src");
             if (images.length < MAX_EXTRACTED_IMAGES) {
               images.push({
                 src: attribs["src"] ?? null,
@@ -254,15 +331,7 @@ export function analyzeHtml(
             }
             break;
           case "script":
-            hasExecutableScript ||= [
-              "",
-              "module",
-              "text/javascript",
-              "application/javascript",
-            ].includes(attribs["type"]?.toLowerCase() ?? "");
-            if (attribs["type"] === "application/ld+json") {
-              hasStructuredData = true;
-            }
+            handleScriptTag(attribs);
             break;
           case "a": {
             // HTML forbids nested <a>; browsers implicitly close the open
@@ -286,6 +355,11 @@ export function analyzeHtml(
         }
       },
       ontext(text) {
+        if (jsonLdBuffer !== null) {
+          jsonLdChars += text.length;
+          if (jsonLdChars <= MAX_JSON_LD_CHARS) jsonLdBuffer.push(text);
+          return;
+        }
         if (suppressDepth > 0) return;
         if (titleDepth > 0) {
           if (title !== null) title += text;
@@ -296,6 +370,7 @@ export function analyzeHtml(
         addVisibleText(text);
       },
       onclosetag(name) {
+        if (name === "script") closeJsonLd();
         if (NON_CONTENT_TAGS.has(name) && suppressDepth > 0) {
           suppressDepth -= 1;
         }
@@ -323,6 +398,17 @@ export function analyzeHtml(
   );
   parser.write(html);
   parser.end();
+
+  closeJsonLd();
+  const signals: PageSignals = {
+    htmlLang,
+    hasViewport,
+    twitterCard,
+    mixedContentCount,
+    mixedContentSamples,
+    jsonLdCount,
+    jsonLdInvalidCount,
+  };
 
   const rawText = (sawBody ? bodyParts : fallbackParts).join("");
   const bodyText = rawText.replace(/\s+/g, " ").trim();
@@ -355,5 +441,6 @@ export function analyzeHtml(
     links: Array.from(linksByTarget.values()),
     hasStructuredData,
     hreflangTags,
+    signals,
   };
 }

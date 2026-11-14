@@ -1,11 +1,18 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { IssueDetails } from "@/client/features/audit/results/IssueDetails";
 import { ChevronRight } from "lucide-react";
 import { sort } from "remeda";
 import {
-  getIssueDescriptor,
   ISSUE_SEVERITY_ORDER,
   type IssueSeverity,
 } from "@/shared/audit-issues";
+import {
+  filterIssues,
+  resolveIssueSeverity,
+  summarizeIssues,
+  type IssueViewFilter,
+} from "@/client/features/audit/results/pageInsights";
+import { Button } from "@/client/components/ui/button";
 import { getAuditIssueCopy } from "@/client/features/audit/issueLabels";
 import { t } from "@/shared/i18n";
 import type { AuditResultsData } from "@/client/features/audit/results/types";
@@ -37,17 +44,6 @@ interface IssueGroup {
   issues: AuditIssueRow[];
 }
 
-export function resolveIssueSeverity(issue: {
-  issueType: string;
-  severity: string;
-}): IssueSeverity {
-  const descriptor = getIssueDescriptor(issue.issueType);
-  if (descriptor) return descriptor.severity;
-  return issue.severity === "critical" || issue.severity === "warning"
-    ? issue.severity
-    : "info";
-}
-
 function groupIssues(issues: AuditIssueRow[]): IssueGroup[] {
   const groups = new Map<string, IssueGroup>();
   for (const issue of issues) {
@@ -75,13 +71,75 @@ function groupIssues(issues: AuditIssueRow[]): IssueGroup[] {
   );
 }
 
-export function IssuesView({
+const SEVERITY_ORDER_LIST = ["critical", "warning", "info"] as const;
+
+function IssueFilterBar({
   issues,
+  filter,
+  onFilterChange,
+}: {
+  issues: AuditIssueRow[];
+  filter: IssueViewFilter;
+  onFilterChange: (filter: IssueViewFilter) => void;
+}) {
+  const counts = useMemo(() => summarizeIssues(issues).counts, [issues]);
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
+      <Button
+        size="xs"
+        variant={filter.severity === "all" ? "secondary" : "ghost"}
+        onClick={() => onFilterChange({ ...filter, severity: "all" })}
+      >
+        {t("auditDetail.issuesAll")}{" "}
+        <span className="tabular-nums">{issues.length}</span>
+      </Button>
+      {SEVERITY_ORDER_LIST.map((severity) => (
+        <Button
+          key={severity}
+          size="xs"
+          variant={filter.severity === severity ? "secondary" : "ghost"}
+          disabled={counts[severity] === 0}
+          onClick={() => onFilterChange({ ...filter, severity })}
+        >
+          {SEVERITY_LABEL[severity]}{" "}
+          <span className="tabular-nums">{counts[severity]}</span>
+        </Button>
+      ))}
+      {filter.issueType ? (
+        <>
+          <span className="text-xs text-muted-foreground">
+            {t("auditDetail.issuesFilteredBy", {
+              title: getAuditIssueCopy(filter.issueType).title,
+            })}
+          </span>
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={() => onFilterChange({ ...filter, issueType: null })}
+          >
+            {t("auditDetail.issuesClearFilter")}
+          </Button>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+export function IssuesView({
+  issues: allIssues,
   tabs,
+  filter,
+  onFilterChange,
 }: {
   issues: AuditIssueRow[];
   tabs: ReactNode;
+  filter: IssueViewFilter;
+  onFilterChange: (filter: IssueViewFilter) => void;
 }) {
+  const issues = useMemo(
+    () => filterIssues(allIssues, filter),
+    [allIssues, filter],
+  );
   const groups = useMemo(() => groupIssues(issues), [issues]);
 
   const sections = useMemo(
@@ -98,16 +156,33 @@ export function IssuesView({
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       {tabs}
+      {allIssues.length > 0 ? (
+        <IssueFilterBar
+          issues={allIssues}
+          filter={filter}
+          onFilterChange={onFilterChange}
+        />
+      ) : null}
       {issues.length === 0 ? (
         <EmptyState
           variant="plain"
-          title={t("audit.noIssuesFound")}
-          description={t("audit.allPagesPassed")}
+          title={
+            allIssues.length === 0
+              ? t("audit.noIssuesFound")
+              : t("auditDetail.issuesNoMatch")
+          }
+          description={
+            allIssues.length === 0 ? t("audit.allPagesPassed") : undefined
+          }
         />
       ) : (
         <div>
           {sections.map((section) => (
-            <IssueSection key={section.severity} section={section} />
+            <IssueSection
+              key={section.severity}
+              section={section}
+              openType={filter.issueType}
+            />
           ))}
         </div>
       )}
@@ -117,8 +192,10 @@ export function IssuesView({
 
 function IssueSection({
   section,
+  openType,
 }: {
   section: { severity: IssueSeverity; groups: IssueGroup[] };
+  openType: string | null;
 }) {
   const issueCount = section.groups.reduce(
     (sum, group) => sum + group.issues.length,
@@ -135,15 +212,25 @@ function IssueSection({
       </div>
       <div className="divide-y divide-border">
         {section.groups.map((group) => (
-          <IssueRow key={group.issueType} group={group} />
+          <IssueRow
+            key={`${group.issueType}:${openType === group.issueType}`}
+            group={group}
+            defaultOpen={openType === group.issueType}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function IssueRow({ group }: { group: IssueGroup }) {
-  const [open, setOpen] = useState(false);
+function IssueRow({
+  group,
+  defaultOpen,
+}: {
+  group: IssueGroup;
+  defaultOpen: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
     <div
@@ -221,42 +308,5 @@ function AffectedUrlList({ issues }: { issues: AuditIssueRow[] }) {
         </div>
       )}
     </div>
-  );
-}
-
-// AuditRepository is the only writer and always stores JSON.stringify of a
-// details object, so the parse cannot throw.
-function parseDetails(detailsJson: string): Array<[string, unknown]> | null {
-  const parsed: unknown = JSON.parse(detailsJson);
-  if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
-    return Object.entries(parsed);
-  }
-  return null;
-}
-
-function IssueDetails({ detailsJson }: { detailsJson: string | null }) {
-  const details = useMemo(
-    () => (detailsJson ? parseDetails(detailsJson) : null),
-    [detailsJson],
-  );
-
-  if (!details) return null;
-
-  const entries = details.filter(
-    ([, value]) => value !== null && value !== undefined,
-  );
-  if (entries.length === 0) return null;
-
-  return (
-    <span className="text-xs text-muted-foreground truncate">
-      {entries
-        .map(([key, value]) => {
-          const rendered = Array.isArray(value)
-            ? value.join(" → ")
-            : String(value);
-          return `${key}: ${rendered}`;
-        })
-        .join(" · ")}
-    </span>
   );
 }

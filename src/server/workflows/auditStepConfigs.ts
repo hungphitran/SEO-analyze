@@ -62,3 +62,9 @@ export const MULTIPAGE_CHECKS_STEP: WorkflowStepConfig = {
   retries: { limit: 2, delay: "5 seconds", backoff: "exponential" },
   timeout: "5 minutes",
 };
+
+/** Best-effort probing of external links; failure is handled inside the step. */
+export const EXTERNAL_LINK_STEP: WorkflowStepConfig = {
+  retries: { limit: 0, delay: "1 second" },
+  timeout: "2 minutes",
+};

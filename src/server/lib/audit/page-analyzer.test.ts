@@ -13,7 +13,10 @@ import type { PageAnalysis, PageLink } from "@/server/lib/audit/types";
  * The previous cheerio implementation (minus passthrough fields), plus
  * separators around block elements so minified markup keeps word boundaries.
  */
-function analyzeHtmlWithCheerio(html: string, pageUrl: string): PageAnalysis {
+function analyzeHtmlWithCheerio(
+  html: string,
+  pageUrl: string,
+): Omit<PageAnalysis, "signals"> {
   const $ = cheerio.load(html);
 
   const title = $("title").first().text().trim();
@@ -121,7 +124,11 @@ const PAGE_URL = "https://example.com/blog/post";
 function expectParity(html: string) {
   const streamed = analyzeHtml(html, PAGE_URL, 200, 0);
   const reference = analyzeHtmlWithCheerio(html, PAGE_URL);
-  const { javascriptShell: _javascriptShell, ...existingAnalysis } = streamed;
+  const {
+    javascriptShell: _javascriptShell,
+    signals: _signals,
+    ...existingAnalysis
+  } = streamed;
   expect(existingAnalysis).toEqual(reference);
 }
 
@@ -320,4 +327,75 @@ describe("JavaScript app-shell detection", () => {
       expect(analyzeHtml(html, PAGE_URL, 200, 0).javascriptShell).toBe(false);
     },
   );
+});
+
+describe("analyzeHtml technical signals", () => {
+  const analyze = (html: string, url = "https://example.com/") =>
+    analyzeHtml(html, url, 200, 0).signals;
+
+  it("reads html lang, viewport and twitter:card", () => {
+    const signals = analyze(
+      `<html lang=" vi-VN "><head><meta name="Viewport" content="width=device-width"><meta name="twitter:card" content="summary"></head><body>x</body></html>`,
+    );
+    expect(signals.htmlLang).toBe("vi-VN");
+    expect(signals.hasViewport).toBe(true);
+    expect(signals.twitterCard).toBe("summary");
+  });
+
+  it("reports absent signals as empty", () => {
+    const signals = analyze("<html><head></head><body>x</body></html>");
+    expect(signals).toMatchObject({
+      htmlLang: null,
+      hasViewport: false,
+      twitterCard: null,
+      mixedContentCount: 0,
+      jsonLdCount: 0,
+      jsonLdInvalidCount: 0,
+    });
+  });
+
+  it("counts http sub-resources on an https page but not plain links", () => {
+    const signals = analyze(
+      `<html><head><link rel="stylesheet" href="http://cdn.test/a.css"></head><body>
+        <img src="http://cdn.test/a.png"><img src="https://ok.test/b.png">
+        <script src="http://cdn.test/a.js"></script>
+        <iframe src="http://video.test/x"></iframe>
+        <a href="http://other.test/page">link</a>
+      </body></html>`,
+    );
+    expect(signals.mixedContentCount).toBe(4);
+    expect(signals.mixedContentSamples).toContain("http://cdn.test/a.css");
+    expect(signals.mixedContentSamples).not.toContain("http://other.test/page");
+  });
+
+  it("does not report mixed content on an http page", () => {
+    const signals = analyze(
+      `<html><body><img src="http://cdn.test/a.png"></body></html>`,
+      "http://example.com/",
+    );
+    expect(signals.mixedContentCount).toBe(0);
+  });
+
+  it("validates JSON-LD blocks", () => {
+    const signals = analyze(
+      `<html><head>
+        <script type="application/ld+json">{"@context":"https://schema.org","@type":"Thing"}</script>
+        <script type="application/ld+json">{ "name": oops, }</script>
+        <script>var a = {broken</script>
+      </head><body>x</body></html>`,
+    );
+    expect(signals.jsonLdCount).toBe(2);
+    expect(signals.jsonLdInvalidCount).toBe(1);
+  });
+
+  it("keeps JSON-LD text out of the visible word count", () => {
+    const analysis = analyzeHtml(
+      `<html><body>hello world<script type="application/ld+json">{"a":"b c d e f"}</script></body></html>`,
+      "https://example.com/",
+      200,
+      0,
+    );
+    expect(analysis.wordCount).toBe(2);
+    expect(analysis.hasStructuredData).toBe(true);
+  });
 });

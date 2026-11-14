@@ -22,7 +22,9 @@ import { DurableObject, env } from "cloudflare:workers";
 import type { CrawlThrottleState } from "@/server/lib/audit/crawl-throttle";
 import {
   BROKEN_LINKS_SQL,
+  EXTERNAL_LINKS_SQL,
   FRONTIER_DISCOVER_SQL,
+  INLINK_COUNTS_SQL,
   ORPHAN_PAGES_SQL,
   SCRATCHPAD_SCHEMA_SQL,
 } from "@/server/features/audit/scratchpad-sql";
@@ -75,6 +77,8 @@ interface RecordBatchInput {
   crawledUrls: string[];
   pages: ScratchpadPageRow[];
   links: ScratchpadPageLinksRow[];
+  /** Outgoing external link targets per page (capped by the caller). */
+  externalLinks?: ScratchpadPageLinksRow[];
   /** Newly discovered same-origin URLs to enqueue (already policy-filtered). */
   discovered: Array<{ url: string; depth: number | null }>;
 }
@@ -84,6 +88,17 @@ interface BrokenLinkRow {
   sourceUrl: string;
   targetUrl: string;
   targetStatus: number;
+}
+
+interface InlinkCountRow {
+  pageId: string;
+  count: number;
+}
+
+export interface ExternalLinkRow {
+  pageId: string;
+  pageUrl: string;
+  targetUrl: string;
 }
 
 interface OrphanPageRow {
@@ -213,6 +228,14 @@ export class AuditScratchpad extends DurableObject {
           JSON.stringify(page.targets),
         );
       }
+      for (const page of input.externalLinks ?? []) {
+        this.ctx.storage.sql.exec(
+          `INSERT OR REPLACE INTO page_external_links (page_id, url, targets_json) VALUES (?, ?, ?)`,
+          page.pageId,
+          page.url,
+          JSON.stringify(page.targets),
+        );
+      }
     }
     for (const found of input.discovered) {
       this.ctx.storage.sql.exec(FRONTIER_DISCOVER_SQL, found.url, found.depth);
@@ -278,6 +301,36 @@ export class AuditScratchpad extends DurableObject {
         : [];
 
     return { brokenLinks, orphanPages };
+  }
+
+  /**
+   * Inbound internal link counts per page, or null when the link graph was
+   * truncated by the storage budget (a missing edge would read as zero).
+   */
+  async getInlinkCounts(): Promise<InlinkCountRow[] | null> {
+    if (this.ctx.storage.sql.databaseSize >= LINK_STORAGE_BUDGET_BYTES) {
+      return null;
+    }
+    return this.ctx.storage.sql
+      .exec<{ page_id: string; inlinks: number }>(INLINK_COUNTS_SQL)
+      .toArray()
+      .map((row) => ({ pageId: row.page_id, count: row.inlinks }));
+  }
+
+  /** External link edges recorded during the crawl, capped at `limit` rows. */
+  async getExternalLinks(limit: number): Promise<ExternalLinkRow[]> {
+    return this.ctx.storage.sql
+      .exec<{
+        page_id: string;
+        page_url: string;
+        target_url: string;
+      }>(EXTERNAL_LINKS_SQL, limit)
+      .toArray()
+      .map((row) => ({
+        pageId: row.page_id,
+        pageUrl: row.page_url,
+        targetUrl: row.target_url,
+      }));
   }
 
   /** Wipe all state (success path, or explicit audit deletion). */

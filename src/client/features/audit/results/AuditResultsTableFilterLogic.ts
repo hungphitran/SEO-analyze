@@ -1,5 +1,10 @@
 import type { AuditResultsData } from "@/client/features/audit/results/types";
 import type { PageFetchClass } from "@/shared/audit-fetch-class";
+import {
+  canonicalDiffers,
+  isAnalyzedPage,
+  isOgComplete,
+} from "@/client/features/audit/results/pageInsights";
 
 export type PageRow = AuditResultsData["pages"][number];
 type PerformanceResultRow = AuditResultsData["lighthouse"][number];
@@ -25,6 +30,11 @@ export type PagesFilters = {
   minResponseMs: string;
   maxResponseMs: string;
   missingAlt: "all" | "yes" | "no";
+  hasIssues: "all" | "yes" | "no";
+  noindex: "all" | "yes";
+  canonicalDiffers: "all" | "yes";
+  missingMeta: "all" | "yes";
+  missingOg: "all" | "yes";
 };
 
 export type PerformanceFilters = {
@@ -47,6 +57,11 @@ export const EMPTY_PAGES_FILTERS: PagesFilters = {
   minResponseMs: "",
   maxResponseMs: "",
   missingAlt: "all",
+  hasIssues: "all",
+  noindex: "all",
+  canonicalDiffers: "all",
+  missingMeta: "all",
+  missingOg: "all",
 };
 
 export const EMPTY_PERFORMANCE_FILTERS: PerformanceFilters = {
@@ -73,7 +88,11 @@ export function isLighthouseFailure(row: LighthouseFailureFields) {
   return !!row.errorMessage || hasMissingLighthouseScores(row);
 }
 
-export function filterPages(rows: PageRow[], filters: PagesFilters) {
+export function filterPages(
+  rows: PageRow[],
+  filters: PagesFilters,
+  issueCounts: ReadonlyMap<string, number> = new Map(),
+) {
   const query = filters.query.trim().toLowerCase();
   return rows.filter((row) => {
     if (query) {
@@ -105,8 +124,31 @@ export function filterPages(rows: PageRow[], filters: PagesFilters) {
     if (filters.missingAlt === "no" && row.imagesMissingAlt > 0) {
       return false;
     }
-    return true;
+    return matchesPageSignals(row, filters, issueCounts);
   });
+}
+
+/** The page-level filters added with the detail view (issues, SEO signals). */
+function matchesPageSignals(
+  row: PageRow,
+  filters: PagesFilters,
+  issueCounts: ReadonlyMap<string, number>,
+) {
+  const issueCount = issueCounts.get(row.id) ?? 0;
+  if (filters.hasIssues === "yes" && issueCount === 0) return false;
+  if (filters.hasIssues === "no" && issueCount > 0) return false;
+  if (filters.noindex === "yes" && row.isIndexable) return false;
+  if (filters.canonicalDiffers === "yes" && !canonicalDiffers(row)) {
+    return false;
+  }
+  // Redirects, errors and files carry no meta data; they are not "missing".
+  if (filters.missingMeta === "yes") {
+    if (!isAnalyzedPage(row) || row.metaDescription) return false;
+  }
+  if (filters.missingOg === "yes") {
+    if (!isAnalyzedPage(row) || isOgComplete(row)) return false;
+  }
+  return true;
 }
 
 export function filterPerformanceRows(

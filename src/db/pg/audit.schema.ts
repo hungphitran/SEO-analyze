@@ -114,6 +114,16 @@ export const auditPages = pgTable(
       .default("ok"),
     // Performance
     responseTimeMs: integer("response_time_ms"),
+    // Added later; null on audits crawled before these columns existed.
+    hreflangJson: text("hreflang_json"),
+    htmlLang: text("html_lang"),
+    hasViewport: boolean("has_viewport"),
+    twitterCard: text("twitter_card"),
+    mixedContentCount: integer("mixed_content_count"),
+    jsonLdCount: integer("json_ld_count"),
+    jsonLdInvalidCount: integer("json_ld_invalid_count"),
+    htmlBytes: integer("html_bytes"),
+    inlinkCount: integer("inlink_count"),
   },
   (table) => [index("audit_pages_audit_url_idx").on(table.auditId, table.url)],
 );

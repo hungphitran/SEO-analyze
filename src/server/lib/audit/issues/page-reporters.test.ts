@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- one describe per reporter */
 import { describe, expect, it } from "vitest";
 import {
   findHreflangProblems,
@@ -391,5 +392,85 @@ describe("hreflang checks", () => {
     );
     expect(types).not.toContain("hreflang-invalid");
     expect(types).not.toContain("hreflang-missing-x-default");
+  });
+});
+
+describe("technical signal checks", () => {
+  const healthySignals = {
+    htmlLang: "vi",
+    hasViewport: true,
+    twitterCard: "summary",
+    mixedContentCount: 0,
+    mixedContentSamples: [],
+    jsonLdCount: 1,
+    jsonLdInvalidCount: 0,
+  };
+
+  it("skips pages that were not analyzed as HTML", () => {
+    const types = issueTypes(makePage({ signals: null }));
+    expect(types).not.toContain("missing-viewport");
+    expect(types).not.toContain("missing-html-lang");
+  });
+
+  it("is clean when every signal is present", () => {
+    const types = issueTypes(makePage({ signals: healthySignals }));
+    for (const type of [
+      "missing-viewport",
+      "missing-html-lang",
+      "mixed-content",
+      "invalid-json-ld",
+      "missing-twitter-card",
+      "large-html",
+    ]) {
+      expect(types).not.toContain(type);
+    }
+  });
+
+  it("flags each missing or broken signal", () => {
+    const types = issueTypes(
+      makePage({
+        htmlBytes: 600 * 1024,
+        signals: {
+          htmlLang: null,
+          hasViewport: false,
+          twitterCard: null,
+          mixedContentCount: 2,
+          mixedContentSamples: ["http://cdn.test/a.png"],
+          jsonLdCount: 2,
+          jsonLdInvalidCount: 1,
+        },
+      }),
+    );
+    expect(types).toEqual(
+      expect.arrayContaining([
+        "missing-viewport",
+        "missing-html-lang",
+        "mixed-content",
+        "invalid-json-ld",
+        "missing-twitter-card",
+        "large-html",
+      ]),
+    );
+  });
+
+  it("does not ask noindex pages for viewport or Twitter Card", () => {
+    const types = issueTypes(
+      makePage({
+        isIndexable: false,
+        signals: { ...healthySignals, hasViewport: false, twitterCard: null },
+      }),
+    );
+    expect(types).not.toContain("missing-viewport");
+    expect(types).not.toContain("missing-twitter-card");
+  });
+
+  it("still checks signals on app-shell pages", () => {
+    const types = issueTypes(
+      makePage({
+        javascriptShell: true,
+        signals: { ...healthySignals, hasViewport: false },
+      }),
+    );
+    expect(types).toContain("missing-viewport");
   });
 });
