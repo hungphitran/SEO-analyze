@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -31,6 +32,7 @@ const signInSchema = z.object({
 });
 
 export const Route = createFileRoute("/_auth/sign-in")({
+  head: pageHead("auth.signIn"),
   validateSearch: authRedirectSearchSchema,
   component: SignInPage,
 });

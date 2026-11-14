@@ -3410,6 +3410,11 @@ export const messages = {
     "{provider} chỉ hỗ trợ thị trường theo quốc gia/ngôn ngữ, không hỗ trợ theo thành phố hoặc mã không hợp lệ.",
   "serp.msg.unavailable":
     "{provider} tạm thời không khả dụng. Không có thứ hạng nào được ghi; vui lòng thử lại sau ít phút.",
+  "title.projects": "Dự án",
+  "title.support": "Hỗ trợ",
+  "title.organization": "Tổ chức",
+  "title.reportTemplates": "Mẫu báo cáo",
+  "title.integrations": "Tích hợp",
 } as const;
 
 export type MessageKey = keyof typeof messages;

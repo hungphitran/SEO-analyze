@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import {
   createFileRoute,
   stripSearchParams,
@@ -10,6 +11,7 @@ import {
 } from "@/types/schemas/search-performance";
 
 export const Route = createFileRoute("/_app/p/$projectId/search-performance")({
+  head: pageHead("nav.gscInsights"),
   validateSearch: searchPerformanceSearchSchema,
   search: {
     middlewares: [

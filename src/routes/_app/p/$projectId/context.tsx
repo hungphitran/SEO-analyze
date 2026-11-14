@@ -1,9 +1,11 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute } from "@tanstack/react-router";
 import { ProjectPageHeader } from "@/client/features/projects/ProjectPageHeader";
 import { ProjectContextPage } from "@/client/features/projects/project-context/ProjectContextPage";
 import { t } from "@/shared/i18n";
 
 export const Route = createFileRoute("/_app/p/$projectId/context")({
+  head: pageHead("nav.context"),
   component: ProjectContextRoute,
 });
 

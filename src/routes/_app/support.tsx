@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute } from "@tanstack/react-router";
 import { CopyButton } from "@/client/components/CopyButton";
 import { PageHeader } from "@/client/components/PageHeader";
@@ -15,6 +16,7 @@ const DISCORD_URL = "https://discord.gg/c9uGs3cFXr";
 const GITHUB_URL = "https://github.com/every-app/open-seo";
 
 export const Route = createFileRoute("/_app/support")({
+  head: pageHead("title.support"),
   component: SupportPage,
 });
 

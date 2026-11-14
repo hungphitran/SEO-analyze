@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAppForm } from "@/client/components/form/useAppForm";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
@@ -31,6 +32,7 @@ const resetPasswordSearchSchema = authRedirectSearchSchema.extend({
 });
 
 export const Route = createFileRoute("/reset-password")({
+  head: pageHead("auth.resetPassword"),
   validateSearch: resetPasswordSearchSchema,
   component: ResetPasswordPage,
 });

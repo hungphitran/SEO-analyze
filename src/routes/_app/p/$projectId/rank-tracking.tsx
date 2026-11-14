@@ -1,8 +1,10 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute, Outlet, useParams } from "@tanstack/react-router";
 import { BackLink, PageHeader } from "@/client/components/PageHeader";
 import { t } from "@/shared/i18n";
 
 export const Route = createFileRoute("/_app/p/$projectId/rank-tracking")({
+  head: pageHead("nav.rankTracking"),
   component: RankTrackingLayout,
 });
 

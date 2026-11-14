@@ -1,3 +1,11 @@
+# Security headers for static files. The Worker adds the same set to every
+# document and API response (src/server/lib/security-headers.ts).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
 # Vite content-hashes every file under /assets/ and the HTML is never cached,
 # so a deploy ships new URLs instead of changing these files. Favicons and the
 # manifest keep stable names, so they keep the default revalidating policy.

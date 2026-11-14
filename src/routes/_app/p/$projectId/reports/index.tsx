@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/client/components/PageHeader";
 import { Button } from "@/client/components/ui/button";
@@ -15,6 +16,7 @@ import { REPORT_APP_LIST_LIMIT } from "@/types/schemas/reports";
 import { t } from "@/shared/i18n";
 
 export const Route = createFileRoute("/_app/p/$projectId/reports/")({
+  head: pageHead("nav.reports"),
   component: ReportsPage,
 });
 

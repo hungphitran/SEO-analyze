@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { everyAppAccountQueryOptions } from "@/client/features/every-app/everyAppAccountQueries";
@@ -57,6 +58,7 @@ const aiSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_app/ai")({
+  head: pageHead("nav.agentSetup"),
   validateSearch: aiSearchSchema,
   component: AiPage,
 });

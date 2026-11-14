@@ -32,6 +32,13 @@ export const Route = createRootRoute({
       {
         title: "OpenSEO",
       },
+      // A private tool: keep every app page out of search indexes. Shared
+      // report links (/s/..., /r/...) are served outside this root and stay
+      // fetchable for link previews. server.ts sends the matching header.
+      {
+        name: "robots",
+        content: "noindex, nofollow",
+      },
       {
         charSet: "utf-8",
       },

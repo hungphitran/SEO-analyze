@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { queryClient } from "@/client/tanstack-db/queryClient";
 import { googleConnectionOptions } from "@/client/features/integrations/googleProviders";
 import { createFileRoute } from "@tanstack/react-router";
@@ -10,6 +11,7 @@ import { IndexNowSettings } from "@/client/features/settings/IndexNowSettings";
 export const Route = createFileRoute(
   "/_app/p/$projectId/settings/integrations",
 )({
+  head: pageHead("title.integrations"),
   loader: ({ params }) => {
     // Start both database checks on link intent without holding up navigation.
     void queryClient.prefetchQuery(

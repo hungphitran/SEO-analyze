@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useAppForm } from "@/client/components/form/useAppForm";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
@@ -19,6 +20,7 @@ const forgotPasswordSchema = z.object({
 });
 
 export const Route = createFileRoute("/forgot-password")({
+  head: pageHead("auth.forgotPassword"),
   validateSearch: authRedirectSearchSchema,
   component: ForgotPasswordPage,
 });

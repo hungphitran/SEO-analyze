@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -22,6 +23,7 @@ import type { ReportTemplate } from "@/types/schemas/report-templates";
 import { t } from "@/shared/i18n";
 
 export const Route = createFileRoute("/_app/p/$projectId/reports/templates")({
+  head: pageHead("title.reportTemplates"),
   component: ReportTemplatesPage,
 });
 

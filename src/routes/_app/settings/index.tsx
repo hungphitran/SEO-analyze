@@ -1,3 +1,4 @@
+import { pageHead } from "@/shared/page-title";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ApiKeySettings } from "@/client/features/settings/ApiKeySettings";
@@ -15,6 +16,7 @@ import { version } from "../../../../package.json";
 import { t } from "@/shared/i18n";
 
 export const Route = createFileRoute("/_app/settings/")({
+  head: pageHead("settings.title"),
   component: PersonalSettings,
 });
 

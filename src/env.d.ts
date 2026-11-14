@@ -1,3 +1,6 @@
+/** Short git commit baked in at build time (vite.config.ts define). */
+declare const __BUILD_COMMIT__: string | undefined;
+
 // Custom environment variable type definitions
 // These extend the auto-generated Env interface from worker-configuration.d.ts
 
