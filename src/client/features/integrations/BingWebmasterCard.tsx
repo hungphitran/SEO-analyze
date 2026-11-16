@@ -6,6 +6,7 @@ import { QueryError } from "@/client/components/QueryState";
 import { SafeExternalLink } from "@/client/components/SafeExternalLink";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
+import { BingDetailPanel } from "@/client/features/integrations/BingDetailPanel";
 import { localizeFreeSourceMessage } from "@/client/features/integrations/freeSourceMessages";
 import {
   getErrorCode,
@@ -159,6 +160,7 @@ export function BingWebmasterCard({ projectId }: { projectId: string }) {
               >
                 {t("freeSources.disconnectBing")}
               </Button>
+              <BingDetailPanel projectId={projectId} />
             </div>
           ) : (
             <div className="space-y-4">

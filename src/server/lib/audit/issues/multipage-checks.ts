@@ -21,6 +21,7 @@ export interface SlimPage {
   isIndexable: boolean;
   canonicalUrl: string | null;
   headerCanonicalUrl: string | null;
+  inSitemap?: boolean | null;
 }
 
 function isOkHtmlPage(page: SlimPage): boolean {
@@ -177,5 +178,51 @@ export function findRedirectChainsAndLoops(pages: SlimPage[]): DetectedIssue[] {
     });
   }
 
+  return issues;
+}
+
+/**
+ * Sitemaps should list only clean, indexable 200 OK canonical URLs. Flags
+ * crawled sitemap URLs that redirect, error, are noindex, or canonicalize elsewhere.
+ */
+export function findSitemapNonIndexablePages(
+  pages: SlimPage[],
+): DetectedIssue[] {
+  const issues: DetectedIssue[] = [];
+  for (const page of pages) {
+    if (
+      page.inSitemap !== true ||
+      page.fetchClass !== "ok" ||
+      page.statusCode === null
+    ) {
+      continue;
+    }
+
+    let reason: "redirect" | "http_error" | "noindex" | "canonicalized" | null =
+      null;
+    if (page.statusCode >= 300 && page.statusCode < 400) {
+      reason = "redirect";
+    } else if (page.statusCode >= 400) {
+      reason = "http_error";
+    } else if (page.statusCode >= 200 && page.statusCode < 300) {
+      if (!page.isIndexable) {
+        reason = "noindex";
+      } else {
+        const effectiveCanonical = page.canonicalUrl ?? page.headerCanonicalUrl;
+        if (effectiveCanonical && effectiveCanonical !== page.url) {
+          reason = "canonicalized";
+        }
+      }
+    }
+
+    if (reason) {
+      issues.push({
+        issueType: "sitemap-non-indexable",
+        pageId: page.id,
+        pageUrl: page.url,
+        details: { reason, statusCode: page.statusCode },
+      });
+    }
+  }
   return issues;
 }

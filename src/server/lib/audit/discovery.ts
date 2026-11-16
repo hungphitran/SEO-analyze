@@ -127,6 +127,25 @@ export function parseRobotsTxt(
   };
 }
 
+const AI_SEARCH_BOTS = [
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "Claude-SearchBot",
+  "PerplexityBot",
+] as const;
+
+/** AI search/citation crawlers explicitly disallowed from the site root in robots.txt. */
+export function findBlockedAiSearchBots(
+  origin: string,
+  robotsText: string | null,
+): string[] {
+  if (!robotsText?.trim()) return [];
+  const robots = robotsParser(`${origin}/robots.txt`, robotsText);
+  return AI_SEARCH_BOTS.filter(
+    (bot) => robots.isAllowed(`${origin}/`, bot) === false,
+  );
+}
+
 /**
  * Fetch and parse a sitemap (supports sitemap index recursion).
  * Returns a flat list of page URLs found.

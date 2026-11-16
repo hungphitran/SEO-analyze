@@ -7,6 +7,7 @@ import {
 import {
   findDuplicates,
   findRedirectChainsAndLoops,
+  findSitemapNonIndexablePages,
   type SlimPage,
 } from "@/server/lib/audit/issues/multipage-checks";
 import type { CrawledPageResult, PageLink } from "@/server/lib/audit/types";
@@ -482,5 +483,80 @@ describe("technical signal checks", () => {
       }),
     );
     expect(types).toContain("missing-viewport");
+  });
+
+  it("flags incomplete Rich Result schemas and generic internal anchor text", () => {
+    const types = issueTypes(
+      makePage({
+        signals: {
+          ...healthySignals,
+          incompleteSchemas: ["Product (missing name, offers/aggregateRating)"],
+        },
+        links: [
+          {
+            targetUrl: "https://example.com/guide",
+            anchor: "Xem thêm!",
+            isInternal: true,
+            isNofollow: false,
+          },
+          {
+            targetUrl: "https://other.example/docs",
+            anchor: "click here",
+            isInternal: false,
+            isNofollow: false,
+          },
+        ],
+      }),
+    );
+    expect(types).toContain("incomplete-schema");
+    expect(types).toContain("generic-anchor-text");
+  });
+});
+
+describe("findSitemapNonIndexablePages", () => {
+  it("flags sitemap URLs that redirect, error, are noindex, or canonicalize elsewhere", () => {
+    const issues = findSitemapNonIndexablePages([
+      makeSlimPage({
+        url: "https://example.com/ok",
+        inSitemap: true,
+        canonicalUrl: "https://example.com/ok",
+      }),
+      makeSlimPage({
+        url: "https://example.com/not-in-sitemap",
+        inSitemap: false,
+        isIndexable: false,
+      }),
+      makeSlimPage({
+        url: "https://example.com/redir",
+        inSitemap: true,
+        statusCode: 301,
+        redirectUrl: "https://example.com/ok",
+      }),
+      makeSlimPage({
+        url: "https://example.com/err",
+        inSitemap: true,
+        statusCode: 404,
+      }),
+      makeSlimPage({
+        url: "https://example.com/noindex",
+        inSitemap: true,
+        isIndexable: false,
+      }),
+      makeSlimPage({
+        url: "https://example.com/canon",
+        inSitemap: true,
+        canonicalUrl: "https://example.com/ok",
+      }),
+    ]);
+
+    expect(issues.map((issue) => [issue.pageUrl, issue.details])).toEqual([
+      ["https://example.com/redir", { reason: "redirect", statusCode: 301 }],
+      ["https://example.com/err", { reason: "http_error", statusCode: 404 }],
+      ["https://example.com/noindex", { reason: "noindex", statusCode: 200 }],
+      [
+        "https://example.com/canon",
+        { reason: "canonicalized", statusCode: 200 },
+      ],
+    ]);
   });
 });

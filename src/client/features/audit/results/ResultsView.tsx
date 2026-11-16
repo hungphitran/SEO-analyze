@@ -19,6 +19,7 @@ import { PagesTable } from "@/client/features/audit/results/PagesTable";
 import { ShopifyCrawlWarning } from "@/client/features/audit/results/ShopifyCrawlWarning";
 import { RenderingWarnings } from "@/client/features/audit/results/RenderingWarnings";
 import { PerformanceTable } from "@/client/features/audit/results/ResultsTables";
+import { CruxVitalsPanel } from "@/client/features/integrations/CruxVitalsPanel";
 import {
   BotProtectionAdvice,
   SCORE_TEXT_CLASS,
@@ -184,13 +185,18 @@ export function ResultsView({
         />
       )}
       {activeTab === "performance" && (
-        <PerformanceTable
-          auditId={audit.id}
-          projectId={projectId}
-          lighthouse={lighthouse}
-          pages={pages}
-          tabs={tabs}
-        />
+        <div className="space-y-4">
+          <PerformanceTable
+            auditId={audit.id}
+            projectId={projectId}
+            lighthouse={lighthouse}
+            pages={pages}
+            tabs={tabs}
+          />
+          <div className="rounded-lg border border-border bg-card p-4 text-sm empty:hidden">
+            <CruxVitalsPanel projectId={projectId} />
+          </div>
+        </div>
       )}
     </>
   );

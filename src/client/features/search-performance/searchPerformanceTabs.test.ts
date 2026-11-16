@@ -24,8 +24,8 @@ describe("tab to dimension mapping", () => {
     );
   });
 
-  it("treats sitemaps and inspection as property tabs, not tables", () => {
-    for (const tab of ["sitemaps", "inspection"] as const) {
+  it("treats sitemaps, inspection, and opportunities as property tabs, not tables", () => {
+    for (const tab of ["sitemaps", "inspection", "opportunities"] as const) {
       expect(isPropertyTab(tab)).toBe(true);
       expect(tableDimensionForTab(tab)).toBeNull();
     }

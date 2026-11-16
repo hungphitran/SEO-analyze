@@ -11,6 +11,7 @@
  * tokenizer keeps only the accumulated text and extracted fields in memory.
  */
 import { Parser } from "htmlparser2";
+import { inspectJsonLdSchemaCompleteness } from "./json-ld-schema";
 import { normalizeUrl, isSameOrigin } from "./url-utils";
 import type { PageAnalysis, PageLink, PageSignals } from "./types";
 
@@ -151,6 +152,7 @@ export function analyzeHtml(
   const mixedContentSamples: string[] = [];
   let jsonLdCount = 0;
   let jsonLdInvalidCount = 0;
+  const incompleteSchemas: string[] = [];
   let jsonLdBuffer: string[] | null = null;
   let jsonLdChars = 0;
 
@@ -200,7 +202,8 @@ export function analyzeHtml(
     jsonLdCount += 1;
     if (jsonLdChars > MAX_JSON_LD_CHARS) return;
     try {
-      JSON.parse(text);
+      const parsed: unknown = JSON.parse(text);
+      inspectJsonLdSchemaCompleteness(parsed, incompleteSchemas);
     } catch {
       jsonLdInvalidCount += 1;
     }
@@ -408,6 +411,7 @@ export function analyzeHtml(
     mixedContentSamples,
     jsonLdCount,
     jsonLdInvalidCount,
+    incompleteSchemas,
   };
 
   const rawText = (sawBody ? bodyParts : fallbackParts).join("");

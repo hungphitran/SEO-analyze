@@ -46,12 +46,12 @@ export type BingQuerySummary = {
 const BING_TIMEOUT_MS = 15_000;
 const BING_RETRY_DELAYS_MS = [400, 1200];
 
-function asRecord(value: unknown): Record<string, unknown> | null {
+export function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null) return null;
   return Object.fromEntries(Object.entries(value));
 }
 
-function stringField(
+export function stringField(
   record: Record<string, unknown> | null,
   name: string,
 ): string | null {
@@ -59,15 +59,15 @@ function stringField(
   return typeof value === "string" ? value : null;
 }
 
-function asArray(value: unknown): unknown[] {
+export function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
-function numberOrZero(value: unknown): number {
+export function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function numberOrNull(value: unknown): number | null {
+export function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
@@ -82,7 +82,7 @@ export function parseBingDate(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-async function bingGet<T>(input: {
+export async function bingGet<T>(input: {
   method: string;
   apiKey: string;
   params?: Record<string, string>;
@@ -241,45 +241,61 @@ export async function listVerifiedBingSites(input: {
   });
 }
 
-export function parseBingQueryStatsPayload(
+type BingRankedRow = {
+  key: string;
+  clicks: number;
+  impressions: number;
+  avgImpressionPosition: number | null;
+  avgClickPosition: number | null;
+};
+
+export function aggregateBingRankRows(
   payload: unknown,
-  siteUrl: string,
+  getKey: (record: Record<string, unknown>) => string,
   options?: { sinceMs?: number; limit?: number },
-): BingQuerySummary {
+): BingRankedRow[] {
   const sinceMs = options?.sinceMs;
   const limit = options?.limit ?? 25;
-  const byQuery = new Map<string, BingQueryStat & { dated: boolean }>();
+  const byKey = new Map<string, BingRankedRow>();
 
   for (const row of asArray(asRecord(payload)?.d)) {
     const record = asRecord(row);
     if (!record) continue;
-    const query = typeof record.Query === "string" ? record.Query.trim() : "";
-    if (!query) continue;
+    const key = getKey(record);
+    if (!key) continue;
     const date = parseBingDate(record.Date);
     if (sinceMs != null && date && date.getTime() < sinceMs) continue;
 
-    const current = byQuery.get(query) ?? {
-      query,
+    const current = byKey.get(key) ?? {
+      key,
       clicks: 0,
       impressions: 0,
       avgImpressionPosition: null,
       avgClickPosition: null,
-      dated: false,
     };
     current.clicks += numberOrZero(record.Clicks);
     current.impressions += numberOrZero(record.Impressions);
     current.avgImpressionPosition = numberOrNull(record.AvgImpressionPosition);
     current.avgClickPosition = numberOrNull(record.AvgClickPosition);
-    current.dated = current.dated || date != null;
-    byQuery.set(query, current);
+    byKey.set(key, current);
   }
 
-  const ranked = [...byQuery.values()];
+  const ranked = [...byKey.values()];
   // ES2022 typings have no Array#toSorted.
   ranked.sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions);
-  const queries = ranked
-    .slice(0, limit)
-    .map(({ dated: _dated, ...stat }) => stat);
+  return ranked.slice(0, limit);
+}
+
+export function parseBingQueryStatsPayload(
+  payload: unknown,
+  siteUrl: string,
+  options?: { sinceMs?: number; limit?: number },
+): BingQuerySummary {
+  const queries: BingQueryStat[] = aggregateBingRankRows(
+    payload,
+    (record) => (stringField(record, "Query") ?? "").trim(),
+    options,
+  ).map(({ key, ...stat }) => ({ query: key, ...stat }));
 
   return {
     siteUrl,

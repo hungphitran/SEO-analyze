@@ -33,6 +33,29 @@ const SLOW_RESPONSE_MS = 1500;
 const DEEP_PAGE_DEPTH = 5;
 // Meta tags are uncapped in the HTML, so bound the copy stored on each issue.
 const MAX_FLAGGED_TEXT_CHARS = 100;
+const GENERIC_ANCHOR_TEXTS = new Set([
+  "click here",
+  "here",
+  "read more",
+  "learn more",
+  "more",
+  "link",
+  "this page",
+  "website",
+  "xem thêm",
+  "tại đây",
+  "bấm vào đây",
+  "chi tiết",
+  "xem chi tiết",
+]);
+
+function normalizeAnchorText(anchor: string): string {
+  return anchor
+    .trim()
+    .toLowerCase()
+    .replace(/^[\p{P}\p{S}\s]+|[\p{P}\p{S}\s]+$/gu, "")
+    .replace(/\s+/g, " ");
+}
 
 function truncateFlaggedText(text: string): string {
   return text.length > MAX_FLAGGED_TEXT_CHARS
@@ -128,6 +151,11 @@ function reportTechnicalSignals(page: CrawledPageResult, report: Reporter) {
     report("invalid-json-ld", {
       invalid: signals.jsonLdInvalidCount,
       total: signals.jsonLdCount,
+    });
+  }
+  if (signals.incompleteSchemas && signals.incompleteSchemas.length > 0) {
+    report("incomplete-schema", {
+      schemas: signals.incompleteSchemas,
     });
   }
   if (!signals.twitterCard && page.isIndexable) report("missing-twitter-card");
@@ -275,6 +303,22 @@ export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
   // Structure
   if (page.isIndexable && page.links.length === 0) {
     report("no-outgoing-links");
+  }
+  if (page.isIndexable) {
+    const genericLinks = page.links.filter(
+      (link) =>
+        link.isInternal &&
+        link.anchor &&
+        GENERIC_ANCHOR_TEXTS.has(normalizeAnchorText(link.anchor)),
+    );
+    if (genericLinks.length > 0) {
+      report("generic-anchor-text", {
+        count: genericLinks.length,
+        examples: genericLinks
+          .slice(0, 3)
+          .map((link) => `${link.anchor} → ${link.targetUrl}`),
+      });
+    }
   }
 
   return issues;

@@ -64,6 +64,7 @@ vi.mock("@/server/lib/audit/progress-kv", () => ({
 vi.mock("@/server/lib/audit/discovery", () => ({
   discoverUrls: vi.fn(),
   parseRobotsTxt: vi.fn(),
+  findBlockedAiSearchBots: vi.fn().mockReturnValue([]),
 }));
 vi.mock("@/server/lib/audit/issues/multipage", () => ({
   runMultipageChecks: vi.fn(),

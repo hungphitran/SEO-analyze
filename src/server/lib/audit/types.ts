@@ -73,6 +73,8 @@ export interface PageSignals {
   /** application/ld+json blocks found, and how many failed JSON.parse. */
   jsonLdCount: number;
   jsonLdInvalidCount: number;
+  /** Recognized Rich Result schema types missing key properties. */
+  incompleteSchemas?: string[];
 }
 
 /** Data extracted from a single page's HTML. */

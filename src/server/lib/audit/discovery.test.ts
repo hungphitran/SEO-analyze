@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { discoverUrls, parseRobotsTxt } from "@/server/lib/audit/discovery";
+import {
+  discoverUrls,
+  findBlockedAiSearchBots,
+  parseRobotsTxt,
+} from "@/server/lib/audit/discovery";
 
 // Resolves the request-signing env lookup instantly, so it can't race the
 // fake timers below.
@@ -87,5 +91,35 @@ describe("parseRobotsTxt", () => {
 
     expect(robots.isAllowed("https://example.com/private/page")).toBe(false);
     expect(robots.isAllowed("https://example.com/public")).toBe(true);
+  });
+});
+
+describe("findBlockedAiSearchBots", () => {
+  it("flags blocked AI search crawlers while allowing training-only opt-outs", () => {
+    expect(
+      findBlockedAiSearchBots(
+        "https://example.com",
+        "User-agent: GPTBot\nDisallow: /\n\nUser-agent: ClaudeBot\nDisallow: /\n\nUser-agent: Google-Extended\nDisallow: /",
+      ),
+    ).toEqual([]);
+
+    expect(
+      findBlockedAiSearchBots(
+        "https://example.com",
+        "User-agent: OAI-SearchBot\nDisallow: /\n\nUser-agent: PerplexityBot\nDisallow: /",
+      ),
+    ).toEqual(["OAI-SearchBot", "PerplexityBot"]);
+
+    expect(
+      findBlockedAiSearchBots(
+        "https://example.com",
+        "User-agent: *\nDisallow: /",
+      ),
+    ).toEqual([
+      "OAI-SearchBot",
+      "ChatGPT-User",
+      "Claude-SearchBot",
+      "PerplexityBot",
+    ]);
   });
 });

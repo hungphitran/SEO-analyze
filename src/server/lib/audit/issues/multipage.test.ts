@@ -58,3 +58,18 @@ it("skips persisted app-shell coverage gaps while retaining genuine duplicate pa
     new Set(["readable-1", "readable-2"]),
   );
 });
+
+it("flags sitemap URLs that redirect or carry noindex", async () => {
+  await client.execute({
+    sql: "INSERT INTO audit_pages (id, audit_id, url, status_code, fetch_class, is_indexable, in_sitemap, word_count) VALUES (?, 'audit', ?, 200, 'ok', 0, 1, 50)",
+    args: ["sitemap-noindex", "https://example.com/hidden-in-sitemap"],
+  });
+  const { issues } = await runMultipageChecks({ auditId: "audit" });
+  expect(issues).toContainEqual(
+    expect.objectContaining({
+      issueType: "sitemap-non-indexable",
+      pageId: "sitemap-noindex",
+      details: { reason: "noindex", statusCode: 200 },
+    }),
+  );
+});

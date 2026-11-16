@@ -67,7 +67,7 @@ Google's public API documentation does not publish a guaranteed daily quota. Key
 
 ## Optional: real-user Core Web Vitals (Chrome UX Report)
 
-The [Chrome UX Report API](https://developer.chrome.com/docs/crux/api) returns Core Web Vitals measured from real Chrome users (LCP, INP, CLS, plus FCP and TTFB), for the project's origin and homepage URL, with a weekly p75 trend from the [History API](https://developer.chrome.com/docs/crux/history-api). It appears in the Integrations card next to PageSpeed Insights.
+The [Chrome UX Report API](https://developer.chrome.com/docs/crux/api) returns Core Web Vitals measured from real Chrome users (LCP, INP, CLS, plus FCP and TTFB), for the project's origin and homepage URL, with up to 40 weekly p75 trend points from the [History API](https://developer.chrome.com/docs/crux/history-api). It appears in the Integrations card next to PageSpeed Insights and inside the Site Audit Performance tab.
 
 1. In Google Cloud, enable the **Chrome UX Report API** and create an API key (no billing account is needed; 150 queries per minute per project, free).
 2. Set `CRUX_API_KEY` in `.env.selfhost`. If it is unset, `PAGESPEED_API_KEY` is tried instead, which works only when that key may also call the Chrome UX Report API (a key restricted to the PageSpeed API gets `403 PERMISSION_DENIED`).
@@ -146,10 +146,10 @@ restores everything. The single source of truth is
 | ------------------------------------------------------------------------------------ | --------------------------------------------- |
 | Dashboard (overview, Keywords tab, new queries, Search Console and audit cards)      | Google Search Console, site audit             |
 | Rank tracking (positions, history, SERP explorer, SERP features, competitor overlap) | SerpApi (`SERP_PROVIDER=serpapi`) or OpenSERP |
-| Search performance                                                                   | Google Search Console (+ Bing Webmaster)      |
-| Site audit and Lighthouse                                                            | Own crawler, PageSpeed Insights               |
-| Real-user Core Web Vitals                                                            | Chrome UX Report (CrUX)                       |
-| Reports, Context, Agent setup, Settings, Integrations                                | No paid data needed                           |
+| Search performance (including GA4 × GSC conversion opportunities)                    | Google Search Console, GA4 (+ Bing Webmaster) |
+| Site audit and Lighthouse (including AI crawler, sitemap, schema, anchor & IndexNow) | Own crawler, PageSpeed Insights, IndexNow     |
+| Real-user Core Web Vitals (up to 40 weeks CrUX history)                              | Chrome UX Report (CrUX)                       |
+| Reports, Context, Agent setup, Settings, Integrations (with Bing pages/links/crawl)  | No paid data needed                           |
 
 ## Bing Webmaster
 

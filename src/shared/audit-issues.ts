@@ -362,6 +362,38 @@ export const AUDIT_ISSUE_TYPES = {
     howToFix:
       "Update the link to the new address, replace it with a working source, or remove it.",
   },
+  "ai-search-bot-blocked": {
+    severity: "warning",
+    title: "AI search crawlers are blocked in robots.txt",
+    explanation:
+      "The site's robots.txt blocks one or more AI search and citation crawlers (such as OAI-SearchBot, ChatGPT-User, Claude-SearchBot or PerplexityBot). Unlike training-only crawlers (GPTBot, ClaudeBot, Google-Extended), blocking search crawlers prevents your pages from being cited in AI search answers.",
+    howToFix:
+      "Allow AI search crawlers (OAI-SearchBot, ChatGPT-User, Claude-SearchBot, PerplexityBot) in robots.txt even if you disallow training crawlers (GPTBot, ClaudeBot, Google-Extended).",
+  },
+  "sitemap-non-indexable": {
+    severity: "warning",
+    title: "Non-indexable or redirecting URL in sitemap",
+    explanation:
+      "This URL is listed in the XML sitemap, but it redirects, returns an error, has a noindex directive, or declares another URL as its canonical. Sitemaps should list only clean, indexable 200 OK canonical URLs.",
+    howToFix:
+      "Remove this URL from your XML sitemap, or replace it with the final indexable canonical URL.",
+  },
+  "incomplete-schema": {
+    severity: "info",
+    title: "Structured data is missing recommended Rich Result fields",
+    explanation:
+      "The page has valid JSON-LD structured data, but a recognized schema type (such as Article, Product, FAQPage or BreadcrumbList) is missing key properties search engines expect for rich results.",
+    howToFix:
+      "Add the missing recommended properties to the JSON-LD block (for example headline and datePublished/author on Article, name and offers/aggregateRating on Product, mainEntity on FAQPage, or itemListElement on BreadcrumbList).",
+  },
+  "generic-anchor-text": {
+    severity: "info",
+    title: "Internal links use generic anchor text",
+    explanation:
+      "The page links to internal pages using non-descriptive anchor text such as 'click here', 'read more' or 'xem thêm'. Search engines use anchor text to understand what the target page is about.",
+    howToFix:
+      "Replace generic anchor text with concise words that describe the destination page's topic.",
+  },
 } as const satisfies Record<string, AuditIssueDescriptor>;
 
 export type AuditIssueType = keyof typeof AUDIT_ISSUE_TYPES;

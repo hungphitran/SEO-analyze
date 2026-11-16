@@ -88,6 +88,7 @@ export const searchPerformanceTableExportInputSchema = z.object({
 
 export const SEARCH_PERFORMANCE_TABS = [
   "striking",
+  "opportunities",
   "queries",
   "pages",
   "countries",

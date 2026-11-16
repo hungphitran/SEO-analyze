@@ -3,10 +3,14 @@ import { getRequest } from "@tanstack/react-start/server";
 import { waitUntil } from "cloudflare:workers";
 import { z } from "zod";
 import { shiftGa4Date } from "@/server/features/ga4/services/Ga4Dates";
+import { Ga4MeasurementHealthService } from "@/server/features/ga4/services/Ga4MeasurementHealthService";
 import { Ga4OrganicOverviewService } from "@/server/features/ga4/services/Ga4OrganicOverviewService";
 import { Ga4Service } from "@/server/features/ga4/services/Ga4Service";
+import { SearchOpportunityService } from "@/server/features/ga4/services/SearchOpportunityService";
+import { isExpectedGrantFailure } from "@/server/features/gsc/services/GscService";
 import { AppError } from "@/server/lib/errors";
 import { Ga4ReportError } from "@/server/lib/ga4Errors";
+import { GscNotConnectedError } from "@/server/lib/gscErrors";
 import { hasGoogleOAuthConfig } from "@/server/features/google/oauth-config";
 import { getGoogleAccessMode } from "@/server/features/google/googleAccess";
 import { getGatewayGoogleConnectUrl } from "@/server/features/google/gatewayGoogle";
@@ -207,6 +211,75 @@ export const disconnectGa4 = createServerFn({ method: "POST" })
       }),
     );
     return { connected: false as const };
+  });
+
+export const getGa4SearchOpportunities = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(projectScopedSchema)
+  .handler(async ({ context }) => {
+    try {
+      const result = await SearchOpportunityService.getOpportunities({
+        projectId: context.projectId,
+        limit: 50,
+      });
+      return {
+        connected: true as const,
+        ...result,
+      };
+    } catch (error) {
+      if (
+        error instanceof Ga4ReportError &&
+        (error.code === "ga4_not_connected" ||
+          error.code === "ga4_reconnect_required" ||
+          error.code === "ga4_property_inaccessible")
+      ) {
+        return { connected: false as const, missing: "ga4" as const };
+      }
+      if (
+        error instanceof GscNotConnectedError ||
+        isExpectedGrantFailure(error)
+      ) {
+        return { connected: false as const, missing: "gsc" as const };
+      }
+      if (
+        error instanceof Ga4ReportError &&
+        error.code === "ga4_quota_exhausted"
+      ) {
+        throw new AppError("RATE_LIMITED");
+      }
+      throw error;
+    }
+  });
+
+export const getGa4MeasurementHealth = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(projectScopedSchema)
+  .handler(async ({ context }) => {
+    try {
+      const health = await Ga4MeasurementHealthService.getMeasurementHealth(
+        context.projectId,
+      );
+      return {
+        connected: true as const,
+        ...health,
+      };
+    } catch (error) {
+      if (
+        error instanceof Ga4ReportError &&
+        (error.code === "ga4_not_connected" ||
+          error.code === "ga4_reconnect_required" ||
+          error.code === "ga4_property_inaccessible")
+      ) {
+        return { connected: false as const };
+      }
+      if (
+        error instanceof Ga4ReportError &&
+        error.code === "ga4_quota_exhausted"
+      ) {
+        throw new AppError("RATE_LIMITED");
+      }
+      throw error;
+    }
   });
 
 export const startGa4Link = createServerFn({ method: "POST" })

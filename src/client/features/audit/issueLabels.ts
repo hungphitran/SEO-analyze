@@ -308,6 +308,34 @@ const ISSUE_COPY = {
     howToFix:
       "Cập nhật liên kết sang địa chỉ mới, thay bằng nguồn còn hoạt động hoặc xoá liên kết.",
   },
+  "ai-search-bot-blocked": {
+    title: "robots.txt đang chặn bot tìm kiếm AI",
+    explanation:
+      "Tệp robots.txt đang chặn một hoặc nhiều trình thu thập tìm kiếm và trích dẫn AI (như OAI-SearchBot, ChatGPT-User, Claude-SearchBot hoặc PerplexityBot). Khác với bot huấn luyện (GPTBot, ClaudeBot, Google-Extended), việc chặn bot tìm kiếm làm trang không được trích dẫn trong câu trả lời AI.",
+    howToFix:
+      "Cho phép các bot tìm kiếm AI (OAI-SearchBot, ChatGPT-User, Claude-SearchBot, PerplexityBot) trong robots.txt ngay cả khi bạn từ chối các bot huấn luyện (GPTBot, ClaudeBot, Google-Extended).",
+  },
+  "sitemap-non-indexable": {
+    title: "URL trong sitemap không thể lập chỉ mục hoặc chuyển hướng",
+    explanation:
+      "URL này nằm trong sitemap XML nhưng lại chuyển hướng, trả về lỗi, gắn noindex hoặc khai báo canonical trỏ sang trang khác. Sitemap chỉ nên chứa các URL 200 OK có thể lập chỉ mục và tự chuẩn hóa.",
+    howToFix:
+      "Xóa URL này khỏi sitemap XML hoặc thay bằng URL đích cuối cùng có thể lập chỉ mục.",
+  },
+  "incomplete-schema": {
+    title: "Dữ liệu có cấu trúc thiếu trường khuyến nghị cho Rich Results",
+    explanation:
+      "Trang có JSON-LD hợp lệ nhưng một loại schema phổ biến (như Article, Product, FAQPage hoặc BreadcrumbList) đang thiếu các thuộc tính quan trọng mà công cụ tìm kiếm cần để hiển thị kết quả nâng cao.",
+    howToFix:
+      "Bổ sung các thuộc tính còn thiếu vào khối JSON-LD (ví dụ headline và datePublished/author cho Article, name và offers/aggregateRating cho Product, mainEntity cho FAQPage, hoặc itemListElement cho BreadcrumbList).",
+  },
+  "generic-anchor-text": {
+    title: "Liên kết nội bộ dùng văn bản neo chung chung",
+    explanation:
+      "Trang liên kết tới các URL nội bộ bằng văn bản neo không mô tả nội dung đích như 'xem thêm', 'tại đây', 'click here' hoặc 'read more'. Công cụ tìm kiếm dựa vào anchor text để hiểu chủ đề trang đích.",
+    howToFix:
+      "Thay thế các cụm từ chung chung bằng từ khóa ngắn gọn mô tả rõ nội dung trang đích.",
+  },
 } as const satisfies Record<AuditIssueType, IssueCopy>;
 
 export function getAuditIssueCopy(issueType: string): IssueCopy {

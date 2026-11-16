@@ -398,4 +398,17 @@ describe("analyzeHtml technical signals", () => {
     expect(analysis.wordCount).toBe(2);
     expect(analysis.hasStructuredData).toBe(true);
   });
+
+  it("checks Rich Result schema completeness for Article, Product, FAQPage and BreadcrumbList", () => {
+    const signals = analyze(
+      `<html><head>
+        <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"OK","datePublished":"2026-01-01"},{"@type":"Product"},{"@type":"FAQPage","mainEntity":[]},{"@type":"BreadcrumbList"}]}</script>
+      </head><body>x</body></html>`,
+    );
+    expect(signals.incompleteSchemas).toEqual([
+      "Product (missing name, offers/aggregateRating)",
+      "FAQPage (missing mainEntity)",
+      "BreadcrumbList (missing itemListElement)",
+    ]);
+  });
 });

@@ -13,6 +13,7 @@ import { auditIssues, auditPages } from "@/db/schema";
 import {
   findDuplicates,
   findRedirectChainsAndLoops,
+  findSitemapNonIndexablePages,
   type SlimPage,
 } from "./multipage-checks";
 import type { DetectedIssue } from "@/server/lib/audit/issues/page-reporters";
@@ -50,13 +51,18 @@ export async function runMultipageChecks(input: {
         isIndexable: auditPages.isIndexable,
         canonicalUrl: auditPages.canonicalUrl,
         headerCanonicalUrl: auditPages.headerCanonicalUrl,
+        inSitemap: auditPages.inSitemap,
       })
       .from(auditPages)
       .where(eq(auditPages.auditId, input.auditId))
   ).filter((page) => !shellPageIds.has(page.id));
 
   return {
-    issues: [...findDuplicates(pages), ...findRedirectChainsAndLoops(pages)],
+    issues: [
+      ...findDuplicates(pages),
+      ...findRedirectChainsAndLoops(pages),
+      ...findSitemapNonIndexablePages(pages),
+    ],
     hasUnreadShells: shellPageIds.size > 0,
   };
 }

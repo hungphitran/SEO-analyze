@@ -2,7 +2,7 @@ import { GscNotConnectedError } from "@/server/lib/gscErrors";
 import { GscService } from "@/server/features/gsc/services/GscService";
 import { BingWebmasterConnectionRepository } from "@/server/features/free-sources/repositories/BingWebmasterConnectionRepository";
 import { OwnedSiteSnapshotRepository } from "@/server/features/free-sources/repositories/OwnedSiteSnapshotRepository";
-import { AppError } from "@/server/lib/errors";
+import { openBingApiKey } from "@/server/features/free-sources/services/BingDetailsService";
 import {
   bingRefreshMessage,
   getBingQueryStats,
@@ -13,10 +13,7 @@ import { runPagespeedReport } from "@/server/lib/free-sources/pagespeed";
 import { buildPagespeedSnapshotSummary } from "@/server/lib/free-sources/pagespeedReport";
 import { projectWebsiteUrlFromDomain } from "@/server/lib/free-sources/project-url";
 import { safeErrorMessage } from "@/server/lib/free-sources/redact";
-import {
-  hasFreeSourcesEncryptionKey,
-  openSecret,
-} from "@/server/lib/free-sources/secret-box";
+import { hasFreeSourcesEncryptionKey } from "@/server/lib/free-sources/secret-box";
 import { getOptionalEnvValue } from "@/server/lib/runtime-env";
 import {
   getCruxApiKey,
@@ -306,18 +303,13 @@ async function refreshBing(input: {
     });
   }
 
-  let apiKey: string;
-  try {
-    apiKey = await openSecret(connection.encryptedApiKey);
-  } catch (error) {
+  const opened = await openBingApiKey(connection.encryptedApiKey);
+  if (!opened.ok) {
     return recordSnapshot({
       ...input,
       source: "bing",
       status: "error",
-      message:
-        error instanceof AppError && error.code === "AUTH_CONFIG_MISSING"
-          ? error.message
-          : "The stored Bing Webmaster key could not be decrypted. Disconnect and save the key again after checking BETTER_AUTH_SECRET.",
+      message: opened.message,
       summary: { siteUrl: connection.siteUrl },
     });
   }
@@ -325,7 +317,7 @@ async function refreshBing(input: {
   try {
     const sinceMs = Date.now() - TWENTY_EIGHT_DAYS_MS;
     const stats: BingQuerySummary = await getBingQueryStats({
-      apiKey,
+      apiKey: opened.apiKey,
       siteUrl: connection.siteUrl,
       sinceMs,
       limit: QUERY_LIMIT,
@@ -342,7 +334,7 @@ async function refreshBing(input: {
       ...input,
       source: "bing",
       status: "error",
-      message: bingRefreshMessage(error, apiKey),
+      message: bingRefreshMessage(error, opened.apiKey),
       summary: { siteUrl: connection.siteUrl },
     });
   }

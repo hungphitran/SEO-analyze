@@ -1,6 +1,11 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { type SortingState, type VisibilityState } from "@tanstack/react-table";
+import { toast } from "sonner";
 import { DataTable, useDataTable } from "@/client/components/table/DataTable";
+import { Button } from "@/client/components/ui/button";
+import { getStandardErrorMessage } from "@/client/lib/error-messages";
+import { submitIndexNowUrls } from "@/serverFunctions/indexnow";
 import {
   countActiveFilters,
   PagesFilterBar,
@@ -64,6 +69,42 @@ export function PagesTable({
     () => filterPages(pages, filters, issueCounts),
     [filters, pages, issueCounts],
   );
+  const indexableUrls = useMemo(
+    () =>
+      filteredPages
+        .filter(
+          (page) =>
+            page.statusCode === 200 &&
+            page.isIndexable &&
+            page.fetchClass === "ok",
+        )
+        .map((page) => page.url)
+        .slice(0, 500),
+    [filteredPages],
+  );
+  const submitIndexNow = useMutation({
+    mutationFn: (urls: string[]) =>
+      submitIndexNowUrls({ data: { projectId, urls } }),
+    onSuccess: (result) => {
+      const failed = result.hosts.filter((host) => host.status === "failed");
+      const sent = result.hosts
+        .filter((host) => host.status === "submitted")
+        .reduce((count, host) => count + host.urlCount, 0);
+      if (sent > 0) {
+        toast.success(t("indexNow.submitted", { count: sent }));
+      }
+      for (const host of failed) {
+        toast.error(t("indexNow.couldNotSubmit"), {
+          description: host.message,
+          duration: 10_000,
+        });
+      }
+      if (sent === 0 && failed.length === 0) {
+        toast.info(t("audit.indexNowNoMatchingUrls"));
+      }
+    },
+    onError: (error: Error) => toast.error(getStandardErrorMessage(error)),
+  });
   const columns = useMemo(() => {
     const canonicalHost = predominantHost(pages, startUrl);
     return [
@@ -112,10 +153,27 @@ export function PagesTable({
               resultCount={filteredPages.length}
               totalCount={pages.length}
               actions={
-                <ColumnPicker
-                  visibility={columnVisibility}
-                  onChange={setColumnVisibility}
-                />
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                      indexableUrls.length === 0 || submitIndexNow.isPending
+                    }
+                    onClick={() => submitIndexNow.mutate(indexableUrls)}
+                  >
+                    {submitIndexNow.isPending
+                      ? t("audit.indexNowSending")
+                      : t("audit.indexNowSubmit", {
+                          count: indexableUrls.length,
+                        })}
+                  </Button>
+                  <ColumnPicker
+                    visibility={columnVisibility}
+                    onChange={setColumnVisibility}
+                  />
+                </>
               }
             />
             {showFilters ? (

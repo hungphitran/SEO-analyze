@@ -335,6 +335,16 @@ describe("queryCruxHistory", () => {
     expect(body.collectionPeriodCount).toBe(12);
   });
 
+  it("defaults to 40 weekly periods when periods is omitted", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(historyFixture));
+    await queryCruxHistory({
+      target: { origin: "https://example.com" },
+      apiKey: "k",
+      fetchImpl,
+    });
+    expect(sentRequest(fetchImpl).body.collectionPeriodCount).toBe(40);
+  });
+
   it("returns null on 404", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({}, 404));
     await expect(

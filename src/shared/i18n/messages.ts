@@ -3686,6 +3686,45 @@ export const messages = {
   "auditDetail.exportJsonLdInvalid": "JSON-LD lỗi",
   "auditDetail.exportHtmlBytes": "Dung lượng HTML (byte)",
   "auditDetail.exportResponseMs": "Phản hồi (ms)",
+  "audit.indexNowSubmit": "Gửi {count} URL qua IndexNow",
+  "audit.indexNowSending": "Đang gửi IndexNow…",
+  "audit.indexNowNoMatchingUrls":
+    "Không có URL hợp lệ thuộc tên miền dự án để gửi.",
+  "gscOpportunities.tabTitle": "Cơ hội chuyển đổi (GA4)",
+  "gscOpportunities.loadFailed": "Không tải được cơ hội tìm kiếm từ GA4.",
+  "gscOpportunities.coverageSummary":
+    "Khớp {matched}/{total} trang ở vị trí 4–20 với GA4 ({start} đến {end}).",
+  "gscOpportunities.healthOk": "Đo lường GA4 ổn định",
+  "gscOpportunities.healthIssues": "{count} cảnh báo đo lường GA4",
+  "gscOpportunities.healthDetails":
+    "{streams} luồng web · {events} sự kiện chính",
+  "gscOpportunities.healthChecksLabel": "Kiểm tra GA4:",
+  "gscOpportunities.healthIssueNoWebStream": "Chưa có luồng dữ liệu web",
+  "gscOpportunities.healthIssueEnhancedDisabled":
+    "Chưa bật đo lường nâng cao (Enhanced Measurement)",
+  "gscOpportunities.healthIssueSiteSearchDisabled":
+    "Chưa bật đo tìm kiếm nội bộ (Site Search)",
+  "gscOpportunities.healthIssueNoKeyEvents":
+    "Chưa cấu hình sự kiện chính (Key Events)",
+  "gscOpportunities.emptyTitle": "Chưa có trang nào ở vị trí 4–20",
+  "gscOpportunities.emptyDesc":
+    "Khi Google Search Console ghi nhận các trang xếp hạng ở vị trí 4–20, hệ thống sẽ đối chiếu với GA4 tại đây.",
+  "gscOpportunities.colScore": "Điểm cơ hội",
+  "gscOpportunities.colRevenue": "Doanh thu",
+  "bing.detailsTitle": "Báo cáo chi tiết từ Bing Webmaster",
+  "bing.detailsLoad": "Tải trang, liên kết & lỗi crawl",
+  "bing.detailsRefresh": "Làm mới báo cáo Bing",
+  "bing.detailsFailed": "Không tải được báo cáo chi tiết từ Bing Webmaster.",
+  "bing.tabPages": "Trang hàng đầu",
+  "bing.tabLinks": "Liên kết trỏ về",
+  "bing.tabCrawlIssues": "Lỗi thu thập",
+  "bing.pagesEmpty": "Bing chưa ghi nhận thống kê trang nào trong 28 ngày qua.",
+  "bing.linksEmpty": "Bing chưa ghi nhận liên kết trỏ về nào.",
+  "bing.linksTotal": "Tổng số liên kết theo dõi được: {total}",
+  "bing.colTargetUrl": "URL đích",
+  "bing.colInboundLinks": "Số liên kết trỏ về",
+  "bing.crawlIssuesEmpty": "Bing không ghi nhận lỗi thu thập nào.",
+  "bing.colInLinks": "Liên kết nội bộ",
 } as const;
 
 export type MessageKey = keyof typeof messages;

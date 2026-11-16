@@ -121,6 +121,15 @@ function trendFor(trend: CruxTrend | null, key: CruxMetricKey) {
   return trend?.metrics[key]?.p75s ?? null;
 }
 
+function trendEndpoints(values: (number | null)[]): {
+  first: number;
+  last: number;
+} | null {
+  const numeric = values.filter((value): value is number => value != null);
+  if (numeric.length < 2) return null;
+  return { first: numeric[0], last: numeric[numeric.length - 1] };
+}
+
 function cruxErrorMessage(
   result: Extract<CruxTargetResult, { status: "error" }>,
 ): string {
@@ -204,13 +213,28 @@ function TargetTable({ result }: { result: CruxTargetResult }) {
                       />
                     </td>
                     <td className="py-1.5">
-                      {trendFor(trend, key) ? (
-                        <Sparkline values={trendFor(trend, key)!} />
-                      ) : (
-                        <span className="text-muted-foreground">
-                          {t("crux.trendNone")}
-                        </span>
-                      )}
+                      {(() => {
+                        const series = trendFor(trend, key);
+                        if (!series) {
+                          return (
+                            <span className="text-muted-foreground">
+                              {t("crux.trendNone")}
+                            </span>
+                          );
+                        }
+                        const endpoints = trendEndpoints(series);
+                        return (
+                          <div className="flex items-center gap-2">
+                            <Sparkline values={series} />
+                            {endpoints ? (
+                              <span className="text-muted-foreground text-xs tabular-nums whitespace-nowrap">
+                                {formatCruxValue(key, endpoints.first)} →{" "}
+                                {formatCruxValue(key, endpoints.last)}
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 );

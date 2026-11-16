@@ -37,7 +37,7 @@ const CRUX_API_METRICS: Record<CruxMetricKey, string> = {
 };
 
 /** Weekly points requested from the History API (the API allows 1 to 40). */
-const CRUX_HISTORY_PERIODS = 26;
+const CRUX_HISTORY_PERIODS = 40;
 
 type CruxErrorKind =
   | "not_configured"

@@ -16,6 +16,7 @@ import { DataTableTabs } from "@/client/components/table/DataTableToolbar";
 import { GoogleConnectionCard } from "@/client/features/integrations/GoogleConnectionCard";
 import { DimensionSection } from "@/client/features/search-performance/SearchPerformanceDimensionSection";
 import { SearchInspectionTab } from "@/client/features/search-performance/SearchInspectionTab";
+import { SearchOpportunitiesTab } from "@/client/features/search-performance/SearchOpportunitiesTab";
 import { SearchSitemapsTab } from "@/client/features/search-performance/SearchSitemapsTab";
 import { SearchPerformanceTabTriggers } from "@/client/features/search-performance/SearchPerformanceTabTriggers";
 import {
@@ -346,6 +347,8 @@ export function SearchPerformancePage({
                 <SearchSitemapsTab projectId={projectId} />
               ) : tab === "inspection" ? (
                 <SearchInspectionTab projectId={projectId} />
+              ) : tab === "opportunities" ? (
+                <SearchOpportunitiesTab projectId={projectId} />
               ) : reportQuery.isPlaceholderData ? (
                 <div className="p-8 text-sm" role="status">
                   {t("ui.loadingMatchingResults")}

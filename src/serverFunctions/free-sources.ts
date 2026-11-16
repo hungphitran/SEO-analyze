@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireOrgPermission } from "@/server/auth/org-gate";
+import { getBingSiteDetails } from "@/server/features/free-sources/services/BingDetailsService";
 import {
   disconnectBing,
   getFreeSourcesStatus,
@@ -87,3 +88,11 @@ export const getOpenPageRankFn = createServerFn({ method: "GET" })
   .middleware(requireProjectContext)
   .validator(openPageRankSchema)
   .handler(async ({ data }) => getOpenPageRank({ domain: data.domain }));
+
+/** Extended Bing Webmaster reports (top pages, inbound links, crawl issues). */
+export const getBingSiteDetailsFn = createServerFn({ method: "GET" })
+  .middleware(requireProjectContext)
+  .validator(freeSourcesProjectSchema)
+  .handler(async ({ context }) =>
+    getBingSiteDetails({ projectId: context.projectId }),
+  );

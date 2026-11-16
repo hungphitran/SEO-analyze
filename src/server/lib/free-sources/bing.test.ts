@@ -5,11 +5,11 @@ import {
   BingWebmasterError,
   getBingQueryStats,
   listVerifiedBingSites,
-  sameBingSite,
-  toBingAppError,
   parseBingDate,
   parseBingQueryStatsPayload,
   parseBingSitesPayload,
+  sameBingSite,
+  toBingAppError,
 } from "./bing";
 
 describe("parseBingSitesPayload", () => {

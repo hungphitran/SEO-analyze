@@ -24,11 +24,11 @@ export function tableDimensionForTab(
   return TAB_DIMENSIONS[tab] ?? null;
 }
 
-/** Tabs that read a different Search Console resource than search analytics. */
+/** Tabs that read a different resource than GSC search analytics. */
 export function isPropertyTab(
   tab: SearchPerformanceTab,
-): tab is "sitemaps" | "inspection" {
-  return tab === "sitemaps" || tab === "inspection";
+): tab is "sitemaps" | "inspection" | "opportunities" {
+  return tab === "sitemaps" || tab === "inspection" || tab === "opportunities";
 }
 
 export function dimensionKeyLabel(

@@ -10,6 +10,9 @@ export function SearchPerformanceTabTriggers({
   return (
     <>
       <TabsTrigger value="striking">{strikingLabel}</TabsTrigger>
+      <TabsTrigger value="opportunities">
+        {t("gscOpportunities.tabTitle")}
+      </TabsTrigger>
       <TabsTrigger value="queries">{t("gscInsights.queries")}</TabsTrigger>
       <TabsTrigger value="pages">{t("gscInsights.pages")}</TabsTrigger>
       <TabsTrigger value="countries">{t("gscDetail.tabCountries")}</TabsTrigger>
