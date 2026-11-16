@@ -171,6 +171,8 @@ function buildProjectNavGroups(projectId: string) {
       label: t("nav.groupMySite"),
       items: [
         byPath("/p/$projectId/search-performance"),
+        byPath("/p/$projectId/opportunities"),
+        byPath("/p/$projectId/geo-evidence"),
         byPath("/p/$projectId/rank-tracking"),
         byPath("/p/$projectId/saved"),
         byPath("/p/$projectId/audit"),
