@@ -7,9 +7,9 @@ import {
 import { SeoFactsRepository } from "@/server/features/free-sources/repositories/SeoFactsRepository";
 import { clusterQueriesByRules } from "./KeywordClusteringService";
 
-export const OPPORTUNITY_SCORE_VERSION = "v1.0";
+const OPPORTUNITY_SCORE_VERSION = "v1.0";
 
-export type QueryObservation = {
+type QueryObservation = {
   query: string;
   targetUrl: string | null;
   clicks: number;
@@ -20,7 +20,7 @@ export type QueryObservation = {
   previousImpressions?: number | null;
 };
 
-export type DetectedOpportunity = {
+type DetectedOpportunity = {
   dedupeKey: string;
   query: string;
   targetUrl: string | null;
@@ -85,7 +85,10 @@ function computeTransparentScore(input: {
 
   const ctrGap =
     input.baselineCtr !== null && input.baselineCtr > 0
-      ? Math.max(0, Math.min(1, (input.baselineCtr - input.ctr) / input.baselineCtr))
+      ? Math.max(
+          0,
+          Math.min(1, (input.baselineCtr - input.ctr) / input.baselineCtr),
+        )
       : null;
 
   const trend =
@@ -121,7 +124,9 @@ function computeTransparentScore(input: {
   }
 
   const score =
-    activeWeight > 0 ? Math.round((weightedSum / activeWeight) * 1000) / 10 : null;
+    activeWeight > 0
+      ? Math.round((weightedSum / activeWeight) * 1000) / 10
+      : null;
 
   return {
     score,
@@ -141,7 +146,11 @@ function computeTransparentScore(input: {
  */
 export function detectKeywordOpportunities(
   observations: QueryObservation[],
-  opts: { nearTopMin?: number; nearTopMax?: number; minImpressions?: number } = {},
+  opts: {
+    nearTopMin?: number;
+    nearTopMax?: number;
+    minImpressions?: number;
+  } = {},
 ): DetectedOpportunity[] {
   const nearTopMin = opts.nearTopMin ?? 4;
   const nearTopMax = opts.nearTopMax ?? 20;
@@ -184,7 +193,11 @@ export function detectKeywordOpportunities(
     const baselineCtr = baselineByBucket.get(bucket) ?? null;
     const competingUrls = Array.from(urlsByQuery.get(obs.query) ?? []);
 
-    const rules: Array<{ rule: OpportunityRule; why: string; conf: "high" | "medium" | "low" }> = [];
+    const rules: Array<{
+      rule: OpportunityRule;
+      why: string;
+      conf: "high" | "medium" | "low";
+    }> = [];
 
     if (baselineCtr !== null && obs.ctr < baselineCtr * 0.75) {
       rules.push({

@@ -2,9 +2,8 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { seoDailyFacts, sourceSyncRuns } from "@/db/schema";
 
-export type SyncSource = "gsc" | "ga4" | "bing_webmaster" | "bing_links";
-export type SyncState = "queued" | "running" | "completed" | "failed";
-export type SyncCompleteness = "complete" | "partial" | "sampled" | "unknown";
+type SyncSource = "gsc" | "ga4" | "bing_webmaster" | "bing_links";
+type SyncCompleteness = "complete" | "partial" | "sampled" | "unknown";
 
 export type SeoDailyFactInsert = {
   id: string;

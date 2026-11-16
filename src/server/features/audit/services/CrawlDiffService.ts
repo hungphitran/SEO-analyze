@@ -1,4 +1,4 @@
-export type CrawlPageSnapshot = {
+type CrawlPageSnapshot = {
   url: string;
   statusCode: number | null;
   redirectUrl: string | null;
@@ -10,7 +10,7 @@ export type CrawlPageSnapshot = {
   inSitemap: boolean;
 };
 
-export type CrawlDiffChangeType =
+type CrawlDiffChangeType =
   | "new_url"
   | "removed_url"
   | "status_changed"
@@ -21,7 +21,7 @@ export type CrawlDiffChangeType =
   | "description_changed"
   | "internal_links_changed";
 
-export type CrawlDiffItem = {
+type CrawlDiffItem = {
   url: string;
   changeType: CrawlDiffChangeType;
   severity: "critical" | "warning" | "info";
@@ -30,14 +30,14 @@ export type CrawlDiffItem = {
   fixSuggestion: string;
 };
 
-export type OrphanCandidate = {
+type OrphanCandidate = {
   url: string;
   source: "sitemap" | "gsc";
   inlinkCount: number;
   coveragePartial: boolean;
 };
 
-export type CrawlDiffResult = {
+type CrawlDiffResult = {
   coverageOverlapCount: number;
   previousComplete: boolean;
   currentComplete: boolean;
@@ -69,7 +69,8 @@ export function diffCrawlSnapshots(input: {
           severity: "info",
           previousValue: null,
           currentValue: String(curr.statusCode ?? "unknown"),
-          fixSuggestion: "Kiểm tra URL mới phát hiện có nằm trong sitemap và được index đúng ý định.",
+          fixSuggestion:
+            "Kiểm tra URL mới phát hiện có nằm trong sitemap và được index đúng ý định.",
         });
       }
       continue;
@@ -83,7 +84,8 @@ export function diffCrawlSnapshots(input: {
         url,
         changeType: "status_changed",
         severity: is5xxOr4xx ? "critical" : "warning",
-        previousValue: prev.statusCode !== null ? String(prev.statusCode) : null,
+        previousValue:
+          prev.statusCode !== null ? String(prev.statusCode) : null,
         currentValue: curr.statusCode !== null ? String(curr.statusCode) : null,
         fixSuggestion: is5xxOr4xx
           ? "Khôi phục trang hoặc thiết lập chuyển hướng 301 hợp lệ và cập nhật internal links."
@@ -98,7 +100,8 @@ export function diffCrawlSnapshots(input: {
         severity: "critical",
         previousValue: "indexable",
         currentValue: "noindex",
-        fixSuggestion: "Kiểm tra thẻ meta robots hoặc X-Robots-Tag; gỡ noindex nếu trang cần xuất hiện trên tìm kiếm.",
+        fixSuggestion:
+          "Kiểm tra thẻ meta robots hoặc X-Robots-Tag; gỡ noindex nếu trang cần xuất hiện trên tìm kiếm.",
       });
     }
 
@@ -109,7 +112,8 @@ export function diffCrawlSnapshots(input: {
         severity: "warning",
         previousValue: prev.canonicalUrl,
         currentValue: curr.canonicalUrl,
-        fixSuggestion: "Xác minh thẻ canonical trỏ về đúng URL chuẩn, tránh trỏ nhầm domain hoặc trang khác.",
+        fixSuggestion:
+          "Xác minh thẻ canonical trỏ về đúng URL chuẩn, tránh trỏ nhầm domain hoặc trang khác.",
       });
     }
 
@@ -120,7 +124,8 @@ export function diffCrawlSnapshots(input: {
         severity: "warning",
         previousValue: prev.redirectUrl,
         currentValue: curr.redirectUrl,
-        fixSuggestion: "Cập nhật liên kết nội bộ trỏ thẳng tới URL đích để tránh chuỗi redirect.",
+        fixSuggestion:
+          "Cập nhật liên kết nội bộ trỏ thẳng tới URL đích để tránh chuỗi redirect.",
       });
     }
 
@@ -142,7 +147,8 @@ export function diffCrawlSnapshots(input: {
         severity: "info",
         previousValue: prev.metaDescription,
         currentValue: curr.metaDescription,
-        fixSuggestion: "Đảm bảo meta description mô tả chính xác nội dung trang.",
+        fixSuggestion:
+          "Đảm bảo meta description mô tả chính xác nội dung trang.",
       });
     }
 
@@ -158,7 +164,8 @@ export function diffCrawlSnapshots(input: {
         severity: "warning",
         previousValue: String(prev.inlinkCount),
         currentValue: "0",
-        fixSuggestion: "Trang mất toàn bộ liên kết nội bộ trong phạm vi crawl; bổ sung internal link từ các trang liên quan.",
+        fixSuggestion:
+          "Trang mất toàn bộ liên kết nội bộ trong phạm vi crawl; bổ sung internal link từ các trang liên quan.",
       });
     }
   }
@@ -171,9 +178,11 @@ export function diffCrawlSnapshots(input: {
           url,
           changeType: "removed_url",
           severity: "warning",
-          previousValue: prev.statusCode !== null ? String(prev.statusCode) : "present",
+          previousValue:
+            prev.statusCode !== null ? String(prev.statusCode) : "present",
           currentValue: null,
-          fixSuggestion: "Nếu trang đã xóa, đảm bảo trả về 410/404 hoặc 301 phù hợp và gỡ khỏi sitemap.",
+          fixSuggestion:
+            "Nếu trang đã xóa, đảm bảo trả về 410/404 hoặc 301 phù hợp và gỡ khỏi sitemap.",
         });
       }
     }

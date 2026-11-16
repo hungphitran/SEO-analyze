@@ -2,10 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("cloudflare:workers", () => ({ env: {} }));
 
-import {
-  escapeCsvFormula,
-  previewGeoCsvImport,
-} from "./GeoEvidenceService";
+import { escapeCsvFormula, previewGeoCsvImport } from "./GeoEvidenceService";
 
 describe("GeoEvidenceService", () => {
   it("parses Bing AI Performance CSV with UTF-8 BOM and arbitrary header order", async () => {

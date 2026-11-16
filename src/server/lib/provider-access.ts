@@ -40,7 +40,7 @@ function withAuthorization(authorization: string): typeof fetch {
 
 /** The gateway capabilities OpenSEO calls through its fetch: its two API-key providers. */
 type OpenSeoProvider = "dataforseo" | "context";
-export type PaidProviderName = OpenSeoProvider | "openrouter";
+type PaidProviderName = OpenSeoProvider | "openrouter";
 
 const blockedProviderCallsByName: Record<PaidProviderName, number> = {
   dataforseo: 0,

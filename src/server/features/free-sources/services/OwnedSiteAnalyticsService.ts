@@ -50,7 +50,7 @@ export function buildFactGrainKey(parts: {
   ].join("|");
 }
 
-export type AggregatedSeoMetrics = {
+type AggregatedSeoMetrics = {
   clicks: number | null;
   impressions: number | null;
   ctr: number | null;
@@ -271,7 +271,9 @@ export async function syncOwnedSiteFacts(input: {
       completeness = "partial";
       coverageInfo = `Bing ${summary.queries.length} top queries`;
     } else if (input.source === "ga4") {
-      const conn = await Ga4ConnectionRepository.getByProjectId(input.projectId);
+      const conn = await Ga4ConnectionRepository.getByProjectId(
+        input.projectId,
+      );
       if (!conn) {
         throw new Error("GA4 is not connected for this project.");
       }
@@ -290,8 +292,7 @@ export async function syncOwnedSiteFacts(input: {
             ? row.landingPagePlusQueryString
             : null;
         const normalizedUrl = pageUrl ? normalizePageUrl(pageUrl) : null;
-        const sessions =
-          typeof row.sessions === "number" ? row.sessions : null;
+        const sessions = typeof row.sessions === "number" ? row.sessions : null;
         const keyEvents =
           typeof row.keyEvents === "number" ? row.keyEvents : null;
         const grainKey = buildFactGrainKey({

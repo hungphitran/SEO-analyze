@@ -1,8 +1,8 @@
 import { sort } from "remeda";
 
-export const CLUSTERING_ALGORITHM_VERSION = "rules-v1.0";
+const CLUSTERING_ALGORITHM_VERSION = "rules-v1.0";
 
-export type KeywordIntent =
+type KeywordIntent =
   | "informational"
   | "commercial"
   | "transactional"
@@ -10,7 +10,7 @@ export type KeywordIntent =
   | "unknown";
 
 /** Normalizes Vietnamese diacritics and punctuation for deterministic clustering. */
-export function normalizeKeywordTokens(text: string): string[] {
+function normalizeKeywordTokens(text: string): string[] {
   const stripped = text
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

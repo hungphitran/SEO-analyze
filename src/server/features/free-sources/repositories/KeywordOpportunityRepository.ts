@@ -6,7 +6,7 @@ import {
   keywordOpportunities,
 } from "@/db/schema";
 
-export type OpportunityStatus = "new" | "in_progress" | "resolved" | "ignored";
+type OpportunityStatus = "new" | "in_progress" | "resolved" | "ignored";
 export type OpportunityRule =
   | "ctr_opportunity"
   | "near_top"

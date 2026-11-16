@@ -3,14 +3,14 @@ import Papa from "papaparse";
 import { db } from "@/db";
 import { geoDailyFacts, geoImportBatches } from "@/db/schema";
 
-export const MAX_GEO_CSV_BYTES = 5 * 1024 * 1024;
-export const MAX_GEO_CSV_ROWS = 50_000;
-export const GEO_SCHEMA_MAPPING_VERSION = "v1.0";
+const MAX_GEO_CSV_BYTES = 5 * 1024 * 1024;
+const MAX_GEO_CSV_ROWS = 50_000;
+const GEO_SCHEMA_MAPPING_VERSION = "v1.0";
 
-export type GeoImportSource = "bing_ai_csv" | "google_genai_csv";
-export type GeoMetricType = "bing_ai_citations" | "google_genai_impressions";
+type GeoImportSource = "bing_ai_csv" | "google_genai_csv";
+type GeoMetricType = "bing_ai_citations" | "google_genai_impressions";
 
-export type GeoColumnMapping = {
+type GeoColumnMapping = {
   dateColumn: string;
   metricColumn: string;
   pageColumn?: string;
@@ -19,7 +19,7 @@ export type GeoColumnMapping = {
   deviceColumn?: string;
 };
 
-export type ParsedGeoRow = {
+type ParsedGeoRow = {
   factDate: string;
   metricValue: number;
   pageUrl: string | null;
@@ -30,7 +30,7 @@ export type ParsedGeoRow = {
   outOfScopeWarning: boolean;
 };
 
-export type GeoPreviewResult = {
+type GeoPreviewResult = {
   source: GeoImportSource;
   metricType: GeoMetricType;
   headers: string[];
@@ -186,7 +186,8 @@ export async function previewGeoCsvImport(input: {
       continue;
     }
 
-    const pageUrl = pageCol && row[pageCol]?.trim() ? row[pageCol].trim() : null;
+    const pageUrl =
+      pageCol && row[pageCol]?.trim() ? row[pageCol].trim() : null;
     const queryOrTopic =
       queryCol && row[queryCol]?.trim() ? row[queryCol].trim() : null;
     const country =
@@ -379,17 +380,18 @@ export async function getGeoEvidenceSummary(projectId: string) {
         bingFacts.map((r) => r.pageUrl).filter(Boolean),
       ).size,
       rowCount: bingFacts.length,
-      completeness: bingFacts.length > 0 ? ("sampled" as const) : ("unknown" as const),
+      completeness:
+        bingFacts.length > 0 ? ("sampled" as const) : ("unknown" as const),
       rows: bingFacts.slice(0, 100),
     },
     googleGenAi: {
       metricName: "google_genai_impressions" as const,
       totalImpressions: googleFacts.reduce((s, r) => s + r.metricValue, 0),
-      distinctPages: new Set(
-        googleFacts.map((r) => r.pageUrl).filter(Boolean),
-      ).size,
+      distinctPages: new Set(googleFacts.map((r) => r.pageUrl).filter(Boolean))
+        .size,
       rowCount: googleFacts.length,
-      completeness: googleFacts.length > 0 ? ("sampled" as const) : ("unknown" as const),
+      completeness:
+        googleFacts.length > 0 ? ("sampled" as const) : ("unknown" as const),
       rows: googleFacts.slice(0, 100),
     },
     batches,

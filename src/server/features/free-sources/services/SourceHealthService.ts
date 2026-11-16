@@ -50,7 +50,8 @@ function buildGscHealth(
   );
   let nextSafeAction = "Sẵn sàng.";
   if (!status.googleSearchConsole.configured) {
-    nextSafeAction = "Cấu hình GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET trên máy chủ.";
+    nextSafeAction =
+      "Cấu hình GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET trên máy chủ.";
   } else if (!status.googleSearchConsole.connected) {
     nextSafeAction = "Kết nối và chọn property đã xác minh.";
   } else if (state === "stale") {
@@ -87,7 +88,8 @@ function buildBingHealth(
   if (!status.bing.canStoreKey) {
     nextSafeAction = "Đặt BETTER_AUTH_SECRET (>= 32 ký tự) để mã hóa API key.";
   } else if (!status.bing.connected) {
-    nextSafeAction = "Nhập API key và chọn site đã xác minh trong Bing Webmaster.";
+    nextSafeAction =
+      "Nhập API key và chọn site đã xác minh trong Bing Webmaster.";
   } else if (state === "stale") {
     nextSafeAction = "Làm mới snapshot Bing Webmaster.";
   }
@@ -112,7 +114,12 @@ function buildPagespeedHealth(
   nowMs: number,
 ): SourceHealthEntry {
   const freshness = computeFreshness(snap?.fetchedAt, nowMs);
-  const state = mapSnapshotState(status.pagespeed.configured, true, snap, freshness);
+  const state = mapSnapshotState(
+    status.pagespeed.configured,
+    true,
+    snap,
+    freshness,
+  );
   return {
     source: "pagespeed",
     label: "PageSpeed Insights",
@@ -213,7 +220,8 @@ export async function getSourceHealth(input: {
       lastSuccessAt: null,
       freshness: "unknown",
       coverage: "Domain authority 0–10 (tùy chọn, cache 24h)",
-      quotaSummary: "30.000 domains/tháng, 60 RPM (ràng buộc IPv4 với key free)",
+      quotaSummary:
+        "30.000 domains/tháng, 60 RPM (ràng buộc IPv4 với key free)",
       lastError: null,
       nextSafeAction: status.openPageRank.configured
         ? "Sẵn sàng (có thể gặp 403 trên Workers nếu key khóa IP)."

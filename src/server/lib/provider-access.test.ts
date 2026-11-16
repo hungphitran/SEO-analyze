@@ -148,7 +148,10 @@ describe("free-sources mode", () => {
 
     await expect(getDataforseoFetch()).rejects.toMatchObject({
       code: "FREE_SOURCES_ONLY",
-      details: { provider: "dataforseo", diagnosticCode: "PAID_SOURCE_DISABLED" },
+      details: {
+        provider: "dataforseo",
+        diagnosticCode: "PAID_SOURCE_DISABLED",
+      },
     });
     expect(await getContextFetch()).toBeNull();
     expect(await hasProviderAccess("dataforseo")).toBe(false);

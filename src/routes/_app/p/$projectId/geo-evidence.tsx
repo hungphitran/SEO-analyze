@@ -115,8 +115,8 @@ function GeoEvidenceRoute() {
               </div>
               <p className="text-xs text-muted-foreground">
                 Tổng citations quan sát được •{" "}
-                {summary.bingAi.distinctCitedPages} trang được trích dẫn •
-                Trạng thái: {summary.bingAi.completeness}
+                {summary.bingAi.distinctCitedPages} trang được trích dẫn • Trạng
+                thái: {summary.bingAi.completeness}
               </p>
             </div>
           ) : (
@@ -180,7 +180,9 @@ function GeoEvidenceRoute() {
               disabled={!csvText || previewMutation.isPending}
               onClick={() => previewMutation.mutate()}
             >
-              {previewMutation.isPending ? "Đang kiểm tra..." : "Xem trước 20 dòng"}
+              {previewMutation.isPending
+                ? "Đang kiểm tra..."
+                : "Xem trước 20 dòng"}
             </Button>
             <Button
               type="button"
@@ -195,8 +197,9 @@ function GeoEvidenceRoute() {
             <div className="rounded-md border p-3 text-xs space-y-2">
               <div>
                 Hợp lệ: <strong>{previewMutation.data.validRows.length}</strong>{" "}
-                dòng • Lỗi: <strong>{previewMutation.data.invalidRowCount}</strong>{" "}
-                • Ngoài domain dự án:{" "}
+                dòng • Lỗi:{" "}
+                <strong>{previewMutation.data.invalidRowCount}</strong> • Ngoài
+                domain dự án:{" "}
                 <strong>{previewMutation.data.outOfScopeCount}</strong>
               </div>
               {previewMutation.data.outOfScopeCount > 0 && (

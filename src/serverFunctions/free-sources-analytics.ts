@@ -10,7 +10,6 @@ import {
 } from "@/server/features/free-sources/services/GeoEvidenceService";
 import { refreshKeywordOpportunitiesFromFacts } from "@/server/features/free-sources/services/KeywordOpportunityService";
 import { syncOwnedSiteFacts } from "@/server/features/free-sources/services/OwnedSiteAnalyticsService";
-import { getSeoOverview } from "@/server/features/free-sources/services/OwnedSiteOverviewService";
 import { requireProjectContext } from "@/serverFunctions/middleware";
 
 const projectOnlySchema = z.object({
@@ -20,14 +19,14 @@ const projectOnlySchema = z.object({
 const syncFactsSchema = z.object({
   projectId: z.string().min(1),
   source: z.enum(["gsc", "bing_webmaster", "ga4"]),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-});
-
-const seoOverviewSchema = z.object({
-  projectId: z.string().min(1),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 
 const listOpportunitiesSchema = z.object({
@@ -99,17 +98,6 @@ export const syncOwnedSiteFactsFn = createServerFn({ method: "POST" })
       endDate: data.endDate,
     });
   });
-
-export const getSeoOverviewFn = createServerFn({ method: "GET" })
-  .middleware(requireProjectContext)
-  .validator(seoOverviewSchema)
-  .handler(async ({ data, context }) =>
-    getSeoOverview({
-      projectId: context.projectId,
-      startDate: data.startDate,
-      endDate: data.endDate,
-    }),
-  );
 
 export const refreshKeywordOpportunitiesFn = createServerFn({ method: "POST" })
   .middleware(requireProjectContext)

@@ -74,6 +74,8 @@ describe("KeywordOpportunityService", () => {
     expect(clusters.length).toBeGreaterThanOrEqual(2);
     expect(classifyKeywordIntent("mua gói seo giá rẻ")).toBe("transactional");
     expect(classifyKeywordIntent("cách làm seo là gì")).toBe("informational");
-    expect(classifyKeywordIntent("so sánh công cụ seo tốt nhất")).toBe("commercial");
+    expect(classifyKeywordIntent("so sánh công cụ seo tốt nhất")).toBe(
+      "commercial",
+    );
   });
 });

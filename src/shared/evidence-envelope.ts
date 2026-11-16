@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const DATA_STATES = [
+const DATA_STATES = [
   "ok",
   "partial",
   "stale",
@@ -15,7 +15,7 @@ export const DATA_STATES = [
 export const dataStateSchema = z.enum(DATA_STATES);
 export type DataState = z.infer<typeof dataStateSchema>;
 
-export const EVIDENCE_SOURCES = [
+const EVIDENCE_SOURCES = [
   "gsc",
   "ga4",
   "bing_webmaster",
@@ -31,25 +31,20 @@ export const EVIDENCE_SOURCES = [
 export const evidenceSourceSchema = z.enum(EVIDENCE_SOURCES);
 export type EvidenceSource = z.infer<typeof evidenceSourceSchema>;
 
-export const EVIDENCE_GRANULARITIES = [
-  "instant",
-  "day",
-  "week",
-  "month",
-] as const;
-export const evidenceGranularitySchema = z.enum(EVIDENCE_GRANULARITIES);
-export type EvidenceGranularity = z.infer<typeof evidenceGranularitySchema>;
+const EVIDENCE_GRANULARITIES = ["instant", "day", "week", "month"] as const;
+const evidenceGranularitySchema = z.enum(EVIDENCE_GRANULARITIES);
+type EvidenceGranularity = z.infer<typeof evidenceGranularitySchema>;
 
-export const EVIDENCE_COMPLETENESS = [
+const EVIDENCE_COMPLETENESS = [
   "complete",
   "partial",
   "sampled",
   "unknown",
 ] as const;
-export const evidenceCompletenessSchema = z.enum(EVIDENCE_COMPLETENESS);
-export type EvidenceCompleteness = z.infer<typeof evidenceCompletenessSchema>;
+const evidenceCompletenessSchema = z.enum(EVIDENCE_COMPLETENESS);
+type EvidenceCompleteness = z.infer<typeof evidenceCompletenessSchema>;
 
-export type EvidenceEnvelope<T> = {
+type EvidenceEnvelope<T> = {
   source: EvidenceSource;
   projectId: string;
   observedAt: string;

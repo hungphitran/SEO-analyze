@@ -33,7 +33,9 @@ describe("EvidenceEnvelope", () => {
   });
 
   it("supports null payload when source is not configured or unavailable", () => {
-    const schema = createEvidenceEnvelopeSchema(z.object({ value: z.number() }));
+    const schema = createEvidenceEnvelopeSchema(
+      z.object({ value: z.number() }),
+    );
     const envelope = buildEvidenceEnvelope<{ value: number }>({
       source: "crux",
       projectId: "proj_1",
