@@ -16,6 +16,7 @@ import {
   type IssueViewFilter,
 } from "@/client/features/audit/results/pageInsights";
 import { PagesTable } from "@/client/features/audit/results/PagesTable";
+import { CrawlDiffPanel } from "@/client/features/audit/results/CrawlDiffPanel";
 import { ShopifyCrawlWarning } from "@/client/features/audit/results/ShopifyCrawlWarning";
 import { RenderingWarnings } from "@/client/features/audit/results/RenderingWarnings";
 import { PerformanceTable } from "@/client/features/audit/results/ResultsTables";
@@ -198,6 +199,8 @@ export function ResultsView({
           </div>
         </div>
       )}
+
+      <CrawlDiffPanel projectId={projectId} auditId={audit.id} />
     </>
   );
 }

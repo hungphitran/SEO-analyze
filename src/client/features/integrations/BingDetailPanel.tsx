@@ -19,6 +19,7 @@ import {
 } from "@/client/components/ui/tabs";
 import { localizeFreeSourceMessage } from "@/client/features/integrations/freeSourceMessages";
 import { getBingSiteDetailsFn } from "@/serverFunctions/free-sources";
+import { getBingLinkHistoryFn } from "@/serverFunctions/free-sources-analytics";
 import { formatUiNumber, t } from "@/shared/i18n";
 
 /**
@@ -34,6 +35,12 @@ export function BingDetailPanel({ projectId }: { projectId: string }) {
     queryFn: () => getBingSiteDetailsFn({ data: { projectId } }),
     enabled: loaded,
     staleTime: 10 * 60_000,
+  });
+
+  const linkHistoryQuery = useQuery({
+    queryKey: ["bing-link-history", projectId],
+    queryFn: () => getBingLinkHistoryFn({ data: { projectId } }),
+    enabled: loaded,
   });
 
   const data = query.data;
@@ -81,6 +88,7 @@ export function BingDetailPanel({ projectId }: { projectId: string }) {
             <TabsTrigger value="crawlIssues">
               {t("bing.tabCrawlIssues")}
             </TabsTrigger>
+            <TabsTrigger value="linkHistory">Lịch sử mẫu</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pages">
@@ -217,6 +225,62 @@ export function BingDetailPanel({ projectId }: { projectId: string }) {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="linkHistory">
+            {linkHistoryQuery.isPending ? (
+              <p className="text-muted-foreground py-2 text-sm">
+                {t("common.loading")}
+              </p>
+            ) : linkHistoryQuery.isError ? (
+              <p className="text-destructive py-2 text-sm">
+                Không thể tải lịch sử mẫu liên kết Bing.
+              </p>
+            ) : !linkHistoryQuery.data ? null : (
+              <div className="space-y-3 py-2 text-xs">
+                <p className="text-muted-foreground">
+                  {linkHistoryQuery.data.scopeNote}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <span>
+                    Mới phát hiện:{" "}
+                    <strong>{linkHistoryQuery.data.discovered.length}</strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Không còn trong mẫu:{" "}
+                    <strong>{linkHistoryQuery.data.lost.length}</strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Giữ nguyên:{" "}
+                    <strong>{linkHistoryQuery.data.unchangedCount}</strong>
+                  </span>
+                </div>
+                {linkHistoryQuery.data.discovered.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="font-medium">Liên kết mới trong mẫu:</p>
+                    {linkHistoryQuery.data.discovered.slice(0, 20).map((r) => (
+                      <div key={`${r.referringDomain}-${r.targetUrl}`}>
+                        {r.targetUrl} ({r.linkCount} inbound)
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {linkHistoryQuery.data.lost.length > 0 && (
+                  <div className="space-y-1 text-muted-foreground">
+                    <p className="font-medium text-foreground">
+                      Liên kết không còn trong mẫu mới:
+                    </p>
+                    {linkHistoryQuery.data.lost.slice(0, 20).map((r) => (
+                      <div key={`${r.referringDomain}-${r.targetUrl}`}>
+                        {r.targetUrl} ({r.linkCount} inbound)
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>

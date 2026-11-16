@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireOrgPermission } from "@/server/auth/org-gate";
+import { AuditRepository } from "@/server/features/audit/repositories/AuditRepository";
+import { diffCrawlSnapshots } from "@/server/features/audit/services/CrawlDiffService";
+import { getBingLinkSampleHistory } from "@/server/features/free-sources/services/BingLinkSnapshotService";
 import { KeywordOpportunityRepository } from "@/server/features/free-sources/repositories/KeywordOpportunityRepository";
+import { SeoFactsRepository } from "@/server/features/free-sources/repositories/SeoFactsRepository";
 import {
   commitGeoCsvImport,
   getGeoEvidenceSummary,
@@ -188,3 +192,95 @@ export const getGeoEvidenceFn = createServerFn({ method: "GET" })
   .middleware(requireProjectContext)
   .validator(projectOnlySchema)
   .handler(async ({ context }) => getGeoEvidenceSummary(context.projectId));
+
+const crawlDiffSchema = z.object({
+  projectId: z.string().min(1),
+  currentAuditId: z.string().min(1),
+  previousAuditId: z.string().min(1).optional(),
+});
+
+function mapAuditPageForDiff(p: {
+  url: string;
+  statusCode: number | null;
+  redirectUrl: string | null;
+  title: string | null;
+  metaDescription: string | null;
+  isIndexable: boolean;
+  inSitemap: boolean;
+}) {
+  return {
+    url: p.url,
+    statusCode: p.statusCode,
+    redirectUrl: p.redirectUrl,
+    title: p.title,
+    metaDescription: p.metaDescription,
+    canonicalUrl: null,
+    isIndexable: p.isIndexable,
+    inlinkCount: null,
+    inSitemap: p.inSitemap,
+  };
+}
+
+export const getAuditCrawlDiffFn = createServerFn({ method: "GET" })
+  .middleware(requireProjectContext)
+  .validator(crawlDiffSchema)
+  .handler(async ({ data, context }) => {
+    const audits = await AuditRepository.getAuditsByProject(context.projectId);
+    const currentAudit = audits.find((a) => a.id === data.currentAuditId);
+    if (!currentAudit) {
+      return {
+        available: false as const,
+        reason: "Không tìm thấy bản crawl hiện tại.",
+      };
+    }
+    const currentIdx = audits.findIndex((a) => a.id === data.currentAuditId);
+    const previousAudit = data.previousAuditId
+      ? audits.find((a) => a.id === data.previousAuditId)
+      : audits.slice(currentIdx + 1).find((a) => a.id !== currentAudit.id);
+
+    if (!previousAudit) {
+      return {
+        available: false as const,
+        reason: "Cần ít nhất 2 lần crawl để so sánh thay đổi.",
+      };
+    }
+
+    const [prevPages, currPages, gscFacts] = await Promise.all([
+      AuditRepository.getPagesForAudit(previousAudit.id),
+      AuditRepository.getPagesForAudit(currentAudit.id),
+      SeoFactsRepository.listDailyFacts({
+        projectId: context.projectId,
+        source: "gsc",
+        limit: 2000,
+      }),
+    ]);
+
+    const gscKnownUrls = Array.from(
+      new Set(
+        gscFacts
+          .map((f) => f.pageUrl)
+          .filter((u): u is string => typeof u === "string" && u.length > 0),
+      ),
+    );
+
+    const diff = diffCrawlSnapshots({
+      previousPages: prevPages.map(mapAuditPageForDiff),
+      currentPages: currPages.map(mapAuditPageForDiff),
+      previousComplete: previousAudit.status === "completed",
+      currentComplete: currentAudit.status === "completed",
+      gscKnownUrls,
+    });
+
+    return {
+      available: true as const,
+      previousAuditId: previousAudit.id,
+      previousStartedAt: previousAudit.startedAt,
+      currentStartedAt: currentAudit.startedAt,
+      diff,
+    };
+  });
+
+export const getBingLinkHistoryFn = createServerFn({ method: "GET" })
+  .middleware(requireProjectContext)
+  .validator(projectOnlySchema)
+  .handler(async ({ context }) => getBingLinkSampleHistory(context.projectId));

@@ -1,4 +1,5 @@
 import { BingWebmasterConnectionRepository } from "@/server/features/free-sources/repositories/BingWebmasterConnectionRepository";
+import { recordBingLinkSnapshot } from "@/server/features/free-sources/services/BingLinkSnapshotService";
 import { AppError } from "@/server/lib/errors";
 import { bingRefreshMessage } from "@/server/lib/free-sources/bing";
 import {
@@ -93,6 +94,19 @@ export async function getBingSiteDetails(input: { projectId: string }): Promise<
       limit: QUERY_LIMIT,
     }),
   );
+  if (links.status === "ok" && links.data.links.length > 0) {
+    await recordBingLinkSnapshot({
+      projectId: input.projectId,
+      organizationId: connection.organizationId,
+      rows: links.data.links.map((item) => ({
+        targetUrl: item.url,
+        referringDomain: connection.siteUrl,
+        referringUrl: null,
+        anchorText: null,
+        linkCount: item.count,
+      })),
+    }).catch(() => null);
+  }
   const crawlIssues = await settle(() =>
     getBingCrawlIssues({
       apiKey,
