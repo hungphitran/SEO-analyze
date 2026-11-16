@@ -8,6 +8,7 @@ import {
   refreshOwnedSiteSources,
   saveBingConnection,
 } from "@/server/features/free-sources/services/FreeSourcesService";
+import { getSourceHealth } from "@/server/features/free-sources/services/SourceHealthService";
 import {
   getCruxVitals,
   getOpenPageRank,
@@ -95,4 +96,12 @@ export const getBingSiteDetailsFn = createServerFn({ method: "GET" })
   .validator(freeSourcesProjectSchema)
   .handler(async ({ context }) =>
     getBingSiteDetails({ projectId: context.projectId }),
+  );
+
+/** Unified Source Health diagnostic report for free/owned-site sources. */
+export const getSourceHealthFn = createServerFn({ method: "GET" })
+  .middleware(requireProjectContext)
+  .validator(freeSourcesProjectSchema)
+  .handler(async ({ context }) =>
+    getSourceHealth({ projectId: context.projectId }),
   );

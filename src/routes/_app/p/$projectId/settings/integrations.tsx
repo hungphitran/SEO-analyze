@@ -5,6 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BingWebmasterCard } from "@/client/features/integrations/BingWebmasterCard";
 import { FreeSourcesCard } from "@/client/features/integrations/FreeSourcesCard";
 import { GoogleConnectionCard } from "@/client/features/integrations/GoogleConnectionCard";
+import { SourceHealthCard } from "@/client/features/integrations/SourceHealthCard";
 import { CrawlerAccessSettings } from "@/client/features/settings/CrawlerAccessSettings";
 import { IndexNowSettings } from "@/client/features/settings/IndexNowSettings";
 
@@ -29,6 +30,10 @@ function ProjectIntegrationsRoute() {
 
   return (
     <div className="space-y-8">
+      <section id="source-health" className="scroll-mt-6">
+        <SourceHealthCard projectId={projectId} />
+      </section>
+
       {/* The ids are the targets old #search-console / #google-analytics deep
           links are redirected to from the settings index. Each card's title
           names its integration, so the sections carry no heading. */}

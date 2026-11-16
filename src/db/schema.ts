@@ -150,4 +150,12 @@ export const {
   localRankResults,
   bingWebmasterConnections,
   ownedSiteSourceSnapshots,
+  sourceSyncRuns,
+  seoDailyFacts,
+  keywordOpportunities,
+  keywordClusters,
+  keywordClusterMembers,
+  geoImportBatches,
+  geoDailyFacts,
+  bingLinkSnapshots,
 } = schema;

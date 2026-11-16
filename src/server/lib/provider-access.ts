@@ -40,6 +40,53 @@ function withAuthorization(authorization: string): typeof fetch {
 
 /** The gateway capabilities OpenSEO calls through its fetch: its two API-key providers. */
 type OpenSeoProvider = "dataforseo" | "context";
+export type PaidProviderName = OpenSeoProvider | "openrouter";
+
+const blockedProviderCallsByName: Record<PaidProviderName, number> = {
+  dataforseo: 0,
+  context: 0,
+  openrouter: 0,
+};
+
+function recordBlockedProviderCall(provider: PaidProviderName): void {
+  blockedProviderCallsByName[provider] += 1;
+}
+
+export function getBlockedProviderCallsStats(): {
+  blocked_provider_calls_total: number;
+  byProvider: Readonly<Record<PaidProviderName, number>>;
+} {
+  const byProvider = { ...blockedProviderCallsByName };
+  return {
+    blocked_provider_calls_total:
+      byProvider.dataforseo + byProvider.context + byProvider.openrouter,
+    byProvider,
+  };
+}
+
+export function resetBlockedProviderCallsStats(): void {
+  blockedProviderCallsByName.dataforseo = 0;
+  blockedProviderCallsByName.context = 0;
+  blockedProviderCallsByName.openrouter = 0;
+}
+
+/**
+ * Fail-closed server-side guard for any paid provider call when
+ * FREE_SOURCES_ONLY=true. Increments blocked_provider_calls_total without
+ * leaking credentials.
+ */
+export async function assertPaidProviderAllowed(
+  provider: PaidProviderName,
+): Promise<void> {
+  if (await isFreeSourcesOnly()) {
+    recordBlockedProviderCall(provider);
+    throw new AppError(
+      "PAID_SOURCE_DISABLED",
+      `Paid provider '${provider}' is disabled in FREE_SOURCES_ONLY mode.`,
+      { provider, diagnosticCode: "PAID_SOURCE_DISABLED" },
+    );
+  }
+}
 
 /**
  * The gateway's fetch for a capability, or null without its binding. Whose
@@ -60,7 +107,11 @@ async function gatewayFetch(provider: OpenSeoProvider) {
 /** A fetch that reaches DataForSEO authenticated, for this deployment. */
 export async function getDataforseoFetch(): Promise<typeof fetch> {
   if (await isFreeSourcesOnly()) {
-    throw new AppError("FREE_SOURCES_ONLY");
+    recordBlockedProviderCall("dataforseo");
+    throw new AppError("FREE_SOURCES_ONLY", undefined, {
+      provider: "dataforseo",
+      diagnosticCode: "PAID_SOURCE_DISABLED",
+    });
   }
   if (await isBehindEveryAppGateway()) {
     const providerFetch = await gatewayFetch("dataforseo");
@@ -84,6 +135,10 @@ export async function getDataforseoFetch(): Promise<typeof fetch> {
 
 /** A fetch that reaches Context.dev authenticated, or null without a key. */
 export async function getContextFetch(): Promise<typeof fetch | null> {
+  if (await isFreeSourcesOnly()) {
+    recordBlockedProviderCall("context");
+    return null;
+  }
   if (await isBehindEveryAppGateway()) return gatewayFetch("context");
   const apiKey = await getOptionalEnvValue("CONTEXT_API_KEY");
   return apiKey ? withAuthorization(`Bearer ${apiKey}`) : null;
@@ -101,7 +156,7 @@ const KEY_ENV: Record<OpenSeoProvider, string> = {
 export async function hasProviderAccess(
   provider: OpenSeoProvider,
 ): Promise<boolean> {
-  if (provider === "dataforseo" && (await isFreeSourcesOnly())) {
+  if (await isFreeSourcesOnly()) {
     return false;
   }
   if (await isBehindEveryAppGateway()) {

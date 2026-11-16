@@ -47,6 +47,16 @@ const projectNavItems = [
     icon: GoogleGlyphMuted,
   },
   {
+    to: "/p/$projectId/opportunities" as const,
+    label: "Cơ hội từ khóa",
+    icon: Search,
+  },
+  {
+    to: "/p/$projectId/geo-evidence" as const,
+    label: "GEO Evidence",
+    icon: ChartLine,
+  },
+  {
     to: "/p/$projectId/domain" as const,
     label: t("nav.domainOverview"),
     icon: Globe,

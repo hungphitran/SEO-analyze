@@ -309,6 +309,13 @@
       "when": 1794642033011,
       "tag": "0043_loose_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794815387937,
+      "tag": "0044_kind_miss_america",
+      "breakpoints": true
     }
   ]
 }

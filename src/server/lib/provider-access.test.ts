@@ -8,9 +8,12 @@ vi.mock("cloudflare:workers", () => ({ env: workerEnv }));
 
 import { serveEveryAppRequest } from "./gateway-attribution";
 import {
+  assertPaidProviderAllowed,
+  getBlockedProviderCallsStats,
   getContextFetch,
   getDataforseoFetch,
   hasProviderAccess,
+  resetBlockedProviderCallsStats,
 } from "./provider-access";
 
 afterEach(() => {
@@ -131,11 +134,13 @@ describe("whose calls they are, behind the gateway", () => {
 });
 
 describe("free-sources mode", () => {
-  it("refuses DataForSEO before any network call when FREE_SOURCES_ONLY is on", async () => {
+  it("refuses DataForSEO, Context.dev, and OpenRouter before any network call when FREE_SOURCES_ONLY is on", async () => {
+    resetBlockedProviderCallsStats();
     vi.stubEnv("FREE_SOURCES_ONLY", "true");
     Object.assign(workerEnv, {
       AUTH_MODE: "password",
-      DATAFORSEO_API_KEY: "encoded-credentials",
+      DATAFORSEO_API_KEY: "super-secret-df-key",
+      CONTEXT_API_KEY: "super-secret-ctx-key",
       FREE_SOURCES_ONLY: "true",
     });
     const blockedFetch = vi.fn();
@@ -143,8 +148,28 @@ describe("free-sources mode", () => {
 
     await expect(getDataforseoFetch()).rejects.toMatchObject({
       code: "FREE_SOURCES_ONLY",
+      details: { provider: "dataforseo", diagnosticCode: "PAID_SOURCE_DISABLED" },
     });
+    expect(await getContextFetch()).toBeNull();
     expect(await hasProviderAccess("dataforseo")).toBe(false);
+    expect(await hasProviderAccess("context")).toBe(false);
+
+    let caught: unknown;
+    try {
+      await assertPaidProviderAllowed("openrouter");
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toMatchObject({ code: "PAID_SOURCE_DISABLED" });
+    expect(JSON.stringify(caught)).not.toContain("super-secret");
     expect(blockedFetch).not.toHaveBeenCalled();
+
+    const stats = getBlockedProviderCallsStats();
+    expect(stats.blocked_provider_calls_total).toBe(3);
+    expect(stats.byProvider).toEqual({
+      dataforseo: 1,
+      context: 1,
+      openrouter: 1,
+    });
   });
 });

@@ -1,5 +1,13 @@
 import { sql } from "drizzle-orm";
-import { index, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  real,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { organization } from "./better-auth-schema";
 import { projects } from "./app.schema";
 
@@ -54,5 +62,267 @@ export const ownedSiteSourceSnapshots = pgTable(
     index("owned_site_source_snapshots_organization_idx").on(
       table.organizationId,
     ),
+  ],
+);
+
+export const sourceSyncRuns = pgTable(
+  "source_sync_runs",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    source: text("source").notNull(),
+    state: text("state").notNull(),
+    requestedAt: text("requested_at").notNull().default(isoNow),
+    startedAt: text("started_at"),
+    completedAt: text("completed_at"),
+    periodStart: text("period_start"),
+    periodEnd: text("period_end"),
+    rowCount: integer("row_count").notNull().default(0),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    completeness: text("completeness").notNull().default("unknown"),
+    coverageInfo: text("coverage_info"),
+  },
+  (table) => [
+    index("source_sync_runs_project_source_idx").on(
+      table.projectId,
+      table.source,
+      table.completedAt,
+    ),
+    index("source_sync_runs_organization_idx").on(table.organizationId),
+  ],
+);
+
+export const seoDailyFacts = pgTable(
+  "seo_daily_facts",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    propertyId: text("property_id").notNull(),
+    source: text("source").notNull(),
+    factDate: text("fact_date").notNull(),
+    grainType: text("grain_type").notNull(),
+    grainKey: text("grain_key").notNull(),
+    query: text("query"),
+    pageUrl: text("page_url"),
+    normalizedUrl: text("normalized_url"),
+    country: text("country"),
+    device: text("device"),
+    clicks: integer("clicks"),
+    impressions: integer("impressions"),
+    ctr: real("ctr"),
+    averagePosition: real("average_position"),
+    organicSessions: integer("organic_sessions"),
+    keyEvents: integer("key_events"),
+    provenance: text("provenance").notNull(),
+    syncRunId: text("sync_run_id"),
+    updatedAt: text("updated_at").notNull().default(isoNow),
+  },
+  (table) => [
+    uniqueIndex("seo_daily_facts_project_source_grain_idx").on(
+      table.projectId,
+      table.source,
+      table.grainKey,
+    ),
+    index("seo_daily_facts_project_date_idx").on(
+      table.projectId,
+      table.source,
+      table.factDate,
+    ),
+    index("seo_daily_facts_organization_idx").on(table.organizationId),
+  ],
+);
+
+export const keywordOpportunities = pgTable(
+  "keyword_opportunities",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    dedupeKey: text("dedupe_key").notNull(),
+    query: text("query").notNull(),
+    targetUrl: text("target_url"),
+    rule: text("rule").notNull(),
+    score: real("score"),
+    scoreVersion: text("score_version").notNull(),
+    partialScore: boolean("partial_score").notNull().default(false),
+    confidence: text("confidence").notNull(),
+    evidencePeriod: text("evidence_period").notNull(),
+    evidenceJson: text("evidence_json").notNull(),
+    whySuggested: text("why_suggested").notNull(),
+    status: text("status").notNull().default("new"),
+    ownerUserId: text("owner_user_id"),
+    note: text("note"),
+    detectedAt: text("detected_at").notNull().default(isoNow),
+    updatedAt: text("updated_at").notNull().default(isoNow),
+  },
+  (table) => [
+    uniqueIndex("keyword_opportunities_project_dedupe_idx").on(
+      table.projectId,
+      table.dedupeKey,
+    ),
+    index("keyword_opportunities_project_status_idx").on(
+      table.projectId,
+      table.status,
+    ),
+    index("keyword_opportunities_organization_idx").on(table.organizationId),
+  ],
+);
+
+export const keywordClusters = pgTable(
+  "keyword_clusters",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    intent: text("intent").notNull().default("unknown"),
+    algorithmVersion: text("algorithm_version").notNull(),
+    confidence: text("confidence").notNull(),
+    evidenceCount: integer("evidence_count").notNull().default(0),
+    createdAt: text("created_at").notNull().default(isoNow),
+    updatedAt: text("updated_at").notNull().default(isoNow),
+  },
+  (table) => [
+    index("keyword_clusters_project_idx").on(table.projectId),
+    index("keyword_clusters_organization_idx").on(table.organizationId),
+  ],
+);
+
+export const keywordClusterMembers = pgTable(
+  "keyword_cluster_members",
+  {
+    id: text("id").primaryKey(),
+    clusterId: text("cluster_id")
+      .notNull()
+      .references(() => keywordClusters.id, { onDelete: "cascade" }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    query: text("query").notNull(),
+    source: text("source").notNull(),
+    createdAt: text("created_at").notNull().default(isoNow),
+  },
+  (table) => [
+    uniqueIndex("keyword_cluster_members_cluster_query_idx").on(
+      table.clusterId,
+      table.query,
+    ),
+    index("keyword_cluster_members_project_idx").on(table.projectId),
+  ],
+);
+
+export const geoImportBatches = pgTable(
+  "geo_import_batches",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    source: text("source").notNull(),
+    reportType: text("report_type").notNull(),
+    filename: text("filename").notNull(),
+    filenameHash: text("filename_hash").notNull(),
+    schemaMappingVersion: text("schema_mapping_version").notNull(),
+    recordCount: integer("record_count").notNull().default(0),
+    validationStatus: text("validation_status").notNull(),
+    completeness: text("completeness").notNull().default("sampled"),
+    importedByUserId: text("imported_by_user_id").notNull(),
+    importedAt: text("imported_at").notNull().default(isoNow),
+  },
+  (table) => [
+    index("geo_import_batches_project_source_idx").on(
+      table.projectId,
+      table.source,
+      table.importedAt,
+    ),
+    index("geo_import_batches_organization_idx").on(table.organizationId),
+  ],
+);
+
+export const geoDailyFacts = pgTable(
+  "geo_daily_facts",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    batchId: text("batch_id")
+      .notNull()
+      .references(() => geoImportBatches.id, { onDelete: "cascade" }),
+    source: text("source").notNull(),
+    factDate: text("fact_date").notNull(),
+    metricType: text("metric_type").notNull(),
+    pageUrl: text("page_url"),
+    queryOrTopic: text("query_or_topic"),
+    country: text("country"),
+    device: text("device"),
+    metricValue: integer("metric_value").notNull(),
+    rowFingerprint: text("row_fingerprint").notNull(),
+    completeness: text("completeness").notNull().default("sampled"),
+  },
+  (table) => [
+    uniqueIndex("geo_daily_facts_project_source_fp_idx").on(
+      table.projectId,
+      table.source,
+      table.rowFingerprint,
+    ),
+    index("geo_daily_facts_project_date_idx").on(
+      table.projectId,
+      table.source,
+      table.factDate,
+    ),
+    index("geo_daily_facts_batch_idx").on(table.batchId),
+  ],
+);
+
+export const bingLinkSnapshots = pgTable(
+  "bing_link_snapshots",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    batchKey: text("batch_key").notNull(),
+    fetchedAt: text("fetched_at").notNull(),
+    targetUrl: text("target_url").notNull(),
+    referringDomain: text("referring_domain").notNull(),
+    referringUrl: text("referring_url"),
+    anchorText: text("anchor_text"),
+    linkCount: integer("link_count").notNull().default(1),
+  },
+  (table) => [
+    index("bing_link_snapshots_project_fetched_idx").on(
+      table.projectId,
+      table.fetchedAt,
+    ),
+    index("bing_link_snapshots_organization_idx").on(table.organizationId),
   ],
 );

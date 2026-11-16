@@ -1,4 +1,5 @@
 import { t } from "@/shared/i18n";
+import type { DataState, EvidenceSource } from "@/shared/evidence-envelope";
 /** Pure helpers for the owned-site free-sources path. */
 
 export function isFreeSourcesOnlyValue(
@@ -82,4 +83,28 @@ export type FreeSourcesStatus = {
     canStoreKey: boolean;
   };
   snapshots: FreeSourceSnapshotView[];
+};
+
+export type SourceFreshness = "fresh" | "stale" | "unknown";
+
+export type SourceHealthEntry = {
+  source: EvidenceSource;
+  label: string;
+  configured: boolean;
+  verified: boolean;
+  state: DataState;
+  lastSuccessAt: string | null;
+  freshness: SourceFreshness;
+  coverage: string;
+  quotaSummary: string;
+  lastError: string | null;
+  nextSafeAction: string;
+};
+
+export type ProjectSourceHealthReport = {
+  projectId: string;
+  checkedAt: string;
+  freeSourcesOnly: boolean;
+  blockedProviderCallsTotal: number;
+  sources: SourceHealthEntry[];
 };

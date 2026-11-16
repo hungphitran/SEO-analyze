@@ -21,6 +21,7 @@ const ERROR_CODES = [
   "AI_VISIBILITY_ERROR",
   "DATAFORSEO_AUTH_FAILED",
   "FREE_SOURCES_ONLY",
+  "PAID_SOURCE_DISABLED",
   "RATE_LIMITED",
   "UPSTREAM_UNAVAILABLE",
   "SERP_NOT_CONFIGURED",
@@ -64,6 +65,7 @@ const NON_REPORTABLE_ERROR_CODES = new Set<ErrorCode>([
   // the failure rate visible in Workers Observability.
   "UPSTREAM_UNAVAILABLE",
   "FREE_SOURCES_ONLY",
+  "PAID_SOURCE_DISABLED",
   // Free SERP providers (SerpApi, OpenSERP): missing/rejected key, spent
   // quota, and provider outages are operator-visible states, not app faults.
   "SERP_NOT_CONFIGURED",
